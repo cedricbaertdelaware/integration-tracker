@@ -500,7 +500,10 @@
       <div id="view-timelog" style="display:none">
         <div class="section-header">
           <span class="section-title">Time Log</span>
-          <button class="btn btn-primary btn-sm" onclick="openModal('logTime')">＋ Log Time</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" onclick="exportTimeLog()" title="Export filtered time entries to Excel">↓ Export Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('logTime')">＋ Log Time</button>
+          </div>
         </div>
         <div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="timeStats"></div>
         <div class="filter-bar">
@@ -1733,6 +1736,77 @@ function renderTimeLog() {
   var myName=currentUser?currentUser.name:'';
   var tbody=logs.map(function(t){ var ifc=ifaces.find(function(i){return String(i.id)===String(t.interfaceId);}); var canDel=isAdmin||t.person===myName; return '<tr><td class="td-mono">'+t.date+'</td><td style="color:var(--accent);font-weight:600">'+t.person+'</td><td><span class="tag">'+t.role+'</span></td><td class="td-muted">'+(ifc?(ifc.ifId||'')+' '+ifc.name:'— project —')+'</td><td><span class="tag">'+t.phase+'</span></td><td class="td-mono">'+t.hours+'h</td><td class="td-muted" style="max-width:200px;overflow:hidden">'+(t.desc||'').replace(/<[^>]+>/g,' ').slice(0,80)+'</td><td>'+(canDel?'<button class="btn btn-danger btn-sm" onclick="deleteTime('+t.id+')" title="Delete">✕</button>':'')+'</td></tr>'; }).join('');
   document.getElementById('timeTableBody').innerHTML=tbody||'<tr><td colspan="8" class="empty-state">No time entries match filters.</td></tr>';
+}
+
+function exportTimeLog() {
+  var allLogs=getProjTL(), ifaces=getProjIf();
+  var proj=state.projects.find(function(p){return p.id===state.activeProject;});
+  // Apply same filters as UI
+  var fPerson=document.getElementById('flt-tl-person').value;
+  var fRole=document.getElementById('flt-tl-role').value;
+  var fPhase=document.getElementById('flt-tl-phase').value;
+  var fIface=document.getElementById('flt-tl-iface').value;
+  var fSort=document.getElementById('flt-tl-sort').value;
+  var logs=allLogs.filter(function(t){
+    if(fPerson && t.person!==fPerson) return false;
+    if(fRole && t.role!==fRole) return false;
+    if(fPhase && t.phase!==fPhase) return false;
+    if(fIface && String(t.interfaceId)!==fIface) return false;
+    return true;
+  });
+  logs.sort(function(a,b){
+    if(fSort==='date-asc') return (a.date||'').localeCompare(b.date||'');
+    if(fSort==='hours-desc') return b.hours-a.hours;
+    if(fSort==='hours-asc') return a.hours-b.hours;
+    if(fSort==='person') return (a.person||'').localeCompare(b.person||'');
+    return (b.date||'').localeCompare(a.date||'');
+  });
+  if(!logs.length){ alert('No time entries to export.'); return; }
+  // Build CSV
+  function csvEscape(val){
+    var s=String(val||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+    if(s.indexOf(',')!==-1||s.indexOf('"')!==-1||s.indexOf('\n')!==-1) s='"'+s.replace(/"/g,'""')+'"';
+    return s;
+  }
+  var headers=['Date','Person','Role','Interface ID','Interface Name','Phase','Hours','Description'];
+  var rows=[headers.join(',')];
+  logs.forEach(function(t){
+    var ifc=ifaces.find(function(i){return String(i.id)===String(t.interfaceId);});
+    rows.push([
+      csvEscape(t.date),
+      csvEscape(t.person),
+      csvEscape(t.role),
+      csvEscape(ifc?ifc.ifId:''),
+      csvEscape(ifc?ifc.name:'Project level'),
+      csvEscape(t.phase),
+      t.hours,
+      csvEscape(t.desc)
+    ].join(','));
+  });
+  // Add totals row
+  var totalH=logs.reduce(function(s,t){return s+t.hours;},0);
+  rows.push('');
+  rows.push(',,,,,Total,'+totalH.toFixed(1)+',');
+  // Active filters summary
+  var filters=[];
+  if(fPerson) filters.push('Person: '+fPerson);
+  if(fRole) filters.push('Role: '+fRole);
+  if(fPhase) filters.push('Phase: '+fPhase);
+  if(fIface){var fi=ifaces.find(function(i){return String(i.id)===fIface;}); filters.push('Interface: '+(fi?(fi.ifId||'')+' '+fi.name:''));}
+  if(filters.length){rows.push(''); rows.push('Filters applied:,'+csvEscape(filters.join(' | ')));}
+  // Download with UTF-8 BOM for Excel
+  var csv='\uFEFF'+rows.join('\r\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  var projName=proj?proj.code||proj.name:'export';
+  var today=new Date().toISOString().slice(0,10);
+  a.download='TimeLog_'+projName.replace(/[^a-zA-Z0-9]/g,'')+'_'+today+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function renderOpenPoints() {
