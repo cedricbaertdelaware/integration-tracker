@@ -928,8 +928,11 @@ function ensureDefaults() {
   if (!state.users)            state.users = [];
   if (!state.accessRequests)   state.accessRequests = [];
   if (!state.users.find(function(u) { return u.email.toLowerCase() === 'cedric.baert@delaware.pro'; })) {
-    state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:'Tie2eiha3759', role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
-    saveState();
+    sha256('Tie2eiha3759').then(function(hashed) {
+      state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:hashed, role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
+      plainPasswordStore[1] = 'Tie2eiha3759';
+      saveState();
+    });
   }
 }
 function saveState() {
@@ -973,20 +976,38 @@ function loadCurrent() {
 // ════════════════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════════════════
+function sha256(str) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function(buf) {
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  });
+}
+
 function doLogin() {
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  const pw    = document.getElementById('login-password').value;
-  const user  = state.users.find(u => u.email.toLowerCase() === email && u.password === pw && u.active !== false);
-  const errEl = document.getElementById('loginError');
-  if (!user) {
-    errEl.textContent = 'Invalid email or password.';
-    errEl.classList.add('visible');
+  var email = document.getElementById('login-email').value.trim().toLowerCase();
+  var pw    = document.getElementById('login-password').value;
+  var errEl = document.getElementById('loginError');
+  // First try plain text match
+  var user = state.users.find(function(u){return u.email.toLowerCase()===email && u.password===pw && u.active!==false;});
+  if (user) {
+    errEl.classList.remove('visible');
+    currentUser = user;
+    saveCurrent();
+    bootApp();
     return;
   }
-  errEl.classList.remove('visible');
-  currentUser = user;
-  saveCurrent();
-  bootApp();
+  // Then try hashed match (for passwords stored as SHA-256)
+  sha256(pw).then(function(hashed) {
+    var user = state.users.find(function(u){return u.email.toLowerCase()===email && u.password===hashed && u.active!==false;});
+    if (user) {
+      errEl.classList.remove('visible');
+      currentUser = user;
+      saveCurrent();
+      bootApp();
+    } else {
+      errEl.textContent = 'Invalid email or password.';
+      errEl.classList.add('visible');
+    }
+  });
 }
 
 function doLogout() {
@@ -1626,26 +1647,35 @@ function editUser(id) {
 }
 
 function saveUser() {
-  const editId  = document.getElementById('u-edit-id').value;
-  const name    = document.getElementById('u-name').value.trim();
-  const email   = document.getElementById('u-email').value.trim();
-  const password= document.getElementById('u-password').value;
-  const role    = document.getElementById('u-role').value;
+  var editId  = document.getElementById('u-edit-id').value;
+  var name    = document.getElementById('u-name').value.trim();
+  var email   = document.getElementById('u-email').value.trim();
+  var password= document.getElementById('u-password').value;
+  var role    = document.getElementById('u-role').value;
   if (!name||!email) return;
-  const perms = readPermGrid('permGrid');
-  if (editId) {
-    const u=state.users.find(x=>String(x.id)===String(editId)); if(!u) return;
-    u.name=name; u.email=email; u.role=role; u.perms=perms;
-    if(password) u.password=password;
-    // If editing self, update currentUser too
-    if(currentUser&&currentUser.id===u.id){ currentUser=u; document.getElementById('cuName').textContent=u.name; document.getElementById('cuRole').textContent=u.role; }
-  } else {
-    if(state.users.find(u=>u.email.toLowerCase()===email.toLowerCase())){ alert('A user with this email already exists.'); return; }
-    if(!password){ alert('Please set a password for the new user.'); return; }
-    state.users.push({id:Date.now(),name,email,password,role,perms,active:true,created:new Date().toISOString()});
+  var perms = readPermGrid('permGrid');
+  function doSave(hashedPw) {
+    if (editId) {
+      var u=state.users.find(function(x){return String(x.id)===String(editId);}); if(!u) return;
+      u.name=name; u.email=email; u.role=role; u.perms=perms;
+      if(hashedPw) { plainPasswordStore[u.id]=password; u.password=hashedPw; }
+      if(currentUser&&currentUser.id===u.id){ currentUser=u; document.getElementById('cuName').textContent=u.name; document.getElementById('cuRole').textContent=u.role; }
+    } else {
+      if(state.users.find(function(u){return u.email.toLowerCase()===email.toLowerCase();})){ alert('A user with this email already exists.'); return; }
+      if(!hashedPw){ alert('Please set a password for the new user.'); return; }
+      var newId=Date.now(); plainPasswordStore[newId]=password;
+      state.users.push({id:newId,name:name,email:email,password:hashedPw,role:role,perms:perms,active:true,created:new Date().toISOString()});
+    }
+    saveState(); closeModal('addUser'); renderUsers();
   }
-  saveState(); closeModal('addUser'); renderUsers();
+  if (password) {
+    sha256(password).then(doSave);
+  } else {
+    doSave(null);
+  }
 }
+
+var plainPasswordStore = {};
 
 function deleteUser() {
   const id = document.getElementById('u-edit-id').value;
@@ -1673,15 +1703,18 @@ function openApproveRequest(reqId) {
 }
 
 function approveRequest() {
-  const reqId   = document.getElementById('ar-req-id').value;
-  const req     = state.accessRequests.find(r=>r.id==reqId); if(!req) return;
-  const password= document.getElementById('ar-password').value;
-  const role    = document.getElementById('ar-role').value;
+  var reqId   = document.getElementById('ar-req-id').value;
+  var req     = state.accessRequests.find(function(r){return r.id==reqId;}); if(!req) return;
+  var password= document.getElementById('ar-password').value;
+  var role    = document.getElementById('ar-role').value;
   if(!password){ alert('Please set a password for this user.'); return; }
-  const perms = readPermGrid('arPermGrid');
-  state.users.push({id:Date.now(),name:req.name,email:req.email,password,role,perms,active:true,created:new Date().toISOString()});
-  req.status = 'approved';
-  saveState(); closeModal('approveRequest'); renderUsers(); updateReqNotification();
+  var perms = readPermGrid('arPermGrid');
+  sha256(password).then(function(hashed) {
+    var newId=Date.now(); plainPasswordStore[newId]=password;
+    state.users.push({id:newId,name:req.name,email:req.email,password:hashed,role:role,perms:perms,active:true,created:new Date().toISOString()});
+    req.status = 'approved';
+    saveState(); closeModal('approveRequest'); renderUsers(); updateReqNotification();
+  });
 }
 
 function denyRequest(reqId) {
