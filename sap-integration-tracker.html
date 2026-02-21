@@ -1592,7 +1592,7 @@ function closeModal(name) { document.getElementById('modal-'+name).classList.add
 // ════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════
-(async () => {
+async function init() {
   await loadState();
   // Expose functions to global scope since we're in a module
   window.doLogin = doLogin;
@@ -1624,7 +1624,6 @@ function closeModal(name) { document.getElementById('modal-'+name).classList.add
   window.openApproveRequest = openApproveRequest;
   window.approveRequest = approveRequest;
   window.denyRequest = denyRequest;
-  window.filterOP = filterOP;
   window.selectProject = selectProject;
   window.togglePwVisibility = togglePwVisibility;
   window.generatePassword = generatePassword;
@@ -1651,7 +1650,9 @@ function closeModal(name) { document.getElementById('modal-'+name).classList.add
     document.getElementById('loginOverlay').classList.remove('hidden');
     document.getElementById('mainApp').style.display = 'none';
   }
-})();
+}
+
+init();
 </script>
 </body>
 </html>
