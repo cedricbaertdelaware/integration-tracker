@@ -19,8 +19,80 @@
 
   /* LAYOUT */
   .app{display:flex;height:100vh;overflow:hidden;}
-  .sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+  .sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .2s ease,min-width .2s ease;}
+  .sidebar.collapsed{width:52px;min-width:52px;}
   .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+
+  /* SIDEBAR COLLAPSE TOGGLE */
+  .sidebar-toggle{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:4px 6px;border-radius:4px;transition:all .15s;flex-shrink:0;line-height:1;}
+  .sidebar-toggle:hover{color:var(--accent);background:var(--accent-dim);}
+  .sidebar.collapsed .sidebar-toggle{transform:rotate(180deg);}
+
+  /* LOGO ICON (shown only when collapsed) */
+  .logo-icon{display:none;width:28px;height:28px;}
+  .sidebar.collapsed .logo-icon{display:block;}
+  .sidebar.collapsed .logo,.sidebar.collapsed .logo-sub{display:none;}
+
+  /* COLLAPSED STATE — hide text, center icons */
+  .sidebar.collapsed .sidebar-header{padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .sidebar.collapsed .sidebar-header > div:first-child{justify-content:center;}
+  .sidebar.collapsed .cu-info,.sidebar.collapsed .cu-logout,
+  .sidebar.collapsed .sidebar-section-label,.sidebar.collapsed .project-name,.sidebar.collapsed .project-count,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-section-label{display:none;}
+  .sidebar.collapsed .btn-add-project{display:none;}
+  .sidebar.collapsed .current-user-bar{justify-content:center;padding:8px 0;}
+  .sidebar.collapsed .project-list{padding:4px 0;}
+  .sidebar.collapsed .project-item{justify-content:center;padding:8px 0;border-left:none;gap:0;}
+  .sidebar.collapsed .project-item.active{border-left:none;background:var(--accent-dim);}
+  .sidebar.collapsed .project-dot{width:10px;height:10px;cursor:pointer;}
+  .sidebar.collapsed .nav-item{justify-content:center;padding:8px 0;gap:0;position:relative;}
+  .sidebar.collapsed .nav-icon{font-size:16px;width:auto;}
+  .sidebar.collapsed .nav-section-sep{margin:6px 8px;}
+  .sidebar.collapsed .notif-dot{position:absolute;top:-2px;right:-2px;}
+
+  /* MOBILE */
+  @media (max-width:768px) {
+    .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;width:52px;min-width:52px;}
+    .sidebar .logo-icon{display:block;}
+    .sidebar .logo,.sidebar .logo-sub{display:none;}
+    .sidebar .cu-info,.sidebar .cu-logout,
+    .sidebar .sidebar-section-label,.sidebar .project-name,.sidebar .project-count,
+    .sidebar .nav-label,
+    .sidebar .nav-section-label{display:none;}
+    .sidebar .btn-add-project{display:none;}
+    .sidebar .current-user-bar{justify-content:center;padding:8px 0;}
+    .sidebar .sidebar-header{padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .sidebar .sidebar-header > div:first-child{justify-content:center;}
+    .sidebar .project-list{padding:4px 0;}
+    .sidebar .project-item{justify-content:center;padding:8px 0;border-left:none;gap:0;}
+    .sidebar .project-item.active{border-left:none;background:var(--accent-dim);}
+    .sidebar .project-dot{width:10px;height:10px;}
+    .sidebar .nav-item{justify-content:center;padding:8px 0;gap:0;position:relative;}
+    .sidebar .nav-icon{font-size:16px;width:auto;}
+    .sidebar .nav-section-sep{margin:6px 8px;}
+    .sidebar .sidebar-toggle{display:none;}
+    .sidebar.expanded{width:240px;min-width:240px;box-shadow:4px 0 20px rgba(0,0,0,.5);}
+    .sidebar.expanded .logo{display:block;}
+    .sidebar.expanded .logo-icon{display:none;}
+    .sidebar.expanded .logo-sub,.sidebar.expanded .cu-info,.sidebar.expanded .cu-logout,
+    .sidebar.expanded .sidebar-section-label,.sidebar.expanded .project-name,.sidebar.expanded .project-count,
+    .sidebar.expanded .btn-add-project span:last-child,.sidebar.expanded .nav-label,
+    .sidebar.expanded .nav-section-label{display:revert;}
+    .sidebar.expanded .current-user-bar{justify-content:flex-start;padding:8px 14px;}
+    .sidebar.expanded .sidebar-header{padding:20px 16px 14px;display:block;}
+    .sidebar.expanded .project-item{justify-content:flex-start;padding:8px 16px;border-left:2px solid transparent;gap:8px;}
+    .sidebar.expanded .project-item.active{border-left-color:var(--accent);}
+    .sidebar.expanded .project-dot{width:7px;height:7px;}
+    .sidebar.expanded .btn-add-project{display:flex;margin:8px 12px;padding:7px 12px;justify-content:flex-start;width:calc(100% - 24px);border-style:dashed;font-size:12px;}
+    .sidebar.expanded .nav-item{justify-content:flex-start;padding:8px 16px;gap:8px;}
+    .sidebar.expanded .nav-icon{font-size:14px;width:16px;}
+    .sidebar.expanded .nav-section-sep{margin:6px 16px;}
+    .main{margin-left:52px;}
+    .stats-row{grid-template-columns:repeat(2,1fr)!important;}
+    .topbar{flex-wrap:wrap;gap:8px;}
+    .topbar-actions{flex-wrap:wrap;}
+  }
 
   /* SIDEBAR */
   .sidebar-header{padding:20px 16px 14px;border-bottom:1px solid var(--border);}
@@ -257,14 +329,6 @@
 </head>
 <body>
 
-<!-- LOADING SCREEN -->
-<div id="loadingScreen" style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300;gap:16px;">
-  <div style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--accent);text-transform:uppercase">Integration Tracker</div>
-  <div id="loadingMsg" style="font-size:13px;color:var(--text-muted)">Loading…</div>
-  <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-</div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-
 <!-- LOGIN / REQUEST ACCESS OVERLAY -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
@@ -315,7 +379,19 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="logo">Integration Tracker</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <!-- Full text logo (visible when expanded) -->
+        <div class="logo">Integration Tracker</div>
+        <!-- Icon logo (visible when collapsed) -->
+        <svg class="logo-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="26" height="26" rx="6" stroke="#4f9cf9" stroke-width="1.5" fill="#1a3558"/>
+          <path d="M8 9h4v10H8z" fill="#4f9cf9" opacity=".9"/>
+          <path d="M16 9h4v10h-4z" fill="#4f9cf9" opacity=".5"/>
+          <path d="M12 12h4v2h-4z" fill="#4f9cf9" opacity=".7"/>
+          <path d="M12 16h4v2h-4z" fill="#4f9cf9" opacity=".7"/>
+        </svg>
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
+      </div>
       <div class="logo-sub">Integration Dev Portal</div>
     </div>
     <div class="current-user-bar" id="currentUserBar">
@@ -334,15 +410,15 @@
     </button>
 
     <nav class="sidebar-nav" id="sideNav">
-      <div class="nav-item active" onclick="navClick('dashboard')" id="nav-dashboard"><span class="nav-icon">◈</span> Dashboard</div>
-      <div class="nav-item" onclick="navClick('interfaces')" id="nav-interfaces"><span class="nav-icon">⇄</span> Interfaces</div>
-      <div class="nav-item" onclick="navClick('timelog')" id="nav-timelog"><span class="nav-icon">◷</span> Time Log</div>
-      <div class="nav-item" onclick="navClick('openpoints')" id="nav-openpoints"><span class="nav-icon">◎</span> Open Points</div>
-      <div class="nav-item" onclick="navClick('validation')" id="nav-validation"><span class="nav-icon">✓</span> Validation</div>
+      <div class="nav-item active" onclick="navClick('dashboard')" id="nav-dashboard"><span class="nav-icon">◈</span><span class="nav-label"> Dashboard</span></div>
+      <div class="nav-item" onclick="navClick('interfaces')" id="nav-interfaces"><span class="nav-icon">⇄</span><span class="nav-label"> Interfaces</span></div>
+      <div class="nav-item" onclick="navClick('timelog')" id="nav-timelog"><span class="nav-icon">◷</span><span class="nav-label"> Time Log</span></div>
+      <div class="nav-item" onclick="navClick('openpoints')" id="nav-openpoints"><span class="nav-icon">◎</span><span class="nav-label"> Open Points</span></div>
+      <div class="nav-item" onclick="navClick('validation')" id="nav-validation"><span class="nav-icon">✓</span><span class="nav-label"> Validation</span></div>
       <div class="nav-section-sep"></div>
       <div class="nav-section-label">Admin</div>
-      <div class="nav-item" onclick="navClick('templates')" id="nav-templates"><span class="nav-icon">⊞</span> dIF Templates</div>
-      <div class="nav-item" onclick="navClick('users')" id="nav-users"><span class="nav-icon">⊙</span> Users <span id="nav-req-dot" class="hidden"></span></div>
+      <div class="nav-item" onclick="navClick('templates')" id="nav-templates"><span class="nav-icon">⊞</span><span class="nav-label"> dIF Templates</span></div>
+      <div class="nav-item" onclick="navClick('users')" id="nav-users"><span class="nav-icon">⊙</span><span class="nav-label"> Users</span> <span id="nav-req-dot" class="hidden"></span></div>
     </nav>
   </aside>
 
@@ -521,7 +597,7 @@
     </div>
     <div class="form-row">
       <div class="form-group"><label>Spec Author (Architect)</label><input id="if-spec-author" placeholder="e.g. Cédric"/></div>
-      <div class="form-group"><label>Developer Assigned</label><input id="if-dev" placeholder="e.g. Mohamed B."/></div>
+      <div class="form-group"><label>Developer Assigned</label><input id="if-dev" placeholder="e.g. TBD"/></div>
     </div>
     <div class="form-row"><div class="form-group"><label>Notes / Description</label>
       <div class="rte-wrap"><div class="rte-toolbar">
@@ -656,8 +732,8 @@
   <div class="modal" style="width:560px">
     <div class="modal-title"><span id="userModalTitle">Add User</span><button class="modal-close" onclick="closeModal('addUser')">×</button></div>
     <div class="form-row">
-      <div class="form-group"><label>Full Name</label><input id="u-name" placeholder="Mohamed Bensalem"/></div>
-      <div class="form-group"><label>Email</label><input id="u-email" type="email" placeholder="m.bensalem@company.com"/></div>
+      <div class="form-group"><label>Full Name</label><input id="u-name" placeholder="Cédric Baert"/></div>
+      <div class="form-group"><label>Email</label><input id="u-email" type="email" placeholder="cedric.baert@delaware.pro"/></div>
     </div>
     <div class="form-row" style="align-items:flex-end">
       <div class="form-group">
@@ -728,37 +804,13 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-
-const firebaseConfig = {
-  apiKey: "AIzaSyChuDvScJOQ0GoPF3DOjgFwd2OnERe02R0",
-  authDomain: "integration-tracker-90e23.firebaseapp.com",
-  projectId: "integration-tracker-90e23",
-  storageBucket: "integration-tracker-90e23.firebasestorage.app",
-  messagingSenderId: "985067859324",
-  appId: "1:985067859324:web:2d6e6ce68f5155869b88f9",
-  measurementId: "G-YNGWT3EKNB"
-};
-
-let db = null;
-let useFirebase = false;
-try {
-  if (typeof firebase !== 'undefined' && firebase.initializeApp) {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    useFirebase = true;
-    console.log('Firebase connected');
-  }
-} catch(e) { console.warn('Firebase unavailable, using localStorage fallback', e); }
-if (!useFirebase) console.log('Running in offline/localStorage mode');
-
 // ════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════
 const VIEWS = ['dashboard','interfaces','timelog','openpoints','validation','templates','users'];
 
+// Permissions per view: { view: canSee, write: canWrite }
 const VIEW_PERMS = [
   { id:'dashboard',  label:'Dashboard (Overview)' },
   { id:'interfaces', label:'Interfaces' },
@@ -782,99 +834,33 @@ let state = {
   validationChecks:{}, difTemplates:[], users:[], accessRequests:[],
   activeProject:null, activeView:'dashboard',
 };
-let currentUser = null;
+let currentUser = null; // { id, name, email, role, perms }
 
 // ════════════════════════════════════════════════════════
-// FIREBASE PERSISTENCE
-// Single document 'appdata/main' holds all shared state.
-// Current user session stored in localStorage (just the user id).
+// PERSISTENCE
 // ════════════════════════════════════════════════════════
-
-function showLoadingScreen(msg) {
-  document.getElementById('loadingMsg').textContent = msg || 'Loading…';
-  document.getElementById('loadingScreen').style.display = 'flex';
-}
-function hideLoadingScreen() {
-  document.getElementById('loadingScreen').style.display = 'none';
-}
-
-async function loadState() {
-  showLoadingScreen('Connecting…');
+function loadState() {
   try {
-    if (useFirebase) {
-      const snap = await db.collection('appdata').doc('main').get();
-      if (snap.exists) {
-        const data = snap.data();
-        state = { ...state, ...data };
-      }
-    } else {
-      // localStorage fallback
-      const raw = localStorage.getItem('dif-tracker-state');
-      if (raw) {
-        try { state = { ...state, ...JSON.parse(raw) }; } catch(e) {}
-      }
-    }
-    // Ensure arrays/defaults
-    if (!state.projects)         state.projects = [];
-    if (!state.interfaces)       state.interfaces = [];
-    if (!state.timeLogs)         state.timeLogs = [];
-    if (!state.openPoints)       state.openPoints = [];
+    const s = localStorage.getItem('dif-tracker-v4');
+    if (s) state = JSON.parse(s);
+    if (!state.projects)        state.projects = [];
+    if (!state.interfaces)      state.interfaces = [];
+    if (!state.timeLogs)        state.timeLogs = [];
+    if (!state.openPoints)      state.openPoints = [];
     if (!state.validationChecks) state.validationChecks = {};
     if (!state.difTemplates || !state.difTemplates.length) state.difTemplates = defaultTemplates();
-    if (!state.users)            state.users = [];
-    if (!state.accessRequests)   state.accessRequests = [];
+    if (!state.users)           state.users = [];
+    if (!state.accessRequests)  state.accessRequests = [];
     // Ensure Cédric's admin account always exists
     if (!state.users.find(u => u.email.toLowerCase() === 'cedric.baert@delaware.pro')) {
-      const hashed = await hashPassword('Tie2eiha3759');
-      plainPasswordStore[1] = 'Tie2eiha3759';
-      state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:hashed, role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
-      await saveState();
+      state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:'Tie2eiha3759', role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
+      saveState();
     }
-    // Migrate any remaining plain text passwords to hashes
-    let needsMigration = false;
-    for (const u of state.users) {
-      if (await migratePasswordIfNeeded(u)) needsMigration = true;
-    }
-    if (needsMigration) await saveState();
-  } catch(e) {
-    console.error('Load error:', e);
-    if (useFirebase) alert('Could not connect to the database. Check your internet connection and try again.');
-  }
-  hideLoadingScreen();
+  } catch(e) { console.error(e); }
 }
-
-async function saveState() {
-  try {
-    // Strip undefined values
-    const clean = JSON.parse(JSON.stringify(state));
-    delete clean.activeView;
-    delete clean.activeProject;
-    if (useFirebase) {
-      await db.collection('appdata').doc('main').set(clean);
-    } else {
-      localStorage.setItem('dif-tracker-state', JSON.stringify(clean));
-    }
-  } catch(e) {
-    console.error('Save error:', e);
-  }
+function saveState() {
+  try { localStorage.setItem('dif-tracker-v4', JSON.stringify(state)); } catch(e) {}
 }
-
-// Listen for real-time updates from other users
-function startRealtimeSync() {
-  if (!useFirebase) return; // No realtime sync in localStorage mode
-  db.collection('appdata').doc('main').onSnapshot((snap) => {
-    if (!snap.exists) return;
-    const data = snap.data();
-    // Merge remote data but preserve local navigation state
-    const activeProject = state.activeProject;
-    const activeView    = state.activeView;
-    state = { ...state, ...data, activeProject, activeView };
-    renderAll();
-    if (state.activeView === 'users') renderUsers();
-    updateReqNotification();
-  });
-}
-
 function saveCurrent() {
   try { if(currentUser) localStorage.setItem('dif-current-v4', JSON.stringify({id:currentUser.id})); } catch(e) {}
 }
@@ -889,11 +875,10 @@ function loadCurrent() {
 // ════════════════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════════════════
-async function doLogin() {
+function doLogin() {
   const email = document.getElementById('login-email').value.trim().toLowerCase();
-  const plain = document.getElementById('login-password').value;
-  const hashed = await hashPassword(plain);
-  const user  = state.users.find(u => u.email.toLowerCase() === email && u.password === hashed && u.active !== false);
+  const pw    = document.getElementById('login-password').value;
+  const user  = state.users.find(u => u.email.toLowerCase() === email && u.password === pw && u.active !== false);
   const errEl = document.getElementById('loginError');
   if (!user) {
     errEl.textContent = 'Invalid email or password.';
@@ -920,12 +905,12 @@ function doLogout() {
 function showLoginForm()   { document.getElementById('loginForm').classList.remove('hidden');   document.getElementById('requestForm').classList.add('hidden'); }
 function showRequestForm() { document.getElementById('requestForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); }
 
-async function submitAccessRequest() {
-  const name   = document.getElementById('req-name').value.trim();
-  const email  = document.getElementById('req-email').value.trim();
-  const reason = document.getElementById('req-reason').value.trim();
-  const errEl  = document.getElementById('requestError');
-  const okEl   = document.getElementById('requestSuccess');
+function submitAccessRequest() {
+  const name    = document.getElementById('req-name').value.trim();
+  const email   = document.getElementById('req-email').value.trim();
+  const reason  = document.getElementById('req-reason').value.trim();
+  const errEl   = document.getElementById('requestError');
+  const okEl    = document.getElementById('requestSuccess');
   errEl.classList.remove('visible'); okEl.classList.remove('visible');
   if (!name || !email) { errEl.textContent='Name and email are required.'; errEl.classList.add('visible'); return; }
   if (state.users.find(u=>u.email.toLowerCase()===email.toLowerCase())) {
@@ -935,7 +920,7 @@ async function submitAccessRequest() {
     errEl.textContent='You already have a pending request.'; errEl.classList.add('visible'); return;
   }
   state.accessRequests.push({ id:Date.now(), name, email, reason, status:'pending', created:new Date().toISOString() });
-  await saveState();
+  saveState();
   okEl.textContent = 'Request submitted! An admin will review it and get back to you.';
   okEl.classList.add('visible');
   ['req-name','req-email','req-reason'].forEach(id=>document.getElementById(id).value='');
@@ -944,6 +929,7 @@ async function submitAccessRequest() {
 function bootApp() {
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('mainApp').style.display = '';
+  // Set current user bar
   document.getElementById('cuName').textContent = currentUser.name;
   document.getElementById('cuRole').textContent = currentUser.role;
   const initials = currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -954,34 +940,11 @@ function bootApp() {
   else if (state.projects.length) selectProject(state.projects[0].id);
   setView(state.activeView || 'dashboard');
   updateReqNotification();
-  startRealtimeSync();
 }
 
 // ════════════════════════════════════════════════════════
-// PASSWORD HASHING (SHA-256 via Web Crypto API)
-// Passwords are NEVER stored in plain text in Firestore.
-// Only the hex hash is persisted. Plain text is held
-// in memory only so admin can copy & share it.
+// PASSWORD HELPERS
 // ════════════════════════════════════════════════════════
-async function hashPassword(plain) {
-  const msgBuffer = new TextEncoder().encode(plain);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-// In-memory store of plain passwords (never persisted) — only populated
-// when admin sets or resets a password in the current session
-const plainPasswordStore = {};
-
-async function migratePasswordIfNeeded(user) {
-  // If password looks like plain text (not a 64-char hex hash), hash it
-  if (user.password && user.password.length !== 64) {
-    plainPasswordStore[user.id] = user.password; // keep plain in memory
-    user.password = await hashPassword(user.password);
-    return true; // needs save
-  }
-  return false;
-}
 function togglePwVisibility(inputId, btnId) {
   const input = document.getElementById(inputId);
   const isHidden = input.type === 'password';
@@ -998,7 +961,7 @@ function generatePassword() {
   input.type = 'text';
   document.getElementById('u-pw-eye').style.color = 'var(--accent)';
   const hint = document.getElementById('u-pw-hint');
-  hint.textContent = '← Copy this password before saving — it will be hashed on save';
+  hint.textContent = '← Copy this password before saving';
   hint.style.display = 'block';
 }
 // ════════════════════════════════════════════════════════
@@ -1062,6 +1025,13 @@ function setView(v) {
 // PROJECT
 // ════════════════════════════════════════════════════════
 let selectedColor = '#4f9cf9';
+document.querySelectorAll('.color-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.color-opt').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedColor = el.dataset.color;
+  });
+});
 
 function renderProjectList() {
   const list = document.getElementById('projectList');
@@ -1076,9 +1046,9 @@ function renderProjectList() {
   });
 }
 
-async function selectProject(id) {
+function selectProject(id) {
   state.activeProject = id;
-  await saveState();
+  saveState();
   const p = state.projects.find(x => x.id === id);
   if (!p) return;
   document.getElementById('topbarProject').textContent = p.name;
@@ -1091,12 +1061,12 @@ async function selectProject(id) {
   renderAll();
 }
 
-async function saveProject() {
+function saveProject() {
   const name = document.getElementById('proj-name').value.trim();
   if (!name) return;
   const p = { id:Date.now(), name, code:document.getElementById('proj-code').value.trim().toUpperCase()||name.substring(0,3).toUpperCase(), desc:document.getElementById('proj-desc').value.trim(), landscape:document.getElementById('proj-landscape').value, phase:document.getElementById('proj-phase').value, color:selectedColor, created:new Date().toISOString() };
   state.projects.push(p);
-  await saveState();
+  saveState();
   closeModal('addProject');
   renderProjectList();
   selectProject(p.id);
@@ -1106,17 +1076,17 @@ async function saveProject() {
 // ════════════════════════════════════════════════════════
 // INTERFACES
 // ════════════════════════════════════════════════════════
-async function saveInterface() {
+function saveInterface() {
   if (!state.activeProject) { alert('Select a project first'); return; }
   const iface = { id:Date.now(), projectId:state.activeProject, ifId:document.getElementById('if-id').value.trim(), name:document.getElementById('if-name').value.trim(), source:document.getElementById('if-source').value.trim(), target:document.getElementById('if-target').value.trim(), dif:document.getElementById('if-dif').value, status:document.getElementById('if-status').value, priority:document.getElementById('if-priority').value, specAuthor:document.getElementById('if-spec-author').value.trim(), dev:document.getElementById('if-dev').value.trim(), notes:document.getElementById('if-notes-rte').innerHTML, created:new Date().toISOString() };
   if (!iface.name) return;
   state.interfaces.push(iface);
-  await saveState(); closeModal('addInterface'); renderAll();
+  saveState(); closeModal('addInterface'); renderAll();
   ['if-id','if-name','if-source','if-target','if-spec-author','if-dev'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('if-notes-rte').innerHTML='';
 }
-async function updateIfStatus(id, val) { const i=state.interfaces.find(x=>x.id===id); if(i){i.status=val;await saveState();renderAll();} }
-async function deleteIf(id) { if(!confirm('Delete this interface?')) return; state.interfaces=state.interfaces.filter(i=>i.id!==id); await saveState(); renderAll(); }
+function updateIfStatus(id, val) { const i=state.interfaces.find(x=>x.id===id); if(i){i.status=val;saveState();renderAll();} }
+function deleteIf(id) { if(!confirm('Delete this interface?')) return; state.interfaces=state.interfaces.filter(i=>i.id!==id); saveState(); renderAll(); }
 
 // ════════════════════════════════════════════════════════
 // TIME LOG
@@ -1129,33 +1099,33 @@ function populateIfDropdown(selId) {
     const o=document.createElement('option'); o.value=i.id; o.textContent=`${i.ifId||'?'} – ${i.name}`; sel.appendChild(o);
   });
 }
-async function saveTimeEntry() {
+function saveTimeEntry() {
   if (!state.activeProject) { alert('Select a project first'); return; }
   const hours = parseFloat(document.getElementById('tl-hours').value);
   if (!hours) return;
   state.timeLogs.push({ id:Date.now(), projectId:state.activeProject, person:document.getElementById('tl-person').value.trim()||'Unknown', role:document.getElementById('tl-role').value, interfaceId:document.getElementById('tl-interface').value||null, phase:document.getElementById('tl-phase').value, date:document.getElementById('tl-date').value||new Date().toISOString().slice(0,10), hours, desc:document.getElementById('tl-desc-rte').innerHTML });
-  await saveState(); closeModal('logTime');
+  saveState(); closeModal('logTime');
   document.getElementById('tl-desc-rte').innerHTML='';
   renderAll();
 }
-async function deleteTime(id) { state.timeLogs=state.timeLogs.filter(t=>t.id!==id); await saveState(); renderAll(); }
+function deleteTime(id) { state.timeLogs=state.timeLogs.filter(t=>t.id!==id); saveState(); renderAll(); }
 
 // ════════════════════════════════════════════════════════
 // OPEN POINTS
 // ════════════════════════════════════════════════════════
 let opFilter = 'all';
 function filterOP(f) { opFilter=f; ['all','open','resolved'].forEach(x=>{ const el=document.getElementById('opf-'+x); el.className=x===f?'btn btn-secondary btn-sm':'btn btn-ghost btn-sm'; }); renderOpenPoints(); }
-async function saveOpenPoint() {
+function saveOpenPoint() {
   if (!state.activeProject) { alert('Select a project first'); return; }
   const desc = document.getElementById('op-desc-rte').innerHTML;
   if (!desc||desc==='<br>') return;
   state.openPoints.push({ id:Date.now(), projectId:state.activeProject, interfaceId:document.getElementById('op-interface').value||null, desc, owner:document.getElementById('op-owner').value.trim(), priority:document.getElementById('op-priority').value, due:document.getElementById('op-due').value, status:'open', created:new Date().toISOString() });
-  await saveState(); closeModal('addOpenPoint');
+  saveState(); closeModal('addOpenPoint');
   document.getElementById('op-desc-rte').innerHTML='';
   renderAll();
 }
-async function resolveOP(id) { const o=state.openPoints.find(x=>x.id===id); if(o){o.status=o.status==='resolved'?'open':'resolved'; await saveState(); renderAll();} }
-async function deleteOP(id) { state.openPoints=state.openPoints.filter(o=>o.id!==id); await saveState(); renderAll(); }
+function resolveOP(id) { const o=state.openPoints.find(x=>x.id===id); if(o){o.status=o.status==='resolved'?'open':'resolved'; saveState(); renderAll();} }
+function deleteOP(id) { state.openPoints=state.openPoints.filter(o=>o.id!==id); saveState(); renderAll(); }
 
 // ════════════════════════════════════════════════════════
 // VALIDATION
@@ -1174,7 +1144,7 @@ const VALIDATION_CHECKS = [
   {id:'customer_signoff',label:'Customer sign-off received'},
   {id:'doc_complete',  label:'Documentation / spec finalized'},
 ];
-async function toggleCheck(ifId, checkId) { const k=`${ifId}__${checkId}`; state.validationChecks[k]=!state.validationChecks[k]; await saveState(); renderValidation(); }
+function toggleCheck(ifId, checkId) { const k=`${ifId}__${checkId}`; state.validationChecks[k]=!state.validationChecks[k]; saveState(); renderValidation(); }
 
 // ════════════════════════════════════════════════════════
 // dIF TEMPLATES
@@ -1278,7 +1248,7 @@ function editTemplate(id) {
   document.getElementById('tmpl-delete-btn').style.display='inline-flex';
   openModal('addTemplate');
 }
-async function saveTemplate() {
+function saveTemplate() {
   const editId=document.getElementById('tmpl-edit-id').value;
   const code=document.getElementById('tmpl-code').value.trim();
   const name=document.getElementById('tmpl-name').value.trim();
@@ -1286,13 +1256,13 @@ async function saveTemplate() {
   const data={code,name,ver:document.getElementById('tmpl-ver')?document.getElementById('tmpl-ver').value.trim():'',short:document.getElementById('tmpl-short').value.trim(),desc:document.getElementById('tmpl-desc-rte').innerHTML,dir:document.getElementById('tmpl-dir').value,proc:document.getElementById('tmpl-proc').value,proto:document.getElementById('tmpl-proto').value.trim()};
   if (editId) { const t=state.difTemplates.find(x=>String(x.id)===String(editId)); if(t) Object.assign(t,data); }
   else state.difTemplates.push({id:Date.now(),...data});
-  await saveState(); closeModal('addTemplate'); renderTemplates();
+  saveState(); closeModal('addTemplate'); renderTemplates();
 }
-async function deleteTemplate() {
+function deleteTemplate() {
   const id=document.getElementById('tmpl-edit-id').value;
   if(!id||!confirm('Delete this template?')) return;
   state.difTemplates=state.difTemplates.filter(t=>String(t.id)!==String(id));
-  await saveState(); closeModal('addTemplate'); renderTemplates();
+  saveState(); closeModal('addTemplate'); renderTemplates();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1359,17 +1329,14 @@ function editUser(id) {
   document.getElementById('u-delete-btn').style.display = u.role==='admin'?'none':'inline-flex';
   document.getElementById('u-name').value     = u.name;
   document.getElementById('u-email').value    = u.email;
-  // Show plain password from memory if available (set this session), otherwise show placeholder
+  // Show password in plain text so admin can copy and share it
   const pwInput = document.getElementById('u-password');
-  const knownPlain = plainPasswordStore[u.id];
-  pwInput.value = knownPlain || '';
-  pwInput.type  = knownPlain ? 'text' : 'password';
-  document.getElementById('u-pw-eye').style.color = knownPlain ? 'var(--accent)' : '';
+  pwInput.value = u.password||'';
+  pwInput.type  = 'text';
+  document.getElementById('u-pw-eye').style.color = 'var(--accent)';
   const hint = document.getElementById('u-pw-hint');
-  hint.textContent = knownPlain
-    ? '← Current password — copy to share with user'
-    : 'Password is hashed — enter a new one to reset it';
-  hint.style.display = 'block';
+  hint.textContent = u.password ? '← Current password — visible so you can copy & share it' : '';
+  hint.style.display = u.password ? 'block' : 'none';
   document.getElementById('u-role').value     = u.role;
   initPermGrid('permGrid','u-role', u.role);
   if (u.perms) VIEW_PERMS.forEach(v => {
@@ -1379,37 +1346,33 @@ function editUser(id) {
   openModal('addUser');
 }
 
-async function saveUser() {
+function saveUser() {
   const editId  = document.getElementById('u-edit-id').value;
   const name    = document.getElementById('u-name').value.trim();
   const email   = document.getElementById('u-email').value.trim();
-  const plain   = document.getElementById('u-password').value;
+  const password= document.getElementById('u-password').value;
   const role    = document.getElementById('u-role').value;
   if (!name||!email) return;
   const perms = readPermGrid('permGrid');
   if (editId) {
     const u=state.users.find(x=>String(x.id)===String(editId)); if(!u) return;
     u.name=name; u.email=email; u.role=role; u.perms=perms;
-    if(plain) {
-      plainPasswordStore[u.id] = plain;
-      u.password = await hashPassword(plain);
-    }
+    if(password) u.password=password;
+    // If editing self, update currentUser too
     if(currentUser&&currentUser.id===u.id){ currentUser=u; document.getElementById('cuName').textContent=u.name; document.getElementById('cuRole').textContent=u.role; }
   } else {
     if(state.users.find(u=>u.email.toLowerCase()===email.toLowerCase())){ alert('A user with this email already exists.'); return; }
-    if(!plain){ alert('Please set a password for the new user.'); return; }
-    const newId = Date.now();
-    plainPasswordStore[newId] = plain;
-    state.users.push({id:newId, name, email, password: await hashPassword(plain), role, perms, active:true, created:new Date().toISOString()});
+    if(!password){ alert('Please set a password for the new user.'); return; }
+    state.users.push({id:Date.now(),name,email,password,role,perms,active:true,created:new Date().toISOString()});
   }
-  await saveState(); closeModal('addUser'); renderUsers();
+  saveState(); closeModal('addUser'); renderUsers();
 }
 
-async function deleteUser() {
+function deleteUser() {
   const id = document.getElementById('u-edit-id').value;
   if(!id||!confirm('Remove this user?')) return;
   state.users = state.users.filter(u=>String(u.id)!==String(id));
-  await saveState(); closeModal('addUser'); renderUsers();
+  saveState(); closeModal('addUser'); renderUsers();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1430,24 +1393,22 @@ function openApproveRequest(reqId) {
   openModal('approveRequest');
 }
 
-async function approveRequest() {
+function approveRequest() {
   const reqId   = document.getElementById('ar-req-id').value;
   const req     = state.accessRequests.find(r=>r.id==reqId); if(!req) return;
-  const plain   = document.getElementById('ar-password').value;
+  const password= document.getElementById('ar-password').value;
   const role    = document.getElementById('ar-role').value;
-  if(!plain){ alert('Please set a password for this user.'); return; }
+  if(!password){ alert('Please set a password for this user.'); return; }
   const perms = readPermGrid('arPermGrid');
-  const newId = Date.now();
-  plainPasswordStore[newId] = plain;
-  state.users.push({id:newId, name:req.name, email:req.email, password: await hashPassword(plain), role, perms, active:true, created:new Date().toISOString()});
+  state.users.push({id:Date.now(),name:req.name,email:req.email,password,role,perms,active:true,created:new Date().toISOString()});
   req.status = 'approved';
-  await saveState(); closeModal('approveRequest'); renderUsers(); updateReqNotification();
+  saveState(); closeModal('approveRequest'); renderUsers(); updateReqNotification();
 }
 
-async function denyRequest(reqId) {
+function denyRequest(reqId) {
   if(!confirm('Deny and remove this access request?')) return;
   state.accessRequests = state.accessRequests.filter(r=>r.id!==reqId);
-  await saveState(); renderUsers(); updateReqNotification();
+  saveState(); renderUsers(); updateReqNotification();
 }
 
 function updateReqNotification() {
@@ -1587,33 +1548,49 @@ function openModal(name) {
 }
 function closeModal(name) { document.getElementById('modal-'+name).classList.add('hidden'); }
 
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{ if(e.target===el) el.classList.add('hidden'); });
+});
+
+// ════════════════════════════════════════════════════════
+// SIDEBAR COLLAPSE
+// ════════════════════════════════════════════════════════
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  sb.classList.toggle('collapsed');
+  try { localStorage.setItem('dif-sidebar-collapsed', sb.classList.contains('collapsed')?'1':'0'); } catch(e){}
+}
+function restoreSidebarState() {
+  try {
+    const v = localStorage.getItem('dif-sidebar-collapsed');
+    if (v === '1') document.querySelector('.sidebar').classList.add('collapsed');
+    // On mobile, auto-collapse
+    if (window.innerWidth <= 768) document.querySelector('.sidebar').classList.add('collapsed');
+  } catch(e){}
+}
+
 // ════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════
-async function init() {
-  await loadState();
+restoreSidebarState();
+loadState();
 
-  document.querySelectorAll('.modal-overlay').forEach(el=>{
-    el.addEventListener('click',e=>{ if(e.target===el) el.classList.add('hidden'); });
+document.querySelectorAll('.color-opt').forEach(function(el) {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.color-opt').forEach(function(e) { e.classList.remove('selected'); });
+    el.classList.add('selected');
+    selectedColor = el.dataset.color;
   });
-  document.querySelectorAll('.color-opt').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('.color-opt').forEach(e => e.classList.remove('selected'));
-      el.classList.add('selected');
-      selectedColor = el.dataset.color;
-    });
-  });
+});
 
-  const saved = loadCurrent();
-  if (saved) {
-    currentUser = saved;
-    bootApp();
-  } else {
-    document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('mainApp').style.display = 'none';
-  }
+var saved = loadCurrent();
+if (saved) {
+  currentUser = saved;
+  bootApp();
+} else {
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('mainApp').style.display = 'none';
 }
-init();
 </script>
 </body>
 </html>
