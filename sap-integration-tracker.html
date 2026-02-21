@@ -841,6 +841,8 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ════════════════════════════════════════════════════════
 // STATE
@@ -874,29 +876,88 @@ let state = {
 let currentUser = null; // { id, name, email, role, perms }
 
 // ════════════════════════════════════════════════════════
-// PERSISTENCE
+// FIREBASE + PERSISTENCE (dual-mode)
 // ════════════════════════════════════════════════════════
+var db = null;
+var useFirebase = false;
+try {
+  if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyChuDvScJOQ0GoPF3DOjgFwd2OnERe02R0",
+      authDomain: "integration-tracker-90e23.firebaseapp.com",
+      projectId: "integration-tracker-90e23",
+      storageBucket: "integration-tracker-90e23.firebasestorage.app",
+      messagingSenderId: "985067859324",
+      appId: "1:985067859324:web:2d6e6ce68f5155869b88f9"
+    });
+    db = firebase.firestore();
+    useFirebase = true;
+    console.log('Firebase connected');
+  }
+} catch(e) { console.warn('Firebase unavailable, using localStorage fallback', e); }
+if (!useFirebase) console.log('Running in offline/localStorage mode');
+
 function loadState() {
+  if (useFirebase) {
+    return db.collection('appdata').doc('main').get().then(function(snap) {
+      if (snap.exists) state = Object.assign(state, snap.data());
+      ensureDefaults();
+    }).catch(function(e) {
+      console.error('Firebase load error:', e);
+      loadFromLocalStorage();
+    });
+  } else {
+    loadFromLocalStorage();
+    return Promise.resolve();
+  }
+}
+function loadFromLocalStorage() {
   try {
-    const s = localStorage.getItem('dif-tracker-v4');
-    if (s) state = JSON.parse(s);
-    if (!state.projects)        state.projects = [];
-    if (!state.interfaces)      state.interfaces = [];
-    if (!state.timeLogs)        state.timeLogs = [];
-    if (!state.openPoints)      state.openPoints = [];
-    if (!state.validationChecks) state.validationChecks = {};
-    if (!state.difTemplates || !state.difTemplates.length) state.difTemplates = defaultTemplates();
-    if (!state.users)           state.users = [];
-    if (!state.accessRequests)  state.accessRequests = [];
-    // Ensure Cédric's admin account always exists
-    if (!state.users.find(u => u.email.toLowerCase() === 'cedric.baert@delaware.pro')) {
-      state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:'Tie2eiha3759', role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
-      saveState();
-    }
-  } catch(e) { console.error(e); }
+    var s = localStorage.getItem('dif-tracker-v4');
+    if (s) state = Object.assign(state, JSON.parse(s));
+  } catch(e) {}
+  ensureDefaults();
+}
+function ensureDefaults() {
+  if (!state.projects)         state.projects = [];
+  if (!state.interfaces)       state.interfaces = [];
+  if (!state.timeLogs)         state.timeLogs = [];
+  if (!state.openPoints)       state.openPoints = [];
+  if (!state.validationChecks) state.validationChecks = {};
+  if (!state.difTemplates || !state.difTemplates.length) state.difTemplates = defaultTemplates();
+  if (!state.users)            state.users = [];
+  if (!state.accessRequests)   state.accessRequests = [];
+  if (!state.users.find(function(u) { return u.email.toLowerCase() === 'cedric.baert@delaware.pro'; })) {
+    state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:'Tie2eiha3759', role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
+    saveState();
+  }
 }
 function saveState() {
-  try { localStorage.setItem('dif-tracker-v4', JSON.stringify(state)); } catch(e) {}
+  try {
+    var clean = JSON.parse(JSON.stringify(state));
+    delete clean.activeView;
+    delete clean.activeProject;
+    if (useFirebase) {
+      db.collection('appdata').doc('main').set(clean).catch(function(e) { console.error('Firebase save error:', e); });
+    }
+    // Always save to localStorage as backup
+    localStorage.setItem('dif-tracker-v4', JSON.stringify(state));
+  } catch(e) { console.error('Save error:', e); }
+}
+function startRealtimeSync() {
+  if (!useFirebase) return;
+  db.collection('appdata').doc('main').onSnapshot(function(snap) {
+    if (!snap.exists) return;
+    var data = snap.data();
+    var activeProject = state.activeProject;
+    var activeView = state.activeView;
+    state = Object.assign(state, data, {activeProject: activeProject, activeView: activeView});
+    if (currentUser) {
+      renderAll();
+      if (state.activeView === 'users') renderUsers();
+      updateReqNotification();
+    }
+  });
 }
 function saveCurrent() {
   try { if(currentUser) localStorage.setItem('dif-current-v4', JSON.stringify({id:currentUser.id})); } catch(e) {}
@@ -977,6 +1038,7 @@ function bootApp() {
   else if (state.projects.length) selectProject(state.projects[0].id);
   setView(state.activeView || 'dashboard');
   updateReqNotification();
+  startRealtimeSync();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1946,24 +2008,24 @@ function restoreSidebarState() {
 // INIT
 // ════════════════════════════════════════════════════════
 restoreSidebarState();
-loadState();
-
-document.querySelectorAll('.color-opt').forEach(function(el) {
-  el.addEventListener('click', function() {
-    document.querySelectorAll('.color-opt').forEach(function(e) { e.classList.remove('selected'); });
-    el.classList.add('selected');
-    selectedColor = el.dataset.color;
+loadState().then(function() {
+  document.querySelectorAll('.color-opt').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.color-opt').forEach(function(e) { e.classList.remove('selected'); });
+      el.classList.add('selected');
+      selectedColor = el.dataset.color;
+    });
   });
-});
 
-var saved = loadCurrent();
-if (saved) {
-  currentUser = saved;
-  bootApp();
-} else {
-  document.getElementById('loginOverlay').classList.remove('hidden');
-  document.getElementById('mainApp').style.display = 'none';
-}
+  var saved = loadCurrent();
+  if (saved) {
+    currentUser = saved;
+    bootApp();
+  } else {
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('mainApp').style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
