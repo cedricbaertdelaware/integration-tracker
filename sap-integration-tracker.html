@@ -261,7 +261,17 @@
 <div id="loadingScreen" style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300;gap:16px;">
   <div style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--accent);text-transform:uppercase">Integration Tracker</div>
   <div id="loadingMsg" style="font-size:13px;color:var(--text-muted)">Loading…</div>
-  <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <div id="loadingSpinner" style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <!-- Error panel (hidden by default) -->
+  <div id="loadingError" style="display:none;max-width:460px;background:var(--surface);border:1px solid var(--red);border-radius:10px;padding:24px;text-align:left;margin-top:8px;">
+    <div style="color:var(--red);font-weight:600;margin-bottom:8px;font-size:14px">⚠ Could not connect to the database</div>
+    <div id="loadingErrorMsg" style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-family:var(--mono);word-break:break-all;line-height:1.6"></div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">
+      Most likely cause: <b style="color:var(--text)">Firestore security rules not published yet.</b><br><br>
+      Go to <b style="color:var(--accent)">Firebase Console → Firestore Database → Rules</b> and make sure you clicked <b style="color:var(--text)">Publish</b> after pasting the rules.
+    </div>
+    <button onclick="location.reload()" style="background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:13px">↺ Retry</button>
+  </div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
@@ -784,14 +794,24 @@ let currentUser = null;
 function showLoadingScreen(msg) {
   document.getElementById('loadingMsg').textContent = msg || 'Loading…';
   document.getElementById('loadingScreen').style.display = 'flex';
+  document.getElementById('loadingError').style.display = 'none';
+  document.getElementById('loadingSpinner').style.display = 'block';
 }
 function hideLoadingScreen() {
   document.getElementById('loadingScreen').style.display = 'none';
+}
+function showErrorScreen(err) {
+  document.getElementById('loadingScreen').style.display = 'flex';
+  document.getElementById('loadingSpinner').style.display = 'none';
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('loadingErrorMsg').textContent = err ? (err.code ? `Error code: ${err.code}` : err.message || String(err)) : 'Unknown error';
+  document.getElementById('loadingError').style.display = 'block';
 }
 
 async function loadState() {
   showLoadingScreen('Connecting to database…');
   try {
+    showLoadingScreen('Loading data…');
     const snap = await getDoc(doc(db, 'appdata', 'main'));
     if (snap.exists()) {
       const data = snap.data();
@@ -808,6 +828,7 @@ async function loadState() {
     if (!state.accessRequests)   state.accessRequests = [];
     // Ensure Cédric's admin account always exists
     if (!state.users.find(u => u.email.toLowerCase() === 'cedric.baert@delaware.pro')) {
+      showLoadingScreen('Setting up admin account…');
       const hashed = await hashPassword('Tie2eiha3759');
       plainPasswordStore[1] = 'Tie2eiha3759';
       state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:hashed, role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
@@ -821,7 +842,9 @@ async function loadState() {
     if (needsMigration) await saveState();
   } catch(e) {
     console.error('Firebase load error:', e);
-    alert('Could not connect to the database. Check your internet connection and try again.');
+    hideLoadingScreen();
+    showErrorScreen(e);
+    return;
   }
   hideLoadingScreen();
 }
