@@ -261,17 +261,7 @@
 <div id="loadingScreen" style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:300;gap:16px;">
   <div style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--accent);text-transform:uppercase">Integration Tracker</div>
   <div id="loadingMsg" style="font-size:13px;color:var(--text-muted)">Loading…</div>
-  <div id="loadingSpinner" style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-  <!-- Error panel (hidden by default) -->
-  <div id="loadingError" style="display:none;max-width:460px;background:var(--surface);border:1px solid var(--red);border-radius:10px;padding:24px;text-align:left;margin-top:8px;">
-    <div style="color:var(--red);font-weight:600;margin-bottom:8px;font-size:14px">⚠ Could not connect to the database</div>
-    <div id="loadingErrorMsg" style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-family:var(--mono);word-break:break-all;line-height:1.6"></div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">
-      Most likely cause: <b style="color:var(--text)">Firestore security rules not published yet.</b><br><br>
-      Go to <b style="color:var(--accent)">Firebase Console → Firestore Database → Rules</b> and make sure you clicked <b style="color:var(--text)">Publish</b> after pasting the rules.
-    </div>
-    <button onclick="location.reload()" style="background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:13px">↺ Retry</button>
-  </div>
+  <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
@@ -738,9 +728,9 @@
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 
 const firebaseConfig = {
   apiKey: "AIzaSyChuDvScJOQ0GoPF3DOjgFwd2OnERe02R0",
@@ -752,8 +742,17 @@ const firebaseConfig = {
   measurementId: "G-YNGWT3EKNB"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
+let db = null;
+let useFirebase = false;
+try {
+  if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    useFirebase = true;
+    console.log('Firebase connected');
+  }
+} catch(e) { console.warn('Firebase unavailable, using localStorage fallback', e); }
+if (!useFirebase) console.log('Running in offline/localStorage mode');
 
 // ════════════════════════════════════════════════════════
 // STATE
@@ -794,28 +793,26 @@ let currentUser = null;
 function showLoadingScreen(msg) {
   document.getElementById('loadingMsg').textContent = msg || 'Loading…';
   document.getElementById('loadingScreen').style.display = 'flex';
-  document.getElementById('loadingError').style.display = 'none';
-  document.getElementById('loadingSpinner').style.display = 'block';
 }
 function hideLoadingScreen() {
   document.getElementById('loadingScreen').style.display = 'none';
 }
-function showErrorScreen(err) {
-  document.getElementById('loadingScreen').style.display = 'flex';
-  document.getElementById('loadingSpinner').style.display = 'none';
-  document.getElementById('loadingMsg').style.display = 'none';
-  document.getElementById('loadingErrorMsg').textContent = err ? (err.code ? `Error code: ${err.code}` : err.message || String(err)) : 'Unknown error';
-  document.getElementById('loadingError').style.display = 'block';
-}
 
 async function loadState() {
-  showLoadingScreen('Connecting to database…');
+  showLoadingScreen('Connecting…');
   try {
-    showLoadingScreen('Loading data…');
-    const snap = await getDoc(doc(db, 'appdata', 'main'));
-    if (snap.exists()) {
-      const data = snap.data();
-      state = { ...state, ...data };
+    if (useFirebase) {
+      const snap = await db.collection('appdata').doc('main').get();
+      if (snap.exists) {
+        const data = snap.data();
+        state = { ...state, ...data };
+      }
+    } else {
+      // localStorage fallback
+      const raw = localStorage.getItem('dif-tracker-state');
+      if (raw) {
+        try { state = { ...state, ...JSON.parse(raw) }; } catch(e) {}
+      }
     }
     // Ensure arrays/defaults
     if (!state.projects)         state.projects = [];
@@ -828,7 +825,6 @@ async function loadState() {
     if (!state.accessRequests)   state.accessRequests = [];
     // Ensure Cédric's admin account always exists
     if (!state.users.find(u => u.email.toLowerCase() === 'cedric.baert@delaware.pro')) {
-      showLoadingScreen('Setting up admin account…');
       const hashed = await hashPassword('Tie2eiha3759');
       plainPasswordStore[1] = 'Tie2eiha3759';
       state.users.unshift({ id:1, name:'Cédric Baert', email:'cedric.baert@delaware.pro', password:hashed, role:'admin', perms: ROLE_DEFAULTS.admin, active:true, created: new Date().toISOString() });
@@ -841,31 +837,33 @@ async function loadState() {
     }
     if (needsMigration) await saveState();
   } catch(e) {
-    console.error('Firebase load error:', e);
-    hideLoadingScreen();
-    showErrorScreen(e);
-    return;
+    console.error('Load error:', e);
+    if (useFirebase) alert('Could not connect to the database. Check your internet connection and try again.');
   }
   hideLoadingScreen();
 }
 
 async function saveState() {
   try {
-    // Firestore doesn't allow undefined values — strip them
+    // Strip undefined values
     const clean = JSON.parse(JSON.stringify(state));
-    // Don't persist activeView/activeProject — those are per-user
     delete clean.activeView;
     delete clean.activeProject;
-    await setDoc(doc(db, 'appdata', 'main'), clean);
+    if (useFirebase) {
+      await db.collection('appdata').doc('main').set(clean);
+    } else {
+      localStorage.setItem('dif-tracker-state', JSON.stringify(clean));
+    }
   } catch(e) {
-    console.error('Firebase save error:', e);
+    console.error('Save error:', e);
   }
 }
 
 // Listen for real-time updates from other users
 function startRealtimeSync() {
-  onSnapshot(doc(db, 'appdata', 'main'), (snap) => {
-    if (!snap.exists()) return;
+  if (!useFirebase) return; // No realtime sync in localStorage mode
+  db.collection('appdata').doc('main').onSnapshot((snap) => {
+    if (!snap.exists) return;
     const data = snap.data();
     // Merge remote data but preserve local navigation state
     const activeProject = state.activeProject;
@@ -922,7 +920,7 @@ function doLogout() {
 function showLoginForm()   { document.getElementById('loginForm').classList.remove('hidden');   document.getElementById('requestForm').classList.add('hidden'); }
 function showRequestForm() { document.getElementById('requestForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); }
 
-async async function submitAccessRequest() {
+async function submitAccessRequest() {
   const name   = document.getElementById('req-name').value.trim();
   const email  = document.getElementById('req-email').value.trim();
   const reason = document.getElementById('req-reason').value.trim();
@@ -1078,7 +1076,7 @@ function renderProjectList() {
   });
 }
 
-function selectProject(id) {
+async function selectProject(id) {
   state.activeProject = id;
   await saveState();
   const p = state.projects.find(x => x.id === id);
@@ -1594,42 +1592,6 @@ function closeModal(name) { document.getElementById('modal-'+name).classList.add
 // ════════════════════════════════════════════════════════
 async function init() {
   await loadState();
-  // Expose functions to global scope since we're in a module
-  window.doLogin = doLogin;
-  window.doLogout = doLogout;
-  window.showLoginForm = showLoginForm;
-  window.showRequestForm = showRequestForm;
-  window.submitAccessRequest = submitAccessRequest;
-  window.openModal = openModal;
-  window.closeModal = closeModal;
-  window.saveProject = saveProject;
-  window.saveInterface = saveInterface;
-  window.updateIfStatus = updateIfStatus;
-  window.deleteIf = deleteIf;
-  window.saveTimeEntry = saveTimeEntry;
-  window.deleteTime = deleteTime;
-  window.filterOP = filterOP;
-  window.saveOpenPoint = saveOpenPoint;
-  window.resolveOP = resolveOP;
-  window.deleteOP = deleteOP;
-  window.toggleCheck = toggleCheck;
-  window.openAddTemplate = openAddTemplate;
-  window.editTemplate = editTemplate;
-  window.saveTemplate = saveTemplate;
-  window.deleteTemplate = deleteTemplate;
-  window.openAddUser = openAddUser;
-  window.editUser = editUser;
-  window.saveUser = saveUser;
-  window.deleteUser = deleteUser;
-  window.openApproveRequest = openApproveRequest;
-  window.approveRequest = approveRequest;
-  window.denyRequest = denyRequest;
-  window.selectProject = selectProject;
-  window.togglePwVisibility = togglePwVisibility;
-  window.generatePassword = generatePassword;
-  window.updatePermCheckboxes = updatePermCheckboxes;
-  window.updateARPermCheckboxes = updateARPermCheckboxes;
-  window.applyHL = applyHL;
 
   document.querySelectorAll('.modal-overlay').forEach(el=>{
     el.addEventListener('click',e=>{ if(e.target===el) el.classList.add('hidden'); });
@@ -1651,7 +1613,6 @@ async function init() {
     document.getElementById('mainApp').style.display = 'none';
   }
 }
-
 init();
 </script>
 </body>
