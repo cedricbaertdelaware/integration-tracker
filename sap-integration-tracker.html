@@ -192,13 +192,26 @@
   .btn-danger:hover{border-color:var(--red);}
   .btn-success{background:var(--green-dim);color:var(--green);border:1px solid transparent;}
   .btn-success:hover{border-color:var(--green);}
-  .btn-sm{padding:4px 10px;font-size:11px;}
+  .btn-edit{background:var(--accent-dim);color:var(--accent);border:1px solid transparent;}
+  .btn-edit:hover{border-color:var(--accent);}
+  .btn-sm{padding:4px 10px;font-size:11px;margin-left:3px;}
+  .btn-sm:first-child{margin-left:0;}
+
+  /* FILTER BAR */
+  .filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+  .filter-bar label{font-size:10px;margin-bottom:0;white-space:nowrap;}
+  .filter-bar select,.filter-bar input{padding:5px 8px;font-size:12px;min-width:0;width:auto;max-width:160px;}
+  .filter-bar input[type=text]{max-width:180px;}
+  .filter-group{display:flex;align-items:center;gap:4px;}
+  .sort-btn{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:3px;transition:color .15s;}
+  .sort-btn:hover,.sort-btn.active{color:var(--accent);}
 
   /* FORM */
   .form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
   .form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;}
   .form-group.small{flex:0 0 auto;min-width:100px;}
   label{font-size:11px;color:var(--text-muted);font-family:var(--mono);letter-spacing:.05em;}
+  .req{color:var(--red);margin-left:2px;font-weight:700;}
   input,select,textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:5px;font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s;width:100%;}
   input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   select option{background:var(--surface2);}
@@ -340,11 +353,11 @@
       <div class="login-title">Sign in</div>
       <div class="login-error" id="loginError"></div>
       <div class="form-group" style="margin-bottom:12px">
-        <label>Email</label>
+        <label>Email<span class="req">*</span></label>
         <input id="login-email" type="email" placeholder="cedric.baert@delaware.pro" onkeydown="if(event.key==='Enter')doLogin()" />
       </div>
       <div class="form-group" style="margin-bottom:20px">
-        <label>Password</label>
+        <label>Password<span class="req">*</span></label>
         <input id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
       </div>
       <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign In</button>
@@ -357,11 +370,11 @@
       <div class="login-error" id="requestError"></div>
       <div class="login-success" id="requestSuccess"></div>
       <div class="form-group" style="margin-bottom:12px">
-        <label>Full Name</label>
+        <label>Full Name<span class="req">*</span></label>
         <input id="req-name" placeholder="Your full name" />
       </div>
       <div class="form-group" style="margin-bottom:12px">
-        <label>Email</label>
+        <label>Email<span class="req">*</span></label>
         <input id="req-email" type="email" placeholder="your.email@company.com" />
       </div>
       <div class="form-group" style="margin-bottom:20px">
@@ -433,6 +446,7 @@
         <button class="btn btn-secondary btn-sm" id="btn-logTime" onclick="openModal('logTime')">＋ Log Time</button>
         <button class="btn btn-secondary btn-sm" id="btn-addInterface" onclick="openModal('addInterface')">＋ Interface</button>
         <button class="btn btn-primary btn-sm" id="btn-addOpenPoint" onclick="openModal('addOpenPoint')">＋ Open Point</button>
+        <button class="btn btn-danger btn-sm" id="btn-deleteProject" onclick="deleteProject()" title="Delete this project">🗑 Project</button>
       </div>
     </div>
 
@@ -468,6 +482,12 @@
           <span class="section-title">All Interfaces</span>
           <button class="btn btn-primary btn-sm" id="ifAddBtn" onclick="openModal('addInterface')">＋ Add Interface</button>
         </div>
+        <div class="filter-bar">
+          <div class="filter-group"><label>Status</label><select id="flt-if-status" onchange="renderInterfaces()"><option value="">All</option><option value="spec">Spec</option><option value="dev">Dev</option><option value="review">Review</option><option value="done">Done</option><option value="parked">Parked</option><option value="blocked">Blocked</option></select></div>
+          <div class="filter-group"><label>Priority</label><select id="flt-if-priority" onchange="renderInterfaces()"><option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+          <div class="filter-group"><label>Search</label><input type="text" id="flt-if-search" placeholder="Name, ID..." oninput="renderInterfaces()"/></div>
+          <div class="filter-group"><label>Sort</label><select id="flt-if-sort" onchange="renderInterfaces()"><option value="id">ID</option><option value="name">Name</option><option value="status">Status</option><option value="priority">Priority</option><option value="hours">Hours ↓</option></select></div>
+        </div>
         <div class="table-wrap">
           <table><thead><tr>
             <th>ID</th><th>Name</th><th>Source</th><th>Target</th><th>dIF Template</th>
@@ -483,6 +503,13 @@
           <button class="btn btn-primary btn-sm" onclick="openModal('logTime')">＋ Log Time</button>
         </div>
         <div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="timeStats"></div>
+        <div class="filter-bar">
+          <div class="filter-group"><label>Person</label><select id="flt-tl-person" onchange="renderTimeLog()"><option value="">All</option></select></div>
+          <div class="filter-group"><label>Role</label><select id="flt-tl-role" onchange="renderTimeLog()"><option value="">All</option><option>Architect</option><option>Developer</option><option>Test Lead</option><option>PM</option><option>Functional</option></select></div>
+          <div class="filter-group"><label>Phase</label><select id="flt-tl-phase" onchange="renderTimeLog()"><option value="">All</option><option>Spec Writing</option><option>Development</option><option>Unit Test</option><option>Integration Test</option><option>Review</option><option>Fix / Rework</option><option>Documentation</option><option>Meeting</option><option>Other</option></select></div>
+          <div class="filter-group"><label>Interface</label><select id="flt-tl-iface" onchange="renderTimeLog()"><option value="">All</option></select></div>
+          <div class="filter-group"><label>Sort</label><select id="flt-tl-sort" onchange="renderTimeLog()"><option value="date-desc">Date ↓</option><option value="date-asc">Date ↑</option><option value="hours-desc">Hours ↓</option><option value="hours-asc">Hours ↑</option><option value="person">Person</option></select></div>
+        </div>
         <div class="table-wrap">
           <table><thead><tr><th>Date</th><th>Person</th><th>Role</th><th>Interface</th><th>Phase</th><th>Hours</th><th>Description</th><th></th></tr></thead>
           <tbody id="timeTableBody"></tbody></table>
@@ -493,12 +520,14 @@
       <div id="view-openpoints" style="display:none">
         <div class="section-header">
           <span class="section-title">Open Points &amp; Decisions</span>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-secondary btn-sm" onclick="filterOP('all')" id="opf-all">All</button>
-            <button class="btn btn-ghost btn-sm" onclick="filterOP('open')" id="opf-open">Open</button>
-            <button class="btn btn-ghost btn-sm" onclick="filterOP('resolved')" id="opf-resolved">Resolved</button>
-            <button class="btn btn-primary btn-sm" onclick="openModal('addOpenPoint')">＋ Add</button>
-          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addOpenPoint')">＋ Add</button>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-group"><label>Status</label><select id="flt-op-status" onchange="renderOpenPoints()"><option value="">All</option><option value="open">Open</option><option value="resolved">Resolved</option></select></div>
+          <div class="filter-group"><label>Priority</label><select id="flt-op-priority" onchange="renderOpenPoints()"><option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+          <div class="filter-group"><label>Owner</label><select id="flt-op-owner" onchange="renderOpenPoints()"><option value="">All</option></select></div>
+          <div class="filter-group"><label>Interface</label><select id="flt-op-iface" onchange="renderOpenPoints()"><option value="">All</option></select></div>
+          <div class="filter-group"><label>Sort</label><select id="flt-op-sort" onchange="renderOpenPoints()"><option value="priority">Priority</option><option value="date-desc">Newest</option><option value="date-asc">Oldest</option><option value="due">Due date</option><option value="owner">Owner</option></select></div>
         </div>
         <div id="opList"></div>
       </div>
@@ -507,6 +536,11 @@
       <div id="view-validation" style="display:none">
         <div class="section-header">
           <span class="section-title">Validation Checklists</span>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-group"><label>Status</label><select id="flt-val-status" onchange="renderValidation()"><option value="">All</option><option value="incomplete">Incomplete</option><option value="complete">Complete</option></select></div>
+          <div class="filter-group"><label>Search</label><input type="text" id="flt-val-search" placeholder="Interface name..." oninput="renderValidation()"/></div>
+          <div class="filter-group"><label>Sort</label><select id="flt-val-sort" onchange="renderValidation()"><option value="id">ID</option><option value="progress-asc">Progress ↑</option><option value="progress-desc">Progress ↓</option><option value="name">Name</option></select></div>
         </div>
         <div id="validationContent"></div>
       </div>
@@ -552,7 +586,7 @@
   <div class="modal">
     <div class="modal-title">New Project <button class="modal-close" onclick="closeModal('addProject')">×</button></div>
     <div class="form-row">
-      <div class="form-group"><label>Customer Name</label><input id="proj-name" placeholder="e.g. Turbo's Hoet"/></div>
+      <div class="form-group"><label>Customer Name<span class="req">*</span></label><input id="proj-name" placeholder="e.g. Turbo's Hoet"/></div>
       <div class="form-group small"><label>Code</label><input id="proj-code" placeholder="THT" maxlength="5"/></div>
     </div>
     <div class="form-row"><div class="form-group"><label>Description</label><input id="proj-desc" placeholder="S/4HANA Public Cloud migration"/></div></div>
@@ -583,12 +617,12 @@
   <div class="modal">
     <div class="modal-title">Add Interface <button class="modal-close" onclick="closeModal('addInterface')">×</button></div>
     <div class="form-row">
-      <div class="form-group small"><label>Interface ID</label><input id="if-id" placeholder="CP011-IF001"/></div>
-      <div class="form-group"><label>Interface Name</label><input id="if-name" placeholder="BTS to SAP Stock List"/></div>
+      <div class="form-group small"><label>Interface ID<span class="req">*</span></label><input id="if-id" placeholder="CP011-IF001"/></div>
+      <div class="form-group"><label>Interface Name<span class="req">*</span></label><input id="if-name" placeholder="BTS to SAP Stock List"/></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Source System</label><input id="if-source" placeholder="BTS"/></div>
-      <div class="form-group"><label>Target System</label><input id="if-target" placeholder="SAP S/4HANA"/></div>
+      <div class="form-group"><label>Source System<span class="req">*</span></label><input id="if-source" placeholder="BTS"/></div>
+      <div class="form-group"><label>Target System<span class="req">*</span></label><input id="if-target" placeholder="SAP S/4HANA"/></div>
     </div>
     <div class="form-row">
       <div class="form-group small"><label>dIF Template</label><select id="if-dif"></select></div>
@@ -627,16 +661,16 @@
   <div class="modal">
     <div class="modal-title">Log Time <button class="modal-close" onclick="closeModal('logTime')">×</button></div>
     <div class="form-row">
-      <div class="form-group"><label>Person</label><input id="tl-person" placeholder="Your name"/></div>
+      <div class="form-group"><label>Person</label><input id="tl-person" readonly style="opacity:.7;cursor:not-allowed"/></div>
       <div class="form-group small"><label>Role</label><select id="tl-role"><option>Architect</option><option>Developer</option><option>Test Lead</option><option>PM</option><option>Functional</option></select></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Interface</label><select id="tl-interface"></select></div>
+      <div class="form-group"><label>Interface<span class="req">*</span></label><select id="tl-interface"></select></div>
       <div class="form-group small"><label>Phase</label><select id="tl-phase"><option>Spec Writing</option><option>Development</option><option>Unit Test</option><option>Integration Test</option><option>Review</option><option>Fix / Rework</option><option>Documentation</option><option>Meeting</option><option>Other</option></select></div>
     </div>
     <div class="form-row">
-      <div class="form-group small"><label>Date</label><input type="date" id="tl-date"/></div>
-      <div class="form-group small"><label>Hours</label><input type="number" id="tl-hours" min="0.25" max="24" step="0.25" placeholder="1.5"/></div>
+      <div class="form-group small"><label>Date<span class="req">*</span></label><input type="date" id="tl-date"/></div>
+      <div class="form-group small"><label>Hours<span class="req">*</span></label><input type="number" id="tl-hours" min="0.25" max="24" step="0.25" placeholder="1.5"/></div>
     </div>
     <div class="form-row"><div class="form-group"><label>Description</label>
       <div class="rte-wrap"><div class="rte-toolbar">
@@ -662,10 +696,10 @@
   <div class="modal">
     <div class="modal-title">Add Open Point <button class="modal-close" onclick="closeModal('addOpenPoint')">×</button></div>
     <div class="form-row">
-      <div class="form-group"><label>Interface (optional)</label><select id="op-interface"><option value="">— Project level —</option></select></div>
+      <div class="form-group"><label>Interface<span class="req">*</span></label><select id="op-interface"><option value="">— Select interface —</option></select></div>
       <div class="form-group small"><label>Priority</label><select id="op-priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
     </div>
-    <div class="form-row"><div class="form-group"><label>Description / Question</label>
+    <div class="form-row"><div class="form-group"><label>Description / Question<span class="req">*</span></label>
       <div class="rte-wrap"><div class="rte-toolbar">
         <button class="rte-btn" onmousedown="event.preventDefault();document.execCommand('bold')"><b>B</b></button>
         <button class="rte-btn" onmousedown="event.preventDefault();document.execCommand('italic')"><i>I</i></button>
@@ -693,8 +727,8 @@
   <div class="modal" style="width:580px">
     <div class="modal-title">Template &nbsp;<span id="tmpl-modal-id-display" style="font-family:var(--mono);color:var(--accent);font-size:13px"></span><button class="modal-close" onclick="closeModal('addTemplate')">×</button></div>
     <div class="form-row">
-      <div class="form-group small"><label>Code</label><input id="tmpl-code" placeholder="TF001" maxlength="10"/></div>
-      <div class="form-group"><label>Name</label><input id="tmpl-name" placeholder="Async One-Way"/></div>
+      <div class="form-group small"><label>Code<span class="req">*</span></label><input id="tmpl-code" placeholder="TF001" maxlength="10"/></div>
+      <div class="form-group"><label>Name<span class="req">*</span></label><input id="tmpl-name" placeholder="Async One-Way"/></div>
       <div class="form-group small"><label>Version</label><input id="tmpl-ver" placeholder="1.5.2"/></div>
     </div>
     <div class="form-row"><div class="form-group"><label>Short Description</label><input id="tmpl-short" placeholder="Asynchronous one-way message processing..."/></div></div>
@@ -732,12 +766,12 @@
   <div class="modal" style="width:560px">
     <div class="modal-title"><span id="userModalTitle">Add User</span><button class="modal-close" onclick="closeModal('addUser')">×</button></div>
     <div class="form-row">
-      <div class="form-group"><label>Full Name</label><input id="u-name" placeholder="Cédric Baert"/></div>
-      <div class="form-group"><label>Email</label><input id="u-email" type="email" placeholder="cedric.baert@delaware.pro"/></div>
+      <div class="form-group"><label>Full Name<span class="req">*</span></label><input id="u-name" placeholder="Cédric Baert"/></div>
+      <div class="form-group"><label>Email<span class="req">*</span></label><input id="u-email" type="email" placeholder="cedric.baert@delaware.pro"/></div>
     </div>
     <div class="form-row" style="align-items:flex-end">
       <div class="form-group">
-        <label>Password</label>
+        <label>Password<span class="req">*</span></label>
         <div style="display:flex;gap:6px">
           <input id="u-password" type="password" placeholder="Set a password" style="flex:1"/>
           <button type="button" class="btn btn-secondary btn-sm" onclick="togglePwVisibility('u-password','u-pw-eye')" id="u-pw-eye" title="Show/hide password" style="flex-shrink:0;padding:7px 10px">👁</button>
@@ -779,7 +813,7 @@
     <div class="modal-title">Approve Access Request<button class="modal-close" onclick="closeModal('approveRequest')">×</button></div>
     <div id="approveRequestInfo" style="background:var(--surface2);border-radius:6px;padding:12px;margin-bottom:16px;font-size:13px;"></div>
     <div class="form-row">
-      <div class="form-group"><label>Password for this user</label><input id="ar-password" type="password" placeholder="Set initial password"/></div>
+      <div class="form-group"><label>Password for this user<span class="req">*</span></label><input id="ar-password" type="password" placeholder="Set initial password"/></div>
       <div class="form-group small"><label>Role</label>
         <select id="ar-role" onchange="updateARPermCheckboxes()">
           <option value="admin">Admin</option>
@@ -958,10 +992,10 @@ function generatePassword() {
   for (let i = 0; i < 12; i++) pw += chars[Math.floor(Math.random() * chars.length)];
   const input = document.getElementById('u-password');
   input.value = pw;
-  input.type = 'text';
-  document.getElementById('u-pw-eye').style.color = 'var(--accent)';
+  input.type = 'password';
+  document.getElementById('u-pw-eye').style.color = '';
   const hint = document.getElementById('u-pw-hint');
-  hint.textContent = '← Copy this password before saving';
+  hint.textContent = 'Password generated — click 👁 to reveal and copy before saving';
   hint.style.display = 'block';
 }
 // ════════════════════════════════════════════════════════
@@ -986,6 +1020,7 @@ function applyRBAC() {
   const canWriteTL = canWrite('timelog');
   const canWriteOP = canWrite('openpoints');
   document.getElementById('btnAddProject').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btn-deleteProject').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-addInterface').style.display = canWriteIF ? '' : 'none';
   document.getElementById('btn-logTime').style.display = canWriteTL ? '' : 'none';
   document.getElementById('btn-addOpenPoint').style.display = canWriteOP ? '' : 'none';
@@ -1073,20 +1108,96 @@ function saveProject() {
   ['proj-name','proj-code','proj-desc'].forEach(id => document.getElementById(id).value='');
 }
 
+var deleteProjectArmed = false;
+function deleteProject() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  if (!state.activeProject) return;
+  var p = state.projects.find(function(x) { return x.id === state.activeProject; });
+  if (!p) return;
+  var btn = document.getElementById('btn-deleteProject');
+  if (!deleteProjectArmed) {
+    // First click — arm the button
+    deleteProjectArmed = true;
+    var ifCount = state.interfaces.filter(function(i) { return i.projectId === p.id; }).length;
+    btn.textContent = ifCount > 0 ? '⚠ Confirm delete (' + ifCount + ' interfaces)' : '⚠ Confirm delete';
+    btn.style.borderColor = 'var(--red)';
+    // Auto-disarm after 4 seconds
+    setTimeout(function() {
+      deleteProjectArmed = false;
+      btn.textContent = '🗑 Project';
+      btn.style.borderColor = '';
+    }, 4000);
+    return;
+  }
+  // Second click — execute deletion
+  deleteProjectArmed = false;
+  btn.textContent = '🗑 Project';
+  btn.style.borderColor = '';
+  var pid = p.id;
+  state.interfaces = state.interfaces.filter(function(i) { return i.projectId !== pid; });
+  state.timeLogs = state.timeLogs.filter(function(t) { return t.projectId !== pid; });
+  state.openPoints = state.openPoints.filter(function(o) { return o.projectId !== pid; });
+  var keepKeys = {};
+  Object.keys(state.validationChecks).forEach(function(k) {
+    var ifId = k.split('__')[0];
+    if (state.interfaces.find(function(i) { return String(i.id) === ifId; })) keepKeys[k] = state.validationChecks[k];
+  });
+  state.validationChecks = keepKeys;
+  state.projects = state.projects.filter(function(x) { return x.id !== pid; });
+  state.activeProject = state.projects.length ? state.projects[0].id : null;
+  saveState();
+  if (state.activeProject) {
+    selectProject(state.activeProject);
+  } else {
+    document.getElementById('topbarProject').textContent = 'Select a project';
+    document.getElementById('topbarBadge').style.display = 'none';
+  }
+  renderProjectList();
+  renderAll();
+}
+
 // ════════════════════════════════════════════════════════
 // INTERFACES
 // ════════════════════════════════════════════════════════
+function editInterface(id) {
+  var i = state.interfaces.find(function(x){return x.id===id;}); if(!i) return;
+  document.getElementById('if-id').value = i.ifId||'';
+  document.getElementById('if-name').value = i.name||'';
+  document.getElementById('if-source').value = i.source||'';
+  document.getElementById('if-target').value = i.target||'';
+  document.getElementById('if-status').value = i.status||'spec';
+  document.getElementById('if-priority').value = i.priority||'medium';
+  document.getElementById('if-spec-author').value = i.specAuthor||'';
+  document.getElementById('if-dev').value = i.dev||'';
+  document.getElementById('if-notes-rte').innerHTML = i.notes||'';
+  document.getElementById('modal-addInterface').dataset.editId = id;
+  // Set dIF dropdown
+  var sel = document.getElementById('if-dif');
+  sel.innerHTML='<option value="">Select...</option>'+state.difTemplates.map(function(t){return '<option value="'+t.code+'">'+t.code+' – '+t.name+'</option>';}).join('');
+  sel.value = i.dif||'';
+  document.getElementById('modal-addInterface').classList.remove('hidden');
+}
 function saveInterface() {
   if (!state.activeProject) { alert('Select a project first'); return; }
-  const iface = { id:Date.now(), projectId:state.activeProject, ifId:document.getElementById('if-id').value.trim(), name:document.getElementById('if-name').value.trim(), source:document.getElementById('if-source').value.trim(), target:document.getElementById('if-target').value.trim(), dif:document.getElementById('if-dif').value, status:document.getElementById('if-status').value, priority:document.getElementById('if-priority').value, specAuthor:document.getElementById('if-spec-author').value.trim(), dev:document.getElementById('if-dev').value.trim(), notes:document.getElementById('if-notes-rte').innerHTML, created:new Date().toISOString() };
-  if (!iface.name) return;
-  state.interfaces.push(iface);
+  var editId = document.getElementById('modal-addInterface').dataset.editId;
+  var data = { ifId:document.getElementById('if-id').value.trim(), name:document.getElementById('if-name').value.trim(), source:document.getElementById('if-source').value.trim(), target:document.getElementById('if-target').value.trim(), dif:document.getElementById('if-dif').value, status:document.getElementById('if-status').value, priority:document.getElementById('if-priority').value, specAuthor:document.getElementById('if-spec-author').value.trim(), dev:document.getElementById('if-dev').value.trim(), notes:document.getElementById('if-notes-rte').innerHTML };
+  if (!data.name) return;
+  if (editId) {
+    var existing = state.interfaces.find(function(x){return String(x.id)===String(editId);});
+    if (existing) Object.assign(existing, data);
+  } else {
+    data.id = Date.now();
+    data.projectId = state.activeProject;
+    data.created = new Date().toISOString();
+    state.interfaces.push(data);
+  }
+  document.getElementById('modal-addInterface').dataset.editId = '';
   saveState(); closeModal('addInterface'); renderAll();
-  ['if-id','if-name','if-source','if-target','if-spec-author','if-dev'].forEach(id=>document.getElementById(id).value='');
+  ['if-id','if-name','if-source','if-target','if-spec-author','if-dev'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('if-notes-rte').innerHTML='';
 }
 function updateIfStatus(id, val) { const i=state.interfaces.find(x=>x.id===id); if(i){i.status=val;saveState();renderAll();} }
-function deleteIf(id) { if(!confirm('Delete this interface?')) return; state.interfaces=state.interfaces.filter(i=>i.id!==id); saveState(); renderAll(); }
+function deleteIf(id) { if(!currentUser||currentUser.role!=='admin'){return;} state.interfaces=state.interfaces.filter(i=>i.id!==id); saveState(); renderAll(); }
 
 // ════════════════════════════════════════════════════════
 // TIME LOG
@@ -1108,43 +1219,143 @@ function saveTimeEntry() {
   document.getElementById('tl-desc-rte').innerHTML='';
   renderAll();
 }
-function deleteTime(id) { state.timeLogs=state.timeLogs.filter(t=>t.id!==id); saveState(); renderAll(); }
+function deleteTime(id) {
+  if(!currentUser) return;
+  var entry = state.timeLogs.find(function(t){return t.id===id;});
+  if(!entry) return;
+  var isOwn = entry.person === currentUser.name;
+  var isAdmin = currentUser.role === 'admin';
+  if(!isOwn && !isAdmin) return;
+  state.timeLogs=state.timeLogs.filter(function(t){return t.id!==id;});
+  saveState(); renderAll();
+}
 
 // ════════════════════════════════════════════════════════
 // OPEN POINTS
 // ════════════════════════════════════════════════════════
-let opFilter = 'all';
-function filterOP(f) { opFilter=f; ['all','open','resolved'].forEach(x=>{ const el=document.getElementById('opf-'+x); el.className=x===f?'btn btn-secondary btn-sm':'btn btn-ghost btn-sm'; }); renderOpenPoints(); }
+// Open point filters now handled via dropdown in filter bar
+function editOpenPoint(id) {
+  var op = state.openPoints.find(function(x){return x.id===id;}); if(!op) return;
+  populateIfDropdown('op-interface');
+  document.getElementById('op-interface').value = op.interfaceId||'';
+  document.getElementById('op-priority').value = op.priority||'medium';
+  document.getElementById('op-desc-rte').innerHTML = op.desc||'';
+  document.getElementById('op-owner').value = op.owner||'';
+  document.getElementById('op-due').value = op.due||'';
+  document.getElementById('modal-addOpenPoint').dataset.editId = id;
+  document.getElementById('modal-addOpenPoint').classList.remove('hidden');
+}
 function saveOpenPoint() {
   if (!state.activeProject) { alert('Select a project first'); return; }
   const desc = document.getElementById('op-desc-rte').innerHTML;
   if (!desc||desc==='<br>') return;
-  state.openPoints.push({ id:Date.now(), projectId:state.activeProject, interfaceId:document.getElementById('op-interface').value||null, desc, owner:document.getElementById('op-owner').value.trim(), priority:document.getElementById('op-priority').value, due:document.getElementById('op-due').value, status:'open', created:new Date().toISOString() });
+  if (!document.getElementById('op-interface').value) { document.getElementById('op-interface').style.borderColor='var(--red)'; setTimeout(function(){document.getElementById('op-interface').style.borderColor='';},2000); return; }
+  var editId = document.getElementById('modal-addOpenPoint').dataset.editId;
+  var data = { interfaceId:document.getElementById('op-interface').value||null, desc:desc, owner:document.getElementById('op-owner').value.trim(), priority:document.getElementById('op-priority').value, due:document.getElementById('op-due').value };
+  if (editId) {
+    var existing = state.openPoints.find(function(x){return String(x.id)===String(editId);});
+    if (existing) Object.assign(existing, data);
+  } else {
+    data.id = Date.now();
+    data.projectId = state.activeProject;
+    data.status = 'open';
+    data.created = new Date().toISOString();
+    state.openPoints.push(data);
+  }
+  document.getElementById('modal-addOpenPoint').dataset.editId = '';
   saveState(); closeModal('addOpenPoint');
   document.getElementById('op-desc-rte').innerHTML='';
   renderAll();
 }
 function resolveOP(id) { const o=state.openPoints.find(x=>x.id===id); if(o){o.status=o.status==='resolved'?'open':'resolved'; saveState(); renderAll();} }
-function deleteOP(id) { state.openPoints=state.openPoints.filter(o=>o.id!==id); saveState(); renderAll(); }
+function deleteOP(id) { if(!currentUser||currentUser.role!=='admin'){return;} state.openPoints=state.openPoints.filter(o=>o.id!==id); saveState(); renderAll(); }
 
 // ════════════════════════════════════════════════════════
 // VALIDATION
 // ════════════════════════════════════════════════════════
-const VALIDATION_CHECKS = [
-  {id:'spec_approved', label:'Specification approved by Architect'},
-  {id:'spec_reviewed', label:'Spec reviewed by customer (Functional)'},
-  {id:'dev_complete',  label:'Development complete'},
-  {id:'unit_test',     label:'Unit test passed (developer)'},
-  {id:'it_prepared',   label:'Integration test scenario prepared'},
-  {id:'it_executed',   label:'Integration test executed'},
-  {id:'it_passed',     label:'Integration test passed'},
-  {id:'error_handling',label:'Error handling tested (dead letter / alerts)'},
-  {id:'monitoring_keys',label:'Monitoring keys validated in dIF dashboard'},
-  {id:'perf_ok',       label:'Performance / volume test OK'},
-  {id:'customer_signoff',label:'Customer sign-off received'},
-  {id:'doc_complete',  label:'Documentation / spec finalized'},
+var DEFAULT_VALIDATION_CHECKS = [
+  {id:'spec_finalized',    label:'Specification finalized by Architect'},
+  {id:'spec_reviewed',     label:'Spec reviewed by Functional / Customer'},
+  {id:'dev_complete',      label:'Development complete'},
+  {id:'happy_flow',        label:'Happy flow testing passed'},
+  {id:'error_flow_tested', label:'Error handling flow tested'},
+  {id:'error_handling',    label:'Error handling added (dead letter / alerts)'},
+  {id:'monitoring_keys',   label:'Monitoring keys configured in dIF dashboard'},
+  {id:'perf_ok',           label:'Performance / volume test OK'},
+  {id:'customer_signoff',  label:'Customer sign-off received'},
+  {id:'doc_added',         label:'Documentation added'},
 ];
-function toggleCheck(ifId, checkId) { const k=`${ifId}__${checkId}`; state.validationChecks[k]=!state.validationChecks[k]; saveState(); renderValidation(); }
+function getValidationChecks() {
+  if (state.validationChecksDef && state.validationChecksDef.length) return state.validationChecksDef;
+  return DEFAULT_VALIDATION_CHECKS;
+}
+function ensureValidationChecksDef() {
+  if (!state.validationChecksDef || !state.validationChecksDef.length) {
+    state.validationChecksDef = DEFAULT_VALIDATION_CHECKS.map(function(c){return {id:c.id, label:c.label};});
+  }
+}
+var editingCheckIdx = -1;
+function editValidationCheck(idx) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  ensureValidationChecksDef();
+  var chk = state.validationChecksDef[idx]; if (!chk) return;
+  if (editingCheckIdx === idx) {
+    // Save the edit
+    var input = document.getElementById('val-check-edit-input');
+    if (input && input.value.trim()) {
+      chk.label = input.value.trim();
+      saveState();
+    }
+    editingCheckIdx = -1;
+    renderValidation();
+    return;
+  }
+  editingCheckIdx = idx;
+  renderValidation();
+  // Focus the input after render
+  var input = document.getElementById('val-check-edit-input');
+  if (input) { input.focus(); input.select(); }
+}
+function cancelEditCheck() { editingCheckIdx = -1; renderValidation(); }
+function addValidationCheck() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  ensureValidationChecksDef();
+  var id = 'chk_' + Date.now();
+  state.validationChecksDef.push({id:id, label:'New validation check'});
+  saveState();
+  // Open it for editing immediately
+  editingCheckIdx = state.validationChecksDef.length - 1;
+  renderValidation();
+  var input = document.getElementById('val-check-edit-input');
+  if (input) { input.focus(); input.select(); }
+}
+function removeValidationCheck(idx) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  ensureValidationChecksDef();
+  var chk = state.validationChecksDef[idx]; if (!chk) return;
+  state.validationChecksDef.splice(idx, 1);
+  // Clean up checked state for this check across all interfaces
+  Object.keys(state.validationChecks).forEach(function(k) {
+    if (k.endsWith('__' + chk.id)) delete state.validationChecks[k];
+  });
+  saveState(); renderValidation();
+}
+function moveValidationCheck(idx, dir) {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  ensureValidationChecksDef();
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.validationChecksDef.length) return;
+  var temp = state.validationChecksDef[idx];
+  state.validationChecksDef[idx] = state.validationChecksDef[newIdx];
+  state.validationChecksDef[newIdx] = temp;
+  saveState(); renderValidation();
+}
+function resetValidationChecks() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  state.validationChecksDef = DEFAULT_VALIDATION_CHECKS.map(function(c){return {id:c.id, label:c.label};});
+  saveState(); renderValidation();
+}
+function toggleCheck(ifId, checkId) { var k = ifId + '__' + checkId; state.validationChecks[k]=!state.validationChecks[k]; saveState(); renderValidation(); }
 
 // ════════════════════════════════════════════════════════
 // dIF TEMPLATES
@@ -1329,14 +1540,17 @@ function editUser(id) {
   document.getElementById('u-delete-btn').style.display = u.role==='admin'?'none':'inline-flex';
   document.getElementById('u-name').value     = u.name;
   document.getElementById('u-email').value    = u.email;
-  // Show password in plain text so admin can copy and share it
-  const pwInput = document.getElementById('u-password');
-  pwInput.value = u.password||'';
-  pwInput.type  = 'text';
-  document.getElementById('u-pw-eye').style.color = 'var(--accent)';
-  const hint = document.getElementById('u-pw-hint');
-  hint.textContent = u.password ? '← Current password — visible so you can copy & share it' : '';
-  hint.style.display = u.password ? 'block' : 'none';
+  // Password: hidden by default, admin can reveal with eye button
+  var pwInput = document.getElementById('u-password');
+  var knownPlain = plainPasswordStore[u.id];
+  pwInput.value = knownPlain || '';
+  pwInput.type  = 'password';
+  document.getElementById('u-pw-eye').style.color = '';
+  var hint = document.getElementById('u-pw-hint');
+  hint.textContent = knownPlain
+    ? 'Click 👁 to reveal — copy to share with user'
+    : 'Password is hashed — enter a new one to reset it';
+  hint.style.display = 'block';
   document.getElementById('u-role').value     = u.role;
   initPermGrid('permGrid','u-role', u.role);
   if (u.perms) VIEW_PERMS.forEach(v => {
@@ -1454,58 +1668,143 @@ function renderDashboard() {
 }
 
 function renderInterfaces() {
-  const ifaces=getProjIf(), logs=getProjTL();
-  document.getElementById('tab-if-count').textContent=ifaces.length;
-  const rw = canWrite('interfaces');
-  const tbody=ifaces.map(i=>{
-    const hours=logs.filter(t=>String(t.interfaceId)===String(i.id)).reduce((s,t)=>s+t.hours,0);
-    return `<tr>
-      <td class="td-mono">${i.ifId||'—'}</td><td style="max-width:160px">${i.name}</td>
-      <td class="td-muted">${i.source||'—'}</td><td class="td-muted">${i.target||'—'}</td>
-      <td><span class="tag">${i.dif||'—'}</span></td>
-      <td>${rw?`<select onchange="updateIfStatus(${i.id},this.value)" style="padding:3px 6px;font-size:11px;background:var(--surface2)">${['spec','dev','review','done','parked','blocked'].map(s=>`<option ${i.status===s?'selected':''} value="${s}">${s}</option>`).join('')}</select>`:statusBadge(i.status)}</td>
-      <td>${priorityBadge(i.priority)}</td>
-      <td class="td-muted">${i.specAuthor||'—'}</td><td class="td-muted">${i.dev||'—'}</td>
-      <td class="td-mono">${hours>0?hours.toFixed(1)+'h':'—'}</td>
-      <td>${rw?`<button class="btn btn-danger btn-sm" onclick="deleteIf(${i.id})">✕</button>`:'—'}</td>
-    </tr>`;
+  var allIf=getProjIf(), logs=getProjTL();
+  document.getElementById('tab-if-count').textContent=allIf.length;
+  var rw = canWrite('interfaces');
+  // Filters
+  var fStatus = document.getElementById('flt-if-status').value;
+  var fPriority = document.getElementById('flt-if-priority').value;
+  var fSearch = (document.getElementById('flt-if-search').value||'').toLowerCase();
+  var fSort = document.getElementById('flt-if-sort').value;
+  var ifaces = allIf.filter(function(i){
+    if(fStatus && i.status!==fStatus) return false;
+    if(fPriority && i.priority!==fPriority) return false;
+    if(fSearch && (i.ifId||'').toLowerCase().indexOf(fSearch)===-1 && (i.name||'').toLowerCase().indexOf(fSearch)===-1 && (i.source||'').toLowerCase().indexOf(fSearch)===-1 && (i.target||'').toLowerCase().indexOf(fSearch)===-1) return false;
+    return true;
+  });
+  // Sorting
+  var pOrd={high:0,medium:1,low:2}; var sOrd={spec:0,dev:1,review:2,done:3,parked:4,blocked:5};
+  ifaces.sort(function(a,b){
+    if(fSort==='name') return (a.name||'').localeCompare(b.name||'');
+    if(fSort==='status') return (sOrd[a.status]||0)-(sOrd[b.status]||0);
+    if(fSort==='priority') return (pOrd[a.priority]||1)-(pOrd[b.priority]||1);
+    if(fSort==='hours'){var ha=logs.filter(function(t){return String(t.interfaceId)===String(a.id);}).reduce(function(s,t){return s+t.hours;},0); var hb=logs.filter(function(t){return String(t.interfaceId)===String(b.id);}).reduce(function(s,t){return s+t.hours;},0); return hb-ha;}
+    return (a.ifId||'').localeCompare(b.ifId||'');
+  });
+  var tbody=ifaces.map(function(i){
+    var hours=logs.filter(function(t){return String(t.interfaceId)===String(i.id);}).reduce(function(s,t){return s+t.hours;},0);
+    return '<tr><td class="td-mono">'+(i.ifId||'—')+'</td><td style="max-width:160px">'+i.name+'</td><td class="td-muted">'+(i.source||'—')+'</td><td class="td-muted">'+(i.target||'—')+'</td><td><span class="tag">'+(i.dif||'—')+'</span></td><td>'+(rw?'<select onchange="updateIfStatus('+i.id+',this.value)" style="padding:3px 6px;font-size:11px;background:var(--surface2)">'+['spec','dev','review','done','parked','blocked'].map(function(s){return '<option '+(i.status===s?'selected':'')+' value="'+s+'">'+s+'</option>';}).join('')+'</select>':statusBadge(i.status))+'</td><td>'+priorityBadge(i.priority)+'</td><td class="td-muted">'+(i.specAuthor||'—')+'</td><td class="td-muted">'+(i.dev||'—')+'</td><td class="td-mono">'+(hours>0?hours.toFixed(1)+'h':'—')+'</td><td>'+(rw?'<button class="btn btn-edit btn-sm" onclick="editInterface('+i.id+')" title="Edit">✎</button>':'')+(currentUser&&currentUser.role==='admin'?'<button class="btn btn-danger btn-sm" onclick="deleteIf('+i.id+')" title="Delete">✕</button>':'')+'</td></tr>';
   }).join('');
-  document.getElementById('ifTableBody').innerHTML=tbody||`<tr><td colspan="11" class="empty-state">No interfaces yet.</td></tr>`;
+  document.getElementById('ifTableBody').innerHTML=tbody||'<tr><td colspan="11" class="empty-state">No interfaces match filters.</td></tr>';
 }
 
 function renderTimeLog() {
-  const logs=getProjTL(), ifaces=getProjIf();
-  const totalH=logs.reduce((s,t)=>s+t.hours,0);
-  const archH=logs.filter(t=>t.role==='Architect').reduce((s,t)=>s+t.hours,0);
-  const devH=logs.filter(t=>t.role==='Developer').reduce((s,t)=>s+t.hours,0);
-  const testH=logs.filter(t=>t.role==='Test Lead').reduce((s,t)=>s+t.hours,0);
-  document.getElementById('timeStats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total Hours</div><div class="stat-value" style="color:var(--accent)">${totalH.toFixed(1)}</div></div>
-    <div class="stat-card"><div class="stat-label">Architect</div><div class="stat-value" style="color:var(--purple)">${archH.toFixed(1)}</div></div>
-    <div class="stat-card"><div class="stat-label">Developer</div><div class="stat-value" style="color:var(--yellow)">${devH.toFixed(1)}</div></div>
-    <div class="stat-card"><div class="stat-label">Test</div><div class="stat-value" style="color:var(--green)">${testH.toFixed(1)}</div></div>`;
-  const rw=canWrite('timelog');
-  const sorted=[...logs].sort((a,b)=>b.date.localeCompare(a.date));
-  const tbody=sorted.map(t=>{ const ifc=ifaces.find(i=>String(i.id)===String(t.interfaceId)); return `<tr><td class="td-mono">${t.date}</td><td style="color:var(--accent);font-weight:600">${t.person}</td><td><span class="tag">${t.role}</span></td><td class="td-muted">${ifc?`${ifc.ifId||''} ${ifc.name}`:'— project —'}</td><td><span class="tag">${t.phase}</span></td><td class="td-mono">${t.hours}h</td><td class="td-muted" style="max-width:200px;overflow:hidden">${(t.desc||'').replace(/<[^>]+>/g,' ').slice(0,80)}</td><td>${rw?`<button class="btn btn-ghost btn-sm" onclick="deleteTime(${t.id})">✕</button>`:'—'}</td></tr>`; }).join('');
-  document.getElementById('timeTableBody').innerHTML=tbody||`<tr><td colspan="8" class="empty-state">No time logged yet.</td></tr>`;
+  var allLogs=getProjTL(), ifaces=getProjIf();
+  // Populate dynamic filter dropdowns
+  var personSel=document.getElementById('flt-tl-person'), curPerson=personSel.value;
+  var persons=[]; allLogs.forEach(function(t){if(t.person&&persons.indexOf(t.person)===-1) persons.push(t.person);});
+  personSel.innerHTML='<option value="">All</option>'+persons.map(function(p){return '<option'+(curPerson===p?' selected':'')+'>'+p+'</option>';}).join('');
+  var ifaceSel=document.getElementById('flt-tl-iface'), curIf=ifaceSel.value;
+  ifaceSel.innerHTML='<option value="">All</option>'+ifaces.map(function(i){return '<option value="'+i.id+'"'+((curIf==String(i.id))?' selected':'')+'>'+(i.ifId||'?')+' – '+i.name+'</option>';}).join('');
+  // Stats on all (unfiltered)
+  var totalH=allLogs.reduce(function(s,t){return s+t.hours;},0);
+  var archH=allLogs.filter(function(t){return t.role==='Architect';}).reduce(function(s,t){return s+t.hours;},0);
+  var devH=allLogs.filter(function(t){return t.role==='Developer';}).reduce(function(s,t){return s+t.hours;},0);
+  var testH=allLogs.filter(function(t){return t.role==='Test Lead';}).reduce(function(s,t){return s+t.hours;},0);
+  document.getElementById('timeStats').innerHTML='<div class="stat-card"><div class="stat-label">Total Hours</div><div class="stat-value" style="color:var(--accent)">'+totalH.toFixed(1)+'</div></div><div class="stat-card"><div class="stat-label">Architect</div><div class="stat-value" style="color:var(--purple)">'+archH.toFixed(1)+'</div></div><div class="stat-card"><div class="stat-label">Developer</div><div class="stat-value" style="color:var(--yellow)">'+devH.toFixed(1)+'</div></div><div class="stat-card"><div class="stat-label">Test</div><div class="stat-value" style="color:var(--green)">'+testH.toFixed(1)+'</div></div>';
+  // Filters
+  var fPerson=personSel.value, fRole=document.getElementById('flt-tl-role').value, fPhase=document.getElementById('flt-tl-phase').value, fIface=document.getElementById('flt-tl-iface').value, fSort=document.getElementById('flt-tl-sort').value;
+  var logs=allLogs.filter(function(t){
+    if(fPerson && t.person!==fPerson) return false;
+    if(fRole && t.role!==fRole) return false;
+    if(fPhase && t.phase!==fPhase) return false;
+    if(fIface && String(t.interfaceId)!==fIface) return false;
+    return true;
+  });
+  // Sort
+  logs.sort(function(a,b){
+    if(fSort==='date-asc') return (a.date||'').localeCompare(b.date||'');
+    if(fSort==='hours-desc') return b.hours-a.hours;
+    if(fSort==='hours-asc') return a.hours-b.hours;
+    if(fSort==='person') return (a.person||'').localeCompare(b.person||'');
+    return (b.date||'').localeCompare(a.date||'');
+  });
+  var isAdmin=currentUser&&currentUser.role==='admin';
+  var myName=currentUser?currentUser.name:'';
+  var tbody=logs.map(function(t){ var ifc=ifaces.find(function(i){return String(i.id)===String(t.interfaceId);}); var canDel=isAdmin||t.person===myName; return '<tr><td class="td-mono">'+t.date+'</td><td style="color:var(--accent);font-weight:600">'+t.person+'</td><td><span class="tag">'+t.role+'</span></td><td class="td-muted">'+(ifc?(ifc.ifId||'')+' '+ifc.name:'— project —')+'</td><td><span class="tag">'+t.phase+'</span></td><td class="td-mono">'+t.hours+'h</td><td class="td-muted" style="max-width:200px;overflow:hidden">'+(t.desc||'').replace(/<[^>]+>/g,' ').slice(0,80)+'</td><td>'+(canDel?'<button class="btn btn-danger btn-sm" onclick="deleteTime('+t.id+')" title="Delete">✕</button>':'')+'</td></tr>'; }).join('');
+  document.getElementById('timeTableBody').innerHTML=tbody||'<tr><td colspan="8" class="empty-state">No time entries match filters.</td></tr>';
 }
 
 function renderOpenPoints() {
-  const ops=getProjOP(), ifaces=getProjIf();
-  document.getElementById('tab-op-count').textContent=ops.filter(o=>o.status==='open').length;
-  let filtered=ops;
-  if(opFilter==='open') filtered=ops.filter(o=>o.status==='open');
-  if(opFilter==='resolved') filtered=ops.filter(o=>o.status==='resolved');
-  const sorted=[...filtered].sort((a,b)=>{const p={high:0,medium:1,low:2};return(p[a.priority]||1)-(p[b.priority]||1);});
-  const rw=canWrite('openpoints');
-  document.getElementById('opList').innerHTML=sorted.length?sorted.map(op=>{ const ifc=ifaces.find(i=>String(i.id)===String(op.interfaceId)); const res=op.status==='resolved'; return `<div class="open-point ${res?'resolved':''}"><div class="open-point-header"><div style="display:flex;gap:8px;align-items:center"><span class="open-point-id">OP-${String(op.id).slice(-4)}</span>${priorityBadge(op.priority)}${ifc?`<span class="tag">${ifc.ifId||ifc.name}</span>`:''}</div><div style="display:flex;gap:6px;align-items:center"><span class="open-point-owner">${op.owner||'Unassigned'}</span>${op.due?`<span class="td-muted" style="font-size:11px">${op.due}</span>`:''}</span>${rw?`<button class="btn btn-ghost btn-sm" onclick="resolveOP(${op.id})">${res?'↩':'✓'}</button><button class="btn btn-ghost btn-sm" onclick="deleteOP(${op.id})">✕</button>`:''}</div></div><div style="margin-top:4px">${op.desc}</div></div>`; }).join(''):'<div class="empty-state"><div class="empty-icon">◎</div>No open points</div>';
+  var allOps=getProjOP(), ifaces=getProjIf();
+  document.getElementById('tab-op-count').textContent=allOps.filter(function(o){return o.status==='open';}).length;
+  // Populate dynamic dropdowns
+  var ownerSel=document.getElementById('flt-op-owner'), curOwner=ownerSel.value;
+  var owners=[]; allOps.forEach(function(o){if(o.owner&&owners.indexOf(o.owner)===-1) owners.push(o.owner);});
+  ownerSel.innerHTML='<option value="">All</option>'+owners.map(function(p){return '<option'+(curOwner===p?' selected':'')+'>'+p+'</option>';}).join('');
+  var ifaceSel=document.getElementById('flt-op-iface'), curIf=ifaceSel.value;
+  ifaceSel.innerHTML='<option value="">All</option>'+ifaces.map(function(i){return '<option value="'+i.id+'"'+((curIf==String(i.id))?' selected':'')+'>'+(i.ifId||'?')+' – '+i.name+'</option>';}).join('');
+  // Filters
+  var fStatus=document.getElementById('flt-op-status').value;
+  var fPriority=document.getElementById('flt-op-priority').value;
+  var fOwner=ownerSel.value;
+  var fIface=ifaceSel.value;
+  var fSort=document.getElementById('flt-op-sort').value;
+  var ops=allOps.filter(function(o){
+    if(fStatus && o.status!==fStatus) return false;
+    if(fPriority && o.priority!==fPriority) return false;
+    if(fOwner && o.owner!==fOwner) return false;
+    if(fIface && String(o.interfaceId)!==fIface) return false;
+    return true;
+  });
+  var pOrd={high:0,medium:1,low:2};
+  ops.sort(function(a,b){
+    if(fSort==='date-desc') return (b.created||'').localeCompare(a.created||'');
+    if(fSort==='date-asc') return (a.created||'').localeCompare(b.created||'');
+    if(fSort==='due') return (a.due||'9999').localeCompare(b.due||'9999');
+    if(fSort==='owner') return (a.owner||'').localeCompare(b.owner||'');
+    return (pOrd[a.priority]||1)-(pOrd[b.priority]||1);
+  });
+  var rw=canWrite('openpoints');
+  var isAdmin=currentUser&&currentUser.role==='admin';
+  document.getElementById('opList').innerHTML=ops.length?ops.map(function(op){ var ifc=ifaces.find(function(i){return String(i.id)===String(op.interfaceId);}); var res=op.status==='resolved'; return '<div class="open-point '+(res?'resolved':'')+'"><div class="open-point-header"><div style="display:flex;gap:8px;align-items:center"><span class="open-point-id">OP-'+String(op.id).slice(-4)+'</span>'+priorityBadge(op.priority)+(ifc?'<span class="tag">'+(ifc.ifId||ifc.name)+'</span>':'')+'</div><div style="display:flex;gap:6px;align-items:center"><span class="open-point-owner">'+(op.owner||'Unassigned')+'</span>'+(op.due?'<span class="td-muted" style="font-size:11px">'+op.due+'</span>':'')+(rw?'<button class="btn btn-edit btn-sm" onclick="editOpenPoint('+op.id+')" title="Edit">✎</button><button class="btn btn-success btn-sm" onclick="resolveOP('+op.id+')" title="'+(res?'Reopen':'Resolve')+'">'+(res?'↩':'✓')+'</button>':'')+(isAdmin?'<button class="btn btn-danger btn-sm" onclick="deleteOP('+op.id+')" title="Delete">✕</button>':'')+'</div></div><div style="margin-top:4px">'+op.desc+'</div></div>'; }).join(''):'<div class="empty-state"><div class="empty-icon">◎</div>No open points match filters</div>';
 }
 
 function renderValidation() {
-  const ifaces=getProjIf();
-  if(!ifaces.length){ document.getElementById('validationContent').innerHTML='<div class="empty-state"><div class="empty-icon">✓</div>Add interfaces to track validation</div>'; return; }
-  const rw=canWrite('validation');
-  document.getElementById('validationContent').innerHTML=ifaces.map(ifc=>{ const checks=VALIDATION_CHECKS.map(c=>{ const k=`${ifc.id}__${c.id}`; const done=!!state.validationChecks[k]; return `<div class="checklist-item"><div class="check-box ${done?'checked':''}" ${rw?`onclick="toggleCheck(${ifc.id},'${c.id}')"`:''} style="${rw?'':'cursor:default'}">${done?'✓':''}</div><span style="${done?'text-decoration:line-through;color:var(--text-dim)':''}">${c.label}</span></div>`; }).join(''); const dc=VALIDATION_CHECKS.filter(c=>state.validationChecks[`${ifc.id}__${c.id}`]).length; const pct=Math.round(dc/VALIDATION_CHECKS.length*100); return `<div class="table-wrap" style="padding:14px 16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div><span class="td-mono" style="color:var(--accent)">${ifc.ifId||'—'}</span><span style="margin-left:8px;font-weight:600">${ifc.name}</span>${statusBadge(ifc.status)}</div><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">${dc}/${VALIDATION_CHECKS.length}</span><div class="progress-bar" style="width:100px;margin:0"><div class="progress-fill ${pct===100?'green':''}" style="width:${pct}%"></div></div></div></div>${checks}</div>`; }).join('');
+  var CHECKS=getValidationChecks();
+  var isAdmin=currentUser&&currentUser.role==='admin';
+  var adminPanel='';
+  if(isAdmin){
+    adminPanel='<div class="table-wrap" style="padding:14px 16px;margin-bottom:20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span class="section-title">Checklist Definition (Admin)</span><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="addValidationCheck()">＋ Add Check</button><button class="btn btn-ghost btn-sm" onclick="resetValidationChecks()" title="Reset to defaults">↺ Reset</button></div></div>';
+    adminPanel+=CHECKS.map(function(c,idx){var isEditing=editingCheckIdx===idx; var labelHtml=isEditing?'<input id="val-check-edit-input" value="'+c.label.replace(/"/g,'&quot;')+'" style="flex:1;padding:4px 8px;font-size:13px;background:var(--surface2);border:1px solid var(--accent);color:var(--text);border-radius:4px;outline:none" onkeydown="if(event.key===\'Enter\')editValidationCheck('+idx+');if(event.key===\'Escape\')cancelEditCheck()"/>':'<span style="flex:1;font-size:13px">'+c.label+'</span>'; return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span class="td-mono" style="color:var(--text-dim);font-size:10px;width:24px;text-align:center">'+(idx+1)+'</span>'+labelHtml+'<button class="btn btn-ghost btn-sm" onclick="moveValidationCheck('+idx+',-1)" title="Move up" style="padding:2px 6px">▲</button><button class="btn btn-ghost btn-sm" onclick="moveValidationCheck('+idx+',1)" title="Move down" style="padding:2px 6px">▼</button><button class="btn btn-edit btn-sm" onclick="editValidationCheck('+idx+')" title="'+(isEditing?'Save':'Edit')+'">'+(isEditing?'✓':'✎')+'</button>'+(isEditing?'<button class="btn btn-ghost btn-sm" onclick="cancelEditCheck()" title="Cancel">✕</button>':'<button class="btn btn-danger btn-sm" onclick="removeValidationCheck('+idx+')" title="Remove">✕</button>')+'</div>';}).join('');
+    adminPanel+='</div>';
+  }
+  var allIf=getProjIf();
+  if(!allIf.length){ document.getElementById('validationContent').innerHTML=adminPanel+'<div class="empty-state"><div class="empty-icon">✓</div>Add interfaces to track validation</div>'; return; }
+  var rw=canWrite('validation');
+  var fStatus=document.getElementById('flt-val-status').value;
+  var fSearch=(document.getElementById('flt-val-search').value||'').toLowerCase();
+  var fSort=document.getElementById('flt-val-sort').value;
+  var ifData=allIf.map(function(ifc){
+    var dc=CHECKS.filter(function(c){return state.validationChecks[ifc.id+'__'+c.id];}).length;
+    var pct=CHECKS.length?Math.round(dc/CHECKS.length*100):0;
+    return {ifc:ifc, done:dc, pct:pct};
+  });
+  // Filter
+  ifData=ifData.filter(function(d){
+    if(fStatus==='complete' && d.pct!==100) return false;
+    if(fStatus==='incomplete' && d.pct===100) return false;
+    if(fSearch && (d.ifc.ifId||'').toLowerCase().indexOf(fSearch)===-1 && (d.ifc.name||'').toLowerCase().indexOf(fSearch)===-1) return false;
+    return true;
+  });
+  // Sort
+  ifData.sort(function(a,b){
+    if(fSort==='progress-asc') return a.pct-b.pct;
+    if(fSort==='progress-desc') return b.pct-a.pct;
+    if(fSort==='name') return (a.ifc.name||'').localeCompare(b.ifc.name||'');
+    return (a.ifc.ifId||'').localeCompare(b.ifc.ifId||'');
+  });
+  document.getElementById('validationContent').innerHTML=adminPanel+ifData.map(function(d){ var ifc=d.ifc; var dc=d.done; var pct=d.pct; var checks=CHECKS.map(function(c){ var k=ifc.id+'__'+c.id; var done=!!state.validationChecks[k]; return '<div class="checklist-item"><div class="check-box '+(done?'checked':'')+'" '+(rw?'onclick="toggleCheck('+ifc.id+',\''+c.id+'\')"':'')+' style="'+(rw?'':'cursor:default')+'">'+(done?'✓':'')+'</div><span style="'+(done?'text-decoration:line-through;color:var(--text-dim)':'')+'">'+c.label+'</span></div>'; }).join(''); return '<div class="table-wrap" style="padding:14px 16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div><span class="td-mono" style="color:var(--accent)">'+(ifc.ifId||'—')+'</span><span style="margin-left:8px;font-weight:600">'+ifc.name+'</span>'+statusBadge(ifc.status)+'</div><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">'+dc+'/'+CHECKS.length+'</span><div class="progress-bar" style="width:100px;margin:0"><div class="progress-fill '+(pct===100?'green':'')+'" style="width:'+pct+'%"></div></div></div></div>'+checks+'</div>'; }).join('')||'<div class="empty-state">No interfaces match filters</div>';
 }
 
 function renderTemplates() {
@@ -1541,9 +1840,9 @@ function renderAll() {
 function applyHL(color) { document.execCommand('hiliteColor',false,color); }
 
 function openModal(name) {
-  if(name==='logTime'){ populateIfDropdown('tl-interface'); document.getElementById('tl-date').value=new Date().toISOString().slice(0,10); }
-  if(name==='addOpenPoint') populateIfDropdown('op-interface');
-  if(name==='addInterface'){ const sel=document.getElementById('if-dif'); sel.innerHTML='<option value="">Select...</option>'+state.difTemplates.map(t=>`<option value="${t.code}">${t.code} – ${t.name}</option>`).join(''); }
+  if(name==='logTime'){ populateIfDropdown('tl-interface'); document.getElementById('tl-date').value=new Date().toISOString().slice(0,10); if(currentUser) document.getElementById('tl-person').value=currentUser.name; }
+  if(name==='addOpenPoint'){ populateIfDropdown('op-interface'); document.getElementById('modal-addOpenPoint').dataset.editId=''; document.getElementById('op-desc-rte').innerHTML=''; document.getElementById('op-owner').value=''; document.getElementById('op-due').value=''; document.getElementById('op-priority').value='medium'; document.getElementById('op-interface').value=''; }
+  if(name==='addInterface'){ document.getElementById('modal-addInterface').dataset.editId=''; const sel=document.getElementById('if-dif'); sel.innerHTML='<option value="">Select...</option>'+state.difTemplates.map(t=>`<option value="${t.code}">${t.code} – ${t.name}</option>`).join(''); ['if-id','if-name','if-source','if-target','if-spec-author','if-dev'].forEach(function(id){document.getElementById(id).value='';}); document.getElementById('if-notes-rte').innerHTML=''; document.getElementById('if-status').value='spec'; document.getElementById('if-priority').value='medium'; }
   document.getElementById('modal-'+name).classList.remove('hidden');
 }
 function closeModal(name) { document.getElementById('modal-'+name).classList.add('hidden'); }
