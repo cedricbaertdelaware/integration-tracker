@@ -1020,6 +1020,30 @@ function pulseBadge(el) {
 }
 
 // ════════════════════════════════════════════════════════
+// FORM VALIDATION HIGHLIGHT
+// ════════════════════════════════════════════════════════
+function highlightMissing(ids) {
+  // ids = array of element IDs that are missing
+  var names = [];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var label = el.closest('.form-group, .form-row');
+    if (label) { var lbl = label.querySelector('label'); if (lbl) names.push(lbl.textContent.replace('*','').trim()); }
+    el.style.borderColor = 'var(--red)';
+    el.style.boxShadow = '0 0 0 2px rgba(249,96,96,.2)';
+    setTimeout(function(){ el.style.borderColor = ''; el.style.boxShadow = ''; }, 2500);
+  });
+  toast('Please fill in: ' + (names.length ? names.join(', ') : 'required fields'), 'error');
+}
+function highlightEl(el) {
+  if (!el) return;
+  el.style.borderColor = 'var(--red)';
+  el.style.boxShadow = '0 0 0 2px rgba(249,96,96,.2)';
+  setTimeout(function(){ el.style.borderColor = ''; el.style.boxShadow = ''; }, 2500);
+}
+
+// ════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════
 const VIEWS = ['dashboard','interfaces','timelog','openpoints','validation','templates','users'];
@@ -1390,7 +1414,7 @@ function selectProject(id) {
 
 function saveProject() {
   const name = document.getElementById('proj-name').value.trim();
-  if (!name) return;
+  if (!name) { highlightMissing(['proj-name']); return; }
   const p = { id:Date.now(), name, code:document.getElementById('proj-code').value.trim().toUpperCase()||name.substring(0,3).toUpperCase(), desc:document.getElementById('proj-desc').value.trim(), landscape:document.getElementById('proj-landscape').value, phase:document.getElementById('proj-phase').value, color:selectedColor, created:new Date().toISOString() };
   state.projects.push(p);
   saveState();
@@ -1468,13 +1492,21 @@ function editInterface(id) {
   var sel = document.getElementById('if-dif');
   sel.innerHTML='<option value="">Select...</option>'+state.difTemplates.map(function(t){return '<option value="'+t.code+'">'+t.code+' – '+t.name+'</option>';}).join('');
   sel.value = i.dif||'';
-  document.getElementById('modal-addInterface').classList.remove('hidden');
+  var el = document.getElementById('modal-addInterface');
+  el.classList.remove('hidden');
+  void el.offsetWidth;
+  el.classList.add('modal-visible');
 }
 function saveInterface() {
-  if (!state.activeProject) { alert('Select a project first'); return; }
+  if (!state.activeProject) { toast('Select a project first', 'error'); return; }
   var editId = document.getElementById('modal-addInterface').dataset.editId;
   var data = { ifId:document.getElementById('if-id').value.trim(), name:document.getElementById('if-name').value.trim(), source:document.getElementById('if-source').value.trim(), target:document.getElementById('if-target').value.trim(), dif:document.getElementById('if-dif').value, status:document.getElementById('if-status').value, priority:document.getElementById('if-priority').value, specAuthor:document.getElementById('if-spec-author').value.trim(), dev:document.getElementById('if-dev').value.trim(), notes:document.getElementById('if-notes-rte').innerHTML };
-  if (!data.name) return;
+  var missing = [];
+  if (!data.ifId) missing.push('if-id');
+  if (!data.name) missing.push('if-name');
+  if (!data.source) missing.push('if-source');
+  if (!data.target) missing.push('if-target');
+  if (missing.length) { highlightMissing(missing); return; }
   if (editId) {
     var existing = state.interfaces.find(function(x){return String(x.id)===String(editId);});
     if (existing) Object.assign(existing, data);
@@ -1514,9 +1546,13 @@ function populateIfDropdown(selId) {
   });
 }
 function saveTimeEntry() {
-  if (!state.activeProject) { alert('Select a project first'); return; }
-  const hours = parseFloat(document.getElementById('tl-hours').value);
-  if (!hours) return;
+  if (!state.activeProject) { toast('Select a project first', 'error'); return; }
+  var missing = [];
+  if (!document.getElementById('tl-interface').value) missing.push('tl-interface');
+  if (!document.getElementById('tl-date').value) missing.push('tl-date');
+  var hours = parseFloat(document.getElementById('tl-hours').value);
+  if (!hours) missing.push('tl-hours');
+  if (missing.length) { highlightMissing(missing); return; }
   state.timeLogs.push({ id:Date.now(), projectId:state.activeProject, person:document.getElementById('tl-person').value.trim()||'Unknown', role:document.getElementById('tl-role').value, interfaceId:document.getElementById('tl-interface').value||null, phase:document.getElementById('tl-phase').value, date:document.getElementById('tl-date').value||new Date().toISOString().slice(0,10), hours, desc:document.getElementById('tl-desc-rte').innerHTML });
   saveState(); closeModal('logTime');
   document.getElementById('tl-desc-rte').innerHTML='';
@@ -1551,13 +1587,20 @@ function editOpenPoint(id) {
   document.getElementById('op-owner').value = op.owner||'';
   document.getElementById('op-due').value = op.due||'';
   document.getElementById('modal-addOpenPoint').dataset.editId = id;
-  document.getElementById('modal-addOpenPoint').classList.remove('hidden');
+  var el = document.getElementById('modal-addOpenPoint');
+  el.classList.remove('hidden');
+  void el.offsetWidth;
+  el.classList.add('modal-visible');
 }
 function saveOpenPoint() {
-  if (!state.activeProject) { alert('Select a project first'); return; }
-  const desc = document.getElementById('op-desc-rte').innerHTML;
-  if (!desc||desc==='<br>') return;
-  if (!document.getElementById('op-interface').value) { document.getElementById('op-interface').style.borderColor='var(--red)'; setTimeout(function(){document.getElementById('op-interface').style.borderColor='';},2000); return; }
+  if (!state.activeProject) { toast('Select a project first', 'error'); return; }
+  var descEl = document.getElementById('op-desc-rte');
+  var desc = descEl.innerHTML;
+  var ifaceEl = document.getElementById('op-interface');
+  var missing = [];
+  if (!desc || desc === '<br>' || desc.replace(/<[^>]+>/g,'').trim() === '') { highlightEl(descEl); missing.push('op-desc-rte'); }
+  if (!ifaceEl.value) { highlightEl(ifaceEl); if (!missing.length) missing.push('op-interface'); }
+  if (missing.length) { toast('Please fill in: Interface, Description', 'error'); return; }
   var editId = document.getElementById('modal-addOpenPoint').dataset.editId;
   var data = { interfaceId:document.getElementById('op-interface').value||null, desc:desc, owner:document.getElementById('op-owner').value.trim(), priority:document.getElementById('op-priority').value, due:document.getElementById('op-due').value };
   if (editId) {
@@ -1780,7 +1823,10 @@ function saveTemplate() {
   const editId=document.getElementById('tmpl-edit-id').value;
   const code=document.getElementById('tmpl-code').value.trim();
   const name=document.getElementById('tmpl-name').value.trim();
-  if(!code||!name) return;
+  var missing = [];
+  if (!code) missing.push('tmpl-code');
+  if (!name) missing.push('tmpl-name');
+  if (missing.length) { highlightMissing(missing); return; }
   const data={code,name,ver:document.getElementById('tmpl-ver')?document.getElementById('tmpl-ver').value.trim():'',short:document.getElementById('tmpl-short').value.trim(),desc:document.getElementById('tmpl-desc-rte').innerHTML,dir:document.getElementById('tmpl-dir').value,proc:document.getElementById('tmpl-proc').value,proto:document.getElementById('tmpl-proto').value.trim()};
   if (editId) { const t=state.difTemplates.find(x=>String(x.id)===String(editId)); if(t) Object.assign(t,data); }
   else state.difTemplates.push({id:Date.now(),...data});
@@ -1888,7 +1934,11 @@ function saveUser() {
   var email   = document.getElementById('u-email').value.trim();
   var password= document.getElementById('u-password').value;
   var role    = document.getElementById('u-role').value;
-  if (!name||!email) return;
+  var missing = [];
+  if (!name) missing.push('u-name');
+  if (!email) missing.push('u-email');
+  if (!editId && !password) missing.push('u-password');
+  if (missing.length) { highlightMissing(missing); return; }
   var perms = readPermGrid('permGrid');
   function doSave(hashedPw) {
     if (editId) {
@@ -1897,8 +1947,8 @@ function saveUser() {
       if(hashedPw) { plainPasswordStore[u.id]=password; u.password=hashedPw; }
       if(currentUser&&currentUser.id===u.id){ currentUser=u; document.getElementById('cuName').textContent=u.name; document.getElementById('cuRole').textContent=u.role; }
     } else {
-      if(state.users.find(function(u){return u.email.toLowerCase()===email.toLowerCase();})){ alert('A user with this email already exists.'); return; }
-      if(!hashedPw){ alert('Please set a password for the new user.'); return; }
+      if(state.users.find(function(u){return u.email.toLowerCase()===email.toLowerCase();})){ toast('A user with this email already exists','error'); return; }
+      if(!hashedPw){ toast('Please set a password for the new user','error'); return; }
       var newId=Date.now(); plainPasswordStore[newId]=password;
       state.users.push({id:newId,name:name,email:email,password:hashedPw,role:role,perms:perms,active:true,created:new Date().toISOString()});
     }
@@ -1949,7 +1999,7 @@ function approveRequest() {
   var req     = state.accessRequests.find(function(r){return r.id==reqId;}); if(!req) return;
   var password= document.getElementById('ar-password').value;
   var role    = document.getElementById('ar-role').value;
-  if(!password){ alert('Please set a password for this user.'); return; }
+  if(!password){ toast('Please set a password for this user','error'); return; }
   var perms = readPermGrid('arPermGrid');
   sha256(password).then(function(hashed) {
     var newId=Date.now(); plainPasswordStore[newId]=password;
@@ -2103,7 +2153,7 @@ function exportTimeLog() {
     if(fSort==='person') return (a.person||'').localeCompare(b.person||'');
     return (b.date||'').localeCompare(a.date||'');
   });
-  if(!logs.length){ alert('No time entries to export.'); return; }
+  if(!logs.length){ toast('No time entries to export','warning'); return; }
   // Build CSV
   function csvEscape(val){
     var s=String(val||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
