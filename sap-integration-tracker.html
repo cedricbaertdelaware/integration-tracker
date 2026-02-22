@@ -338,9 +338,96 @@
   .access-denied{display:flex;align-items:center;justify-content:center;height:100%;color:var(--red);font-size:13px;gap:8px;}
 
   .notif-dot{width:7px;height:7px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:4px;vertical-align:middle;}
+
+  /* TOAST NOTIFICATIONS */
+  .toast-container{position:fixed;top:16px;right:16px;z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .toast{pointer-events:auto;padding:10px 16px;border-radius:6px;font-size:13px;font-family:var(--sans);display:flex;align-items:center;gap:8px;animation:toastIn .25s ease;min-width:220px;max-width:400px;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+  .toast.success{background:var(--green-dim);border:1px solid var(--green);color:var(--green);}
+  .toast.error{background:var(--red-dim);border:1px solid var(--red);color:var(--red);}
+  .toast.info{background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);}
+  .toast.warning{background:var(--yellow-dim);border:1px solid var(--yellow);color:var(--yellow);}
+  .toast.out{animation:toastOut .2s ease forwards;}
+  .toast-icon{font-size:15px;flex-shrink:0;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+
+  /* TOP LOADING BAR */
+  .loading-bar{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:600;transition:width .3s ease;box-shadow:0 0 8px var(--accent);}
+  .loading-bar.hidden{display:none;}
+
+  /* CONFIRM DIALOG */
+  .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:400;backdrop-filter:blur(2px);}
+  .confirm-overlay.hidden{display:none;}
+  .confirm-box{background:var(--surface);border:1px solid var(--border-bright);border-radius:10px;padding:24px;width:400px;max-width:90vw;}
+  .confirm-msg{font-size:14px;margin-bottom:20px;line-height:1.5;}
+  .confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
+  /* ═══ UX ENHANCEMENTS ═══ */
+
+  /* 1. Smooth View Transitions */
+  [id^="view-"]{opacity:0;transform:translateY(8px);transition:opacity 180ms ease,transform 180ms ease;pointer-events:none;}
+  [id^="view-"].view-active{opacity:1;transform:translateY(0);pointer-events:auto;}
+
+  /* 2. Button Micro-Interactions */
+  .btn{transition:all .15s ease;}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.25);}
+  .btn:active{transform:translateY(0);box-shadow:0 1px 2px rgba(0,0,0,.15);}
+  .btn-sm:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.2);}
+  .btn-sm:active{transform:translateY(0);}
+
+  /* 3. Sidebar Animation Enhancement */
+  .sidebar{transition:width .25s ease,min-width .25s ease,transform .25s ease;}
+
+  /* 4. Smooth Modal Animation */
+  .modal-overlay{opacity:0;transition:opacity 180ms ease;}
+  .modal-overlay.modal-visible{opacity:1;}
+  .modal-overlay .modal,.modal-overlay .confirm-box{transform:scale(.95);transition:transform 180ms ease;}
+  .modal-overlay.modal-visible .modal,.modal-overlay.modal-visible .confirm-box{transform:scale(1);}
+
+  /* 6. Status Badge Pulse */
+  @keyframes badgePulse{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .badge-pulse{animation:badgePulse 200ms ease;}
+
+  /* 7. Table Row Hover */
+  tbody tr{transition:background .12s ease,transform .12s ease;}
+  tbody tr:hover{transform:translateX(2px);}
+
+  /* 8. Input Focus Glow */
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,156,249,.2);outline:none;transition:border-color .15s ease,box-shadow .15s ease;}
+
+  /* 10. Counter Animation */
+  @keyframes countFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .stat-value{animation:countFadeIn .3s ease;}
+
+  /* Card / Table wrap entrance */
+  .table-wrap,.stat-card,.template-card,.user-card,.request-card,.open-point{transition:border-color .15s ease,box-shadow .15s ease;}
+  .table-wrap:hover,.stat-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.15);}
+  .template-card:hover,.user-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.15);}
+
+  /* Confirm dialog animation (reuse modal pattern) */
+  .confirm-overlay{opacity:0;transition:opacity 180ms ease;}
+  .confirm-overlay.confirm-visible{opacity:1;}
+  .confirm-overlay .confirm-box{transform:scale(.95);transition:transform 180ms ease;}
+  .confirm-overlay.confirm-visible .confirm-box{transform:scale(1);}
 </style>
 </head>
 <body>
+
+<!-- TOAST NOTIFICATIONS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- TOP LOADING BAR -->
+<div class="loading-bar hidden" id="loadingBar" style="width:0%"></div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="confirmResolve(false)">Cancel</button>
+      <button class="btn btn-danger" id="confirmBtn" onclick="confirmResolve(true)">Delete</button>
+    </div>
+  </div>
+</div>
 
 <!-- LOGIN / REQUEST ACCESS OVERLAY -->
 <div class="login-overlay" id="loginOverlay">
@@ -845,6 +932,94 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ════════════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ════════════════════════════════════════════════════════
+function toast(msg, type) {
+  type = type || 'success';
+  var icons = {success:'✓', error:'✕', info:'ℹ', warning:'⚠'};
+  var el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = '<span class="toast-icon">' + (icons[type]||'') + '</span><span>' + msg + '</span>';
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(function(){ el.classList.add('out'); setTimeout(function(){ el.remove(); }, 200); }, 3000);
+}
+
+// ════════════════════════════════════════════════════════
+// LOADING BAR
+// ════════════════════════════════════════════════════════
+var loadingTimer = null;
+function showLoading() {
+  var bar = document.getElementById('loadingBar');
+  bar.classList.remove('hidden');
+  bar.style.width = '0%';
+  var pct = 0;
+  clearInterval(loadingTimer);
+  loadingTimer = setInterval(function() {
+    pct += (100 - pct) * 0.1;
+    bar.style.width = Math.min(pct, 90) + '%';
+  }, 100);
+}
+function hideLoading() {
+  clearInterval(loadingTimer);
+  var bar = document.getElementById('loadingBar');
+  bar.style.width = '100%';
+  setTimeout(function(){ bar.classList.add('hidden'); bar.style.width = '0%'; }, 300);
+}
+
+// ════════════════════════════════════════════════════════
+// CONFIRM DIALOG (replaces browser confirm())
+// ════════════════════════════════════════════════════════
+var confirmCallback = null;
+function confirmDialog(msg, btnLabel) {
+  return new Promise(function(resolve) {
+    confirmCallback = resolve;
+    document.getElementById('confirmMsg').innerHTML = msg;
+    var btn = document.getElementById('confirmBtn');
+    btn.textContent = btnLabel || 'Delete';
+    var overlay = document.getElementById('confirmOverlay');
+    overlay.classList.remove('hidden');
+    void overlay.offsetWidth;
+    overlay.classList.add('confirm-visible');
+  });
+}
+function confirmResolve(val) {
+  var overlay = document.getElementById('confirmOverlay');
+  overlay.classList.remove('confirm-visible');
+  setTimeout(function(){ overlay.classList.add('hidden'); }, 180);
+  if (confirmCallback) { confirmCallback(val); confirmCallback = null; }
+}
+
+// ════════════════════════════════════════════════════════
+// ANIMATED COUNTERS
+// ════════════════════════════════════════════════════════
+function animateCounters() {
+  document.querySelectorAll('.stat-value[data-target]').forEach(function(el) {
+    var target = parseFloat(el.dataset.target);
+    var isFloat = String(target).indexOf('.') !== -1;
+    var duration = 400;
+    var start = performance.now();
+    function tick(now) {
+      var elapsed = now - start;
+      var pct = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      var ease = 1 - Math.pow(1 - pct, 3);
+      var val = target * ease;
+      el.textContent = isFloat ? val.toFixed(1) : Math.round(val);
+      if (pct < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// Badge pulse on status change
+function pulseBadge(el) {
+  if (!el) return;
+  el.classList.remove('badge-pulse');
+  void el.offsetWidth;
+  el.classList.add('badge-pulse');
+}
+
+// ════════════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════════════
 const VIEWS = ['dashboard','interfaces','timelog','openpoints','validation','templates','users'];
@@ -898,16 +1073,20 @@ try {
 if (!useFirebase) console.log('Running in offline/localStorage mode');
 
 function loadState() {
+  showLoading();
   if (useFirebase) {
     return db.collection('appdata').doc('main').get().then(function(snap) {
       if (snap.exists) state = Object.assign(state, snap.data());
       ensureDefaults();
+      hideLoading();
     }).catch(function(e) {
       console.error('Firebase load error:', e);
       loadFromLocalStorage();
+      hideLoading();
     });
   } else {
     loadFromLocalStorage();
+    hideLoading();
     return Promise.resolve();
   }
 }
@@ -1057,6 +1236,7 @@ function submitAccessRequest() {
   state.accessRequests.push({ id:Date.now(), name, email, reason, status:'pending', created:new Date().toISOString() });
   saveState();
   okEl.textContent = 'Request submitted! An admin will review it and get back to you.';
+  toast('Access request submitted', 'info');
   okEl.classList.add('visible');
   ['req-name','req-email','req-reason'].forEach(id=>document.getElementById(id).value='');
 }
@@ -1142,14 +1322,24 @@ const ADMIN_VIEWS = ['templates', 'users'];
 function setView(v) {
   if (!canRead(v)) v = 'dashboard';
   state.activeView = v;
-  VIEWS.forEach(name => {
-    const el = document.getElementById('view-' + name);
-    if (el) el.style.display = (name === v) ? '' : 'none';
+  VIEWS.forEach(function(name) {
+    var el = document.getElementById('view-' + name);
+    if (el) {
+      if (name === v) {
+        el.style.display = '';
+        // Trigger reflow then add active class for animation
+        void el.offsetWidth;
+        el.classList.add('view-active');
+      } else {
+        el.classList.remove('view-active');
+        el.style.display = 'none';
+      }
+    }
     if (!ADMIN_VIEWS.includes(name)) {
-      const tab = document.getElementById('tab-' + name);
+      var tab = document.getElementById('tab-' + name);
       if (tab) tab.classList.toggle('active', name === v);
     }
-    const nav = document.getElementById('nav-' + name);
+    var nav = document.getElementById('nav-' + name);
     if (nav) nav.classList.toggle('active', name === v);
   });
   // Hide tab bar on admin-only views
@@ -1205,6 +1395,7 @@ function saveProject() {
   state.projects.push(p);
   saveState();
   closeModal('addProject');
+  toast('Project created successfully', 'success');
   renderProjectList();
   selectProject(p.id);
   ['proj-name','proj-code','proj-desc'].forEach(id => document.getElementById(id).value='');
@@ -1295,11 +1486,21 @@ function saveInterface() {
   }
   document.getElementById('modal-addInterface').dataset.editId = '';
   saveState(); closeModal('addInterface'); renderAll();
+  toast(editId ? 'Interface updated' : 'Interface added', 'success');
   ['if-id','if-name','if-source','if-target','if-spec-author','if-dev'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('if-notes-rte').innerHTML='';
 }
-function updateIfStatus(id, val) { const i=state.interfaces.find(x=>x.id===id); if(i){i.status=val;saveState();renderAll();} }
-function deleteIf(id) { if(!currentUser||currentUser.role!=='admin'){return;} state.interfaces=state.interfaces.filter(i=>i.id!==id); saveState(); renderAll(); }
+function updateIfStatus(id, val) { var i=state.interfaces.find(function(x){return x.id===id;}); if(i){i.status=val;saveState();renderAll();toast('Status updated to '+val,'info');} }
+function deleteIf(id) {
+  if(!currentUser||currentUser.role!=='admin') return;
+  var ifc=state.interfaces.find(function(i){return i.id===id;});
+  confirmDialog('Delete interface <b>'+(ifc?ifc.ifId+' – '+ifc.name:'')+'</b>?<br><br>This cannot be undone.').then(function(ok){
+    if(!ok) return;
+    state.interfaces=state.interfaces.filter(function(i){return i.id!==id;});
+    saveState(); renderAll();
+    toast('Interface deleted', 'warning');
+  });
+}
 
 // ════════════════════════════════════════════════════════
 // TIME LOG
@@ -1320,6 +1521,7 @@ function saveTimeEntry() {
   saveState(); closeModal('logTime');
   document.getElementById('tl-desc-rte').innerHTML='';
   renderAll();
+  toast('Time entry logged', 'success');
 }
 function deleteTime(id) {
   if(!currentUser) return;
@@ -1328,8 +1530,12 @@ function deleteTime(id) {
   var isOwn = entry.person === currentUser.name;
   var isAdmin = currentUser.role === 'admin';
   if(!isOwn && !isAdmin) return;
-  state.timeLogs=state.timeLogs.filter(function(t){return t.id!==id;});
-  saveState(); renderAll();
+  confirmDialog('Delete time entry by <b>'+entry.person+'</b> ('+entry.hours+'h on '+entry.date+')?').then(function(ok){
+    if(!ok) return;
+    state.timeLogs=state.timeLogs.filter(function(t){return t.id!==id;});
+    saveState(); renderAll();
+    toast('Time entry deleted', 'warning');
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -1368,9 +1574,18 @@ function saveOpenPoint() {
   saveState(); closeModal('addOpenPoint');
   document.getElementById('op-desc-rte').innerHTML='';
   renderAll();
+  toast(editId ? 'Open point updated' : 'Open point added', 'success');
 }
-function resolveOP(id) { const o=state.openPoints.find(x=>x.id===id); if(o){o.status=o.status==='resolved'?'open':'resolved'; saveState(); renderAll();} }
-function deleteOP(id) { if(!currentUser||currentUser.role!=='admin'){return;} state.openPoints=state.openPoints.filter(o=>o.id!==id); saveState(); renderAll(); }
+function resolveOP(id) { var o=state.openPoints.find(function(x){return x.id===id;}); if(o){var was=o.status; o.status=o.status==='resolved'?'open':'resolved'; saveState(); renderAll(); toast(o.status==='resolved'?'Open point resolved':'Open point reopened', o.status==='resolved'?'success':'info');} }
+function deleteOP(id) {
+  if(!currentUser||currentUser.role!=='admin') return;
+  confirmDialog('Delete this open point?<br><br>This cannot be undone.').then(function(ok){
+    if(!ok) return;
+    state.openPoints=state.openPoints.filter(function(o){return o.id!==id;});
+    saveState(); renderAll();
+    toast('Open point deleted', 'warning');
+  });
+}
 
 // ════════════════════════════════════════════════════════
 // VALIDATION
@@ -1570,12 +1785,17 @@ function saveTemplate() {
   if (editId) { const t=state.difTemplates.find(x=>String(x.id)===String(editId)); if(t) Object.assign(t,data); }
   else state.difTemplates.push({id:Date.now(),...data});
   saveState(); closeModal('addTemplate'); renderTemplates();
+  toast(editId ? 'Template updated' : 'Template added', 'success');
 }
 function deleteTemplate() {
-  const id=document.getElementById('tmpl-edit-id').value;
-  if(!id||!confirm('Delete this template?')) return;
-  state.difTemplates=state.difTemplates.filter(t=>String(t.id)!==String(id));
-  saveState(); closeModal('addTemplate'); renderTemplates();
+  var id=document.getElementById('tmpl-edit-id').value;
+  if(!id) return;
+  confirmDialog('Delete this template?<br><br>This cannot be undone.').then(function(ok){
+    if(!ok) return;
+    state.difTemplates=state.difTemplates.filter(function(t){return String(t.id)!==String(id);});
+    saveState(); closeModal('addTemplate'); renderTemplates();
+    toast('Template deleted', 'warning');
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -1683,6 +1903,7 @@ function saveUser() {
       state.users.push({id:newId,name:name,email:email,password:hashedPw,role:role,perms:perms,active:true,created:new Date().toISOString()});
     }
     saveState(); closeModal('addUser'); renderUsers();
+    toast(editId ? 'User updated' : 'User created', 'success');
   }
   if (password) {
     sha256(password).then(doSave);
@@ -1694,10 +1915,15 @@ function saveUser() {
 var plainPasswordStore = {};
 
 function deleteUser() {
-  const id = document.getElementById('u-edit-id').value;
-  if(!id||!confirm('Remove this user?')) return;
-  state.users = state.users.filter(u=>String(u.id)!==String(id));
-  saveState(); closeModal('addUser'); renderUsers();
+  var id = document.getElementById('u-edit-id').value;
+  if(!id) return;
+  var u=state.users.find(function(x){return String(x.id)===String(id);});
+  confirmDialog('Remove user <b>'+(u?u.name:'')+'</b>?<br><br>They will lose access immediately.').then(function(ok){
+    if(!ok) return;
+    state.users = state.users.filter(function(x){return String(x.id)!==String(id);});
+    saveState(); closeModal('addUser'); renderUsers();
+    toast('User removed', 'warning');
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -1730,13 +1956,17 @@ function approveRequest() {
     state.users.push({id:newId,name:req.name,email:req.email,password:hashed,role:role,perms:perms,active:true,created:new Date().toISOString()});
     req.status = 'approved';
     saveState(); closeModal('approveRequest'); renderUsers(); updateReqNotification();
+    toast('Access approved — user can now sign in', 'success');
   });
 }
 
 function denyRequest(reqId) {
-  if(!confirm('Deny and remove this access request?')) return;
-  state.accessRequests = state.accessRequests.filter(r=>r.id!==reqId);
-  saveState(); renderUsers(); updateReqNotification();
+  confirmDialog('Deny and remove this access request?').then(function(ok){
+    if(!ok) return;
+    state.accessRequests = state.accessRequests.filter(function(r){return r.id!==reqId;});
+    saveState(); renderUsers(); updateReqNotification();
+    toast('Access request denied', 'warning');
+  });
 }
 
 function updateReqNotification() {
@@ -1768,11 +1998,12 @@ function renderDashboard() {
   const pct=ifaces.length?Math.round(doneFull/ifaces.length*100):0;
   const openOPs=ops.filter(o=>o.status==='open').length;
   document.getElementById('statsRow').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Interfaces</div><div class="stat-value" style="color:var(--accent)">${ifaces.length}</div><div class="stat-sub">in this project</div></div>
-    <div class="stat-card"><div class="stat-label">Done</div><div class="stat-value" style="color:var(--green)">${doneFull}</div><div class="stat-sub">${pct}% complete</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill green" style="width:${pct}%"></div></div></div>
-    <div class="stat-card"><div class="stat-label">In Dev</div><div class="stat-value" style="color:var(--yellow)">${doneCount}</div><div class="stat-sub">${ifaces.filter(i=>i.status==='spec').length} in spec</div></div>
-    <div class="stat-card"><div class="stat-label">Total Hours</div><div class="stat-value" style="color:var(--purple)">${totalH.toFixed(1)}</div><div class="stat-sub">${logs.length} entries</div></div>
-    <div class="stat-card"><div class="stat-label">Open Points</div><div class="stat-value" style="color:var(--orange)">${openOPs}</div><div class="stat-sub">${ops.length-openOPs} resolved</div></div>`;
+    <div class="stat-card"><div class="stat-label">Interfaces</div><div class="stat-value" data-target="${ifaces.length}" style="color:var(--accent)">0</div><div class="stat-sub">in this project</div></div>
+    <div class="stat-card"><div class="stat-label">Done</div><div class="stat-value" data-target="${doneFull}" style="color:var(--green)">0</div><div class="stat-sub">${pct}% complete</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill green" style="width:${pct}%"></div></div></div>
+    <div class="stat-card"><div class="stat-label">In Dev</div><div class="stat-value" data-target="${doneCount}" style="color:var(--yellow)">0</div><div class="stat-sub">${ifaces.filter(i=>i.status==='spec').length} in spec</div></div>
+    <div class="stat-card"><div class="stat-label">Total Hours</div><div class="stat-value" data-target="${totalH.toFixed(1)}" style="color:var(--purple)">0</div><div class="stat-sub">${logs.length} entries</div></div>
+    <div class="stat-card"><div class="stat-label">Open Points</div><div class="stat-value" data-target="${openOPs}" style="color:var(--orange)">0</div><div class="stat-sub">${ops.length-openOPs} resolved</div></div>`;
+  animateCounters();
   const tbody=ifaces.slice(0,8).map(i=>`<tr><td class="td-mono">${i.ifId||'—'}</td><td>${i.name}</td><td>${statusBadge(i.status)}</td></tr>`).join('');
   document.getElementById('dashIfTable').innerHTML=ifaces.length?`<table><thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead><tbody>${tbody}</tbody></table>`:'<div class="empty-state"><div class="empty-icon">⇄</div>No interfaces yet</div>';
   const recent=[...logs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
@@ -2027,13 +2258,20 @@ function applyHL(color) { document.execCommand('hiliteColor',false,color); }
 function openModal(name) {
   if(name==='logTime'){ populateIfDropdown('tl-interface'); document.getElementById('tl-date').value=new Date().toISOString().slice(0,10); if(currentUser) document.getElementById('tl-person').value=currentUser.name; }
   if(name==='addOpenPoint'){ populateIfDropdown('op-interface'); document.getElementById('modal-addOpenPoint').dataset.editId=''; document.getElementById('op-desc-rte').innerHTML=''; document.getElementById('op-owner').value=''; document.getElementById('op-due').value=''; document.getElementById('op-priority').value='medium'; document.getElementById('op-interface').value=''; }
-  if(name==='addInterface'){ document.getElementById('modal-addInterface').dataset.editId=''; const sel=document.getElementById('if-dif'); sel.innerHTML='<option value="">Select...</option>'+state.difTemplates.map(t=>`<option value="${t.code}">${t.code} – ${t.name}</option>`).join(''); ['if-id','if-name','if-source','if-target','if-spec-author','if-dev'].forEach(function(id){document.getElementById(id).value='';}); document.getElementById('if-notes-rte').innerHTML=''; document.getElementById('if-status').value='spec'; document.getElementById('if-priority').value='medium'; }
-  document.getElementById('modal-'+name).classList.remove('hidden');
+  if(name==='addInterface'){ document.getElementById('modal-addInterface').dataset.editId=''; var sel=document.getElementById('if-dif'); sel.innerHTML='<option value="">Select...</option>'+state.difTemplates.map(function(t){return '<option value="'+t.code+'">'+t.code+' – '+t.name+'</option>';}).join(''); ['if-id','if-name','if-source','if-target','if-spec-author','if-dev'].forEach(function(id){document.getElementById(id).value='';}); document.getElementById('if-notes-rte').innerHTML=''; document.getElementById('if-status').value='spec'; document.getElementById('if-priority').value='medium'; }
+  var el=document.getElementById('modal-'+name);
+  el.classList.remove('hidden');
+  void el.offsetWidth;
+  el.classList.add('modal-visible');
 }
-function closeModal(name) { document.getElementById('modal-'+name).classList.add('hidden'); }
+function closeModal(name) {
+  var el=document.getElementById('modal-'+name);
+  el.classList.remove('modal-visible');
+  setTimeout(function(){ el.classList.add('hidden'); }, 180);
+}
 
-document.querySelectorAll('.modal-overlay').forEach(el=>{
-  el.addEventListener('click',e=>{ if(e.target===el) el.classList.add('hidden'); });
+document.querySelectorAll('.modal-overlay').forEach(function(el){
+  el.addEventListener('click',function(e){ if(e.target===el){ el.classList.remove('modal-visible'); setTimeout(function(){ el.classList.add('hidden'); }, 180); } });
 });
 
 // ════════════════════════════════════════════════════════
