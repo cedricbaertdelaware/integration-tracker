@@ -175,16 +175,6 @@ That's it. One file.
 
 ---
 
-## Known Limitations
-
-- **No server-side security**: Firestore rules should be tightened for production use
-- **Single Firestore document**: All data in one document; may hit Firestore's 1MB document limit with very large projects (hundreds of interfaces with rich descriptions)
-- **No email notifications**: User access approvals and open point assignments don't send emails
-- **No version history**: Changes overwrite previous state (no change tracking beyond undo)
-- **Password in source**: The default admin password is visible in the HTML source code; change it immediately after first login
-
----
-
 ## Browser Support
 
 Tested on:
