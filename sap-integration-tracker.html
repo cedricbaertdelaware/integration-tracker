@@ -40,6 +40,8 @@
   .sidebar.collapsed .sidebar-section-label,.sidebar.collapsed .project-name,.sidebar.collapsed .project-count,
   .sidebar.collapsed .nav-label,
   .sidebar.collapsed .nav-section-label{display:none;}
+  .sidebar.collapsed #globalSearch{display:none;}
+  .sidebar.collapsed #globalSearchResults{display:none!important;}
   .sidebar.collapsed .btn-add-project{display:none;}
   .sidebar.collapsed .current-user-bar{justify-content:center;padding:8px 0;}
   .sidebar.collapsed .project-list{padding:4px 0;}
@@ -60,6 +62,8 @@
     .sidebar .sidebar-section-label,.sidebar .project-name,.sidebar .project-count,
     .sidebar .nav-label,
     .sidebar .nav-section-label{display:none;}
+    .sidebar #globalSearch{display:none;}
+    .sidebar #globalSearchResults{display:none!important;}
     .sidebar .btn-add-project{display:none;}
     .sidebar .current-user-bar{justify-content:center;padding:8px 0;}
     .sidebar .sidebar-header{padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:6px;}
@@ -79,6 +83,8 @@
     .sidebar.expanded .sidebar-section-label,.sidebar.expanded .project-name,.sidebar.expanded .project-count,
     .sidebar.expanded .btn-add-project span:last-child,.sidebar.expanded .nav-label,
     .sidebar.expanded .nav-section-label{display:revert;}
+    .sidebar.expanded #globalSearch{display:revert;}
+    .sidebar.expanded #globalSearchResults{display:revert;}
     .sidebar.expanded .current-user-bar{justify-content:flex-start;padding:8px 14px;}
     .sidebar.expanded .sidebar-header{padding:20px 16px 14px;display:block;}
     .sidebar.expanded .project-item{justify-content:flex-start;padding:8px 16px;border-left:2px solid transparent;gap:8px;}
@@ -280,7 +286,20 @@
   .rte-divider{width:1px;height:16px;background:var(--border);margin:0 3px;flex-shrink:0;}
   .rte-hl{width:18px;height:18px;border-radius:3px;border:2px solid transparent;cursor:pointer;transition:transform .1s;flex-shrink:0;}
   .rte-hl:hover{transform:scale(1.15);border-color:var(--text-muted);}
-  .rte-content{background:var(--surface2);color:var(--text);padding:8px 10px;min-height:80px;outline:none;font-size:13px;font-family:var(--sans);line-height:1.6;}
+  .rte-content{background:var(--surface2);color:var(--text);padding:8px 10px;min-height:80px;outline:none;font-size:13px;font-family:var(--sans);line-height:1.6;position:relative;}
+
+  /* @mention dropdown */
+  .mention-dropdown{position:fixed;background:var(--surface);border:1px solid var(--border-bright);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:500;max-height:160px;overflow-y:auto;min-width:180px;}
+  .mention-item{padding:7px 12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;transition:background .1s;}
+  .mention-item:hover,.mention-item.active{background:var(--accent-dim);color:var(--accent);}
+  .mention-item-avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+  .mention-item-name{font-weight:500;}
+  .mention-item-role{font-size:10px;color:var(--text-dim);font-family:var(--mono);}
+  .mention-tag{background:var(--accent-dim);color:var(--accent);padding:1px 4px;border-radius:3px;font-weight:600;font-size:12px;white-space:nowrap;}
+
+  /* Input user autocomplete (reuses mention-dropdown styles) */
+  .input-autocomplete{position:fixed;background:var(--surface);border:1px solid var(--border-bright);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:500;max-height:160px;overflow-y:auto;min-width:180px;}
+  .input-autocomplete.hidden{display:none;}
   .rte-content ul,.rte-content ol{padding-left:20px;}
   .rte-content:empty:before{content:attr(data-placeholder);color:var(--text-dim);pointer-events:none;}
 
@@ -398,6 +417,21 @@
   @keyframes countFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   .stat-value{animation:countFadeIn .3s ease;}
 
+  /* Sortable Column Headers */
+  th.sortable{cursor:pointer;user-select:none;position:relative;padding-right:20px;transition:color .15s;}
+  th.sortable:hover{color:var(--accent);}
+  th.sortable::after{content:'⇅';position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text-dim);transition:color .15s;}
+  th.sortable.sort-asc::after{content:'▲';color:var(--accent);}
+  th.sortable.sort-desc::after{content:'▼';color:var(--accent);}
+  th.sortable.sort-asc,th.sortable.sort-desc{color:var(--accent);}
+
+  /* Bulk action bar */
+  .bulk-bar{display:none;align-items:center;gap:10px;padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:6px;margin-bottom:10px;font-size:12px;}
+  .bulk-count{font-family:var(--mono);font-weight:600;color:var(--accent);}
+  .bulk-check{width:14px;height:14px;cursor:pointer;accent-color:var(--accent);}
+  tr[draggable=true]{cursor:grab;}
+  tr[draggable=true]:active{cursor:grabbing;}
+
   /* Card / Table wrap entrance */
   .table-wrap,.stat-card,.template-card,.user-card,.request-card,.open-point{transition:border-color .15s ease,box-shadow .15s ease;}
   .table-wrap:hover,.stat-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.15);}
@@ -414,6 +448,12 @@
 
 <!-- TOAST NOTIFICATIONS -->
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- @MENTION DROPDOWN -->
+<div class="mention-dropdown hidden" id="mentionDropdown"></div>
+
+<!-- INPUT USER AUTOCOMPLETE -->
+<div class="input-autocomplete hidden" id="inputAutocomplete"></div>
 
 <!-- TOP LOADING BAR -->
 <div class="loading-bar hidden" id="loadingBar" style="width:0%"></div>
@@ -509,6 +549,10 @@
       <span>＋</span> New Project
     </button>
 
+    <div style="padding:6px 12px;border-top:1px solid var(--border)">
+      <input type="text" id="globalSearch" placeholder="Search all..." oninput="doGlobalSearch(this.value)" style="width:100%;padding:5px 8px;font-size:11px"/>
+    </div>
+    <div id="globalSearchResults" class="hidden" style="max-height:200px;overflow-y:auto;padding:0 8px 8px;font-size:11px"></div>
     <nav class="sidebar-nav" id="sideNav">
       <div class="nav-item active" onclick="navClick('dashboard')" id="nav-dashboard"><span class="nav-icon">◈</span><span class="nav-label"> Dashboard</span></div>
       <div class="nav-item" onclick="navClick('interfaces')" id="nav-interfaces"><span class="nav-icon">⇄</span><span class="nav-label"> Interfaces</span></div>
@@ -530,9 +574,11 @@
         <span class="topbar-badge badge" id="topbarBadge" style="display:none"></span>
       </div>
       <div class="topbar-actions" id="topbarActions">
-        <button class="btn btn-secondary btn-sm" id="btn-logTime" onclick="openModal('logTime')">＋ Log Time</button>
         <button class="btn btn-secondary btn-sm" id="btn-addInterface" onclick="openModal('addInterface')">＋ Interface</button>
-        <button class="btn btn-primary btn-sm" id="btn-addOpenPoint" onclick="openModal('addOpenPoint')">＋ Open Point</button>
+        <button class="btn btn-secondary btn-sm" id="btn-logTime" onclick="openModal('logTime')">＋ Log Time</button>
+        <button class="btn btn-secondary btn-sm" id="btn-addOpenPoint" onclick="openModal('addOpenPoint')">＋ Open Point</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportProjectSummary()" title="Export project summary">↓ Summary</button>
+        <button class="btn btn-edit btn-sm" id="btn-editProject" onclick="editProject()" title="Edit project">✎ Project</button>
         <button class="btn btn-danger btn-sm" id="btn-deleteProject" onclick="deleteProject()" title="Delete this project">🗑 Project</button>
       </div>
     </div>
@@ -549,6 +595,7 @@
       <!-- DASHBOARD -->
       <div id="view-dashboard">
         <div class="stats-row" id="statsRow"></div>
+        <div id="dashChart" style="margin-bottom:20px"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
           <div>
             <div class="section-header"><span class="section-title">Interface Status</span></div>
@@ -567,18 +614,23 @@
       <div id="view-interfaces" style="display:none">
         <div class="section-header">
           <span class="section-title">All Interfaces</span>
-          <button class="btn btn-primary btn-sm" id="ifAddBtn" onclick="openModal('addInterface')">＋ Add Interface</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="downloadIfTemplate()" title="Download Excel import template">↓ Template</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('ifImportFile').click()" title="Import interfaces from Excel">↑ Import</button>
+            <input type="file" id="ifImportFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importInterfaces(this)"/>
+            <button class="btn btn-primary btn-sm" id="ifAddBtn" onclick="openModal('addInterface')">＋ Add Interface</button>
+          </div>
         </div>
         <div class="filter-bar">
           <div class="filter-group"><label>Status</label><select id="flt-if-status" onchange="renderInterfaces()"><option value="">All</option><option value="spec">Spec</option><option value="dev">Dev</option><option value="review">Review</option><option value="done">Done</option><option value="parked">Parked</option><option value="blocked">Blocked</option></select></div>
           <div class="filter-group"><label>Priority</label><select id="flt-if-priority" onchange="renderInterfaces()"><option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
           <div class="filter-group"><label>Search</label><input type="text" id="flt-if-search" placeholder="Name, ID..." oninput="renderInterfaces()"/></div>
-          <div class="filter-group"><label>Sort</label><select id="flt-if-sort" onchange="renderInterfaces()"><option value="id">ID</option><option value="name">Name</option><option value="status">Status</option><option value="priority">Priority</option><option value="hours">Hours ↓</option></select></div>
         </div>
+        <div class="bulk-bar" id="bulkBar-interfaces"><span class="bulk-count">0 selected</span><button class="btn btn-danger btn-sm" onclick="bulkDelete('interfaces')">Delete selected</button></div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th>ID</th><th>Name</th><th>Source</th><th>Target</th><th>dIF Template</th>
-            <th>Status</th><th>Priority</th><th>Spec Author</th><th>Developer</th><th>Hours</th><th>Actions</th>
+            <th style="width:30px"><input type="checkbox" class="bulk-check" onchange="toggleBulkAll('interfaces')"/></th><th class="sortable" onclick="colSort('if','id')">ID</th><th class="sortable" onclick="colSort('if','name')">Name</th><th class="sortable" onclick="colSort('if','source')">Source</th><th class="sortable" onclick="colSort('if','target')">Target</th><th>dIF Template</th>
+            <th class="sortable" onclick="colSort('if','status')">Status</th><th class="sortable" onclick="colSort('if','priority')">Priority</th><th>Spec Author</th><th>Developer</th><th class="sortable" onclick="colSort('if','hours')">Hours</th><th>Actions</th>
           </tr></thead><tbody id="ifTableBody"></tbody></table>
         </div>
       </div>
@@ -588,6 +640,9 @@
         <div class="section-header">
           <span class="section-title">Time Log</span>
           <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="downloadTLTemplate()" title="Download Excel import template">↓ Template</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('tlImportFile').click()" title="Import time entries from Excel">↑ Import</button>
+            <input type="file" id="tlImportFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importTimeLogs(this)"/>
             <button class="btn btn-secondary btn-sm" onclick="exportTimeLog()" title="Export filtered time entries to Excel">↓ Export Excel</button>
             <button class="btn btn-primary btn-sm" onclick="openModal('logTime')">＋ Log Time</button>
           </div>
@@ -595,13 +650,13 @@
         <div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="timeStats"></div>
         <div class="filter-bar">
           <div class="filter-group"><label>Person</label><select id="flt-tl-person" onchange="renderTimeLog()"><option value="">All</option></select></div>
-          <div class="filter-group"><label>Role</label><select id="flt-tl-role" onchange="renderTimeLog()"><option value="">All</option><option>Architect</option><option>Developer</option><option>Test Lead</option><option>PM</option><option>Functional</option></select></div>
-          <div class="filter-group"><label>Phase</label><select id="flt-tl-phase" onchange="renderTimeLog()"><option value="">All</option><option>Spec Writing</option><option>Development</option><option>Unit Test</option><option>Integration Test</option><option>Review</option><option>Fix / Rework</option><option>Documentation</option><option>Meeting</option><option>Other</option></select></div>
+          <div class="filter-group"><label>Role</label><select id="flt-tl-role" onchange="renderTimeLog()"><option value="">All</option><option>Architect</option><option>Developer</option><option>Testing</option></select></div>
+          <div class="filter-group"><label>Phase</label><select id="flt-tl-phase" onchange="renderTimeLog()"><option value="">All</option><option>Spec Writing</option><option>Development</option><option>Integration Test</option><option>Review</option><option>Fix / Rework</option><option>Other</option></select></div>
           <div class="filter-group"><label>Interface</label><select id="flt-tl-iface" onchange="renderTimeLog()"><option value="">All</option></select></div>
-          <div class="filter-group"><label>Sort</label><select id="flt-tl-sort" onchange="renderTimeLog()"><option value="date-desc">Date ↓</option><option value="date-asc">Date ↑</option><option value="hours-desc">Hours ↓</option><option value="hours-asc">Hours ↑</option><option value="person">Person</option></select></div>
         </div>
         <div class="table-wrap">
-          <table><thead><tr><th>Date</th><th>Person</th><th>Role</th><th>Interface</th><th>Phase</th><th>Hours</th><th>Description</th><th></th></tr></thead>
+          <div class="bulk-bar" id="bulkBar-timeLogs"><span class="bulk-count">0 selected</span><button class="btn btn-danger btn-sm" onclick="bulkDelete('timeLogs')">Delete selected</button></div>
+        <table><thead><tr><th style="width:30px"><input type="checkbox" class="bulk-check" onchange="toggleBulkAll('timeLogs')"/></th><th class="sortable" onclick="colSort('tl','date')">Date</th><th class="sortable" onclick="colSort('tl','person')">Person</th><th class="sortable" onclick="colSort('tl','role')">Role</th><th>Interface</th><th class="sortable" onclick="colSort('tl','phase')">Phase</th><th class="sortable" onclick="colSort('tl','hours')">Hours</th><th>Description</th><th></th></tr></thead>
           <tbody id="timeTableBody"></tbody></table>
         </div>
       </div>
@@ -610,14 +665,18 @@
       <div id="view-openpoints" style="display:none">
         <div class="section-header">
           <span class="section-title">Open Points &amp; Decisions</span>
-          <button class="btn btn-primary btn-sm" onclick="openModal('addOpenPoint')">＋ Add</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="downloadOPTemplate()" title="Download Excel import template">↓ Template</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('opImportFile').click()" title="Import open points from Excel">↑ Import</button>
+            <input type="file" id="opImportFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importOpenPoints(this)"/>
+            <button class="btn btn-primary btn-sm" onclick="openModal('addOpenPoint')">＋ Add</button>
+          </div>
         </div>
         <div class="filter-bar">
           <div class="filter-group"><label>Status</label><select id="flt-op-status" onchange="renderOpenPoints()"><option value="">All</option><option value="open">Open</option><option value="resolved">Resolved</option></select></div>
           <div class="filter-group"><label>Priority</label><select id="flt-op-priority" onchange="renderOpenPoints()"><option value="">All</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
           <div class="filter-group"><label>Owner</label><select id="flt-op-owner" onchange="renderOpenPoints()"><option value="">All</option></select></div>
           <div class="filter-group"><label>Interface</label><select id="flt-op-iface" onchange="renderOpenPoints()"><option value="">All</option></select></div>
-          <div class="filter-group"><label>Sort</label><select id="flt-op-sort" onchange="renderOpenPoints()"><option value="priority">Priority</option><option value="date-desc">Newest</option><option value="date-asc">Oldest</option><option value="due">Due date</option><option value="owner">Owner</option></select></div>
         </div>
         <div id="opList"></div>
       </div>
@@ -630,7 +689,6 @@
         <div class="filter-bar">
           <div class="filter-group"><label>Status</label><select id="flt-val-status" onchange="renderValidation()"><option value="">All</option><option value="incomplete">Incomplete</option><option value="complete">Complete</option></select></div>
           <div class="filter-group"><label>Search</label><input type="text" id="flt-val-search" placeholder="Interface name..." oninput="renderValidation()"/></div>
-          <div class="filter-group"><label>Sort</label><select id="flt-val-sort" onchange="renderValidation()"><option value="id">ID</option><option value="progress-asc">Progress ↑</option><option value="progress-desc">Progress ↓</option><option value="name">Name</option></select></div>
         </div>
         <div id="validationContent"></div>
       </div>
@@ -720,8 +778,8 @@
       <div class="form-group small"><label>Priority</label><select id="if-priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Spec Author (Architect)</label><input id="if-spec-author" placeholder="e.g. Cédric"/></div>
-      <div class="form-group"><label>Developer Assigned</label><input id="if-dev" placeholder="e.g. TBD"/></div>
+      <div class="form-group"><label>Spec Author (Architect)</label><input id="if-spec-author" placeholder="Type @ to mention..." data-user-autocomplete="true"/></div>
+      <div class="form-group"><label>Developer Assigned</label><input id="if-dev" placeholder="Type @ to mention..." data-user-autocomplete="true"/></div>
     </div>
     <div class="form-row"><div class="form-group"><label>Notes / Description</label>
       <div class="rte-wrap"><div class="rte-toolbar">
@@ -736,6 +794,7 @@
         <div class="rte-hl" style="background:#f96060" onmousedown="event.preventDefault();applyHL('#f96060')"></div>
         <div class="rte-hl" style="background:#3ddc84" onmousedown="event.preventDefault();applyHL('#3ddc84')"></div>
         <div class="rte-hl" style="background:#4f9cf9" onmousedown="event.preventDefault();applyHL('#4f9cf9')"></div>
+        <div class="rte-hl" style="background:var(--surface2);border:1px solid var(--border-bright);font-size:9px;display:flex;align-items:center;justify-content:center" onmousedown="event.preventDefault();removeHL()" title="Remove highlight">✕</div>
         <button class="rte-btn" onmousedown="event.preventDefault();document.execCommand('removeFormat')">✕fmt</button>
       </div><div class="rte-content" id="if-notes-rte" contenteditable="true" data-placeholder="Description or notes..."></div></div>
     </div></div>
@@ -752,11 +811,11 @@
     <div class="modal-title">Log Time <button class="modal-close" onclick="closeModal('logTime')">×</button></div>
     <div class="form-row">
       <div class="form-group"><label>Person</label><input id="tl-person" readonly style="opacity:.7;cursor:not-allowed"/></div>
-      <div class="form-group small"><label>Role</label><select id="tl-role"><option>Architect</option><option>Developer</option><option>Test Lead</option><option>PM</option><option>Functional</option></select></div>
+      <div class="form-group small"><label>Role</label><select id="tl-role"><option>Architect</option><option>Developer</option><option>Testing</option></select></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Interface<span class="req">*</span></label><select id="tl-interface"></select></div>
-      <div class="form-group small"><label>Phase</label><select id="tl-phase"><option>Spec Writing</option><option>Development</option><option>Unit Test</option><option>Integration Test</option><option>Review</option><option>Fix / Rework</option><option>Documentation</option><option>Meeting</option><option>Other</option></select></div>
+      <div class="form-group small"><label>Phase</label><select id="tl-phase"><option>Spec Writing</option><option>Development</option><option>Integration Test</option><option>Review</option><option>Fix / Rework</option><option>Other</option></select></div>
     </div>
     <div class="form-row">
       <div class="form-group small"><label>Date<span class="req">*</span></label><input type="date" id="tl-date"/></div>
@@ -772,6 +831,7 @@
         <div class="rte-hl" style="background:#f5c842" onmousedown="event.preventDefault();applyHL('#f5c842')"></div>
         <div class="rte-hl" style="background:#f96060" onmousedown="event.preventDefault();applyHL('#f96060')"></div>
         <div class="rte-hl" style="background:#3ddc84" onmousedown="event.preventDefault();applyHL('#3ddc84')"></div>
+        <div class="rte-hl" style="background:var(--surface2);border:1px solid var(--border-bright);font-size:9px;display:flex;align-items:center;justify-content:center" onmousedown="event.preventDefault();removeHL()" title="Remove highlight">✕</div>
       </div><div class="rte-content" id="tl-desc-rte" contenteditable="true" data-placeholder="What was done..." style="min-height:55px"></div></div>
     </div></div>
     <div class="modal-actions">
@@ -799,10 +859,11 @@
         <div class="rte-hl" style="background:#f5c842" onmousedown="event.preventDefault();applyHL('#f5c842')"></div>
         <div class="rte-hl" style="background:#f96060" onmousedown="event.preventDefault();applyHL('#f96060')"></div>
         <div class="rte-hl" style="background:#3ddc84" onmousedown="event.preventDefault();applyHL('#3ddc84')"></div>
+        <div class="rte-hl" style="background:var(--surface2);border:1px solid var(--border-bright);font-size:9px;display:flex;align-items:center;justify-content:center" onmousedown="event.preventDefault();removeHL()" title="Remove highlight">✕</div>
       </div><div class="rte-content" id="op-desc-rte" contenteditable="true" data-placeholder="What needs to be decided or clarified?"></div></div>
     </div></div>
     <div class="form-row">
-      <div class="form-group"><label>Owner</label><input id="op-owner" placeholder="Who is responsible?"/></div>
+      <div class="form-group"><label>Owner</label><input id="op-owner" placeholder="Type @ to mention..." data-user-autocomplete="true"/></div>
       <div class="form-group small"><label>Due Date</label><input type="date" id="op-due"/></div>
     </div>
     <div class="modal-actions">
@@ -834,6 +895,7 @@
         <div class="rte-hl" style="background:#f96060" onmousedown="event.preventDefault();applyHL('#f96060')"></div>
         <div class="rte-hl" style="background:#3ddc84" onmousedown="event.preventDefault();applyHL('#3ddc84')"></div>
         <div class="rte-hl" style="background:#4f9cf9" onmousedown="event.preventDefault();applyHL('#4f9cf9')"></div>
+        <div class="rte-hl" style="background:var(--surface2);border:1px solid var(--border-bright);font-size:9px;display:flex;align-items:center;justify-content:center" onmousedown="event.preventDefault();removeHL()" title="Remove highlight">✕</div>
         <button class="rte-btn" onmousedown="event.preventDefault();document.execCommand('removeFormat')">✕fmt</button>
       </div><div class="rte-content" id="tmpl-desc-rte" contenteditable="true" data-placeholder="Describe when to use this template..."></div></div>
     </div></div>
@@ -930,6 +992,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ════════════════════════════════════════════════════════
 // TOAST NOTIFICATIONS
@@ -1019,6 +1082,137 @@ function pulseBadge(el) {
   el.classList.add('badge-pulse');
 }
 
+
+// ════════════════════════════════════════════════════════
+// UNDO SYSTEM (5-second undo for deletes)
+// ════════════════════════════════════════════════════════
+var undoStack = null;
+var undoTimer = null;
+function pushUndo(label, restoreFn) {
+  undoStack = restoreFn;
+  clearTimeout(undoTimer);
+  // Create undo toast
+  var el = document.createElement('div');
+  el.className = 'toast warning';
+  el.id = 'undoToast';
+  el.innerHTML = '<span class="toast-icon">↩</span><span style="flex:1">' + label + '</span><button onclick="executeUndo()" style="background:var(--yellow);color:#000;border:none;padding:3px 10px;border-radius:3px;cursor:pointer;font-size:11px;font-weight:600">Undo</button>';
+  // Remove existing undo toast
+  var existing = document.getElementById('undoToast');
+  if (existing) existing.remove();
+  document.getElementById('toastContainer').appendChild(el);
+  undoTimer = setTimeout(function() { undoStack = null; var t = document.getElementById('undoToast'); if(t){t.classList.add('out');setTimeout(function(){t.remove();},200);} }, 5000);
+}
+function executeUndo() {
+  if (!undoStack) return;
+  undoStack();
+  undoStack = null;
+  clearTimeout(undoTimer);
+  var t = document.getElementById('undoToast'); if(t) t.remove();
+  toast('Action undone', 'success');
+}
+// ════════════════════════════════════════════════════════
+// SHARED IMPORT UTILITIES
+// ════════════════════════════════════════════════════════
+function parseImportFile(data, filename) {
+  var rows = [];
+  try {
+    if (typeof XLSX !== 'undefined' && (filename.endsWith('.xlsx') || filename.endsWith('.xls'))) {
+      var wb = XLSX.read(data, {type: 'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ''});
+    } else {
+      var text = new TextDecoder('utf-8').decode(new Uint8Array(data));
+      rows = text.split(/\r?\n/).map(function(line) {
+        var result = [], current = '', inQuotes = false;
+        for (var i = 0; i < line.length; i++) {
+          var ch = line[i];
+          if (ch === '"') { inQuotes = !inQuotes; }
+          else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+          else { current += ch; }
+        }
+        result.push(current.trim());
+        return result;
+      });
+    }
+  } catch(err) { toast('Failed to read file: ' + err.message, 'error'); return null; }
+  // Filter out empty rows and comment rows
+  rows = rows.filter(function(row) {
+    if (!row || !row.length) return false;
+    var first = String(row[0] || '').trim();
+    if (!first || first.charAt(0) === '#') return false;
+    return true;
+  });
+  return rows;
+}
+
+function mapColumns(headerRow, expectedCols) {
+  var colMap = {};
+  expectedCols.forEach(function(col) {
+    for (var i = 0; i < headerRow.length; i++) {
+      var h = headerRow[i].replace(/[_\-]/g, ' ');
+      if (h.indexOf(col) !== -1 || h === col) { colMap[col] = i; break; }
+    }
+  });
+  return colMap;
+}
+
+// ════════════════════════════════════════════════════════
+// COLUMN SORTING (click header: none → asc → desc → none)
+// ════════════════════════════════════════════════════════
+var sortState = {}; // { 'if': {col:'name', dir:'asc'}, 'tl': {...}, ... }
+
+function colSort(table, col) {
+  var s = sortState[table];
+  if (!s || s.col !== col) {
+    sortState[table] = {col: col, dir: 'asc'};
+  } else if (s.dir === 'asc') {
+    sortState[table] = {col: col, dir: 'desc'};
+  } else {
+    sortState[table] = null; // reset to no sorting
+  }
+  // Update header classes
+  updateSortHeaders(table);
+  // Re-render the appropriate view
+  if (table === 'if') renderInterfaces();
+  else if (table === 'tl') renderTimeLog();
+  else if (table === 'op') renderOpenPoints();
+  else if (table === 'val') renderValidation();
+}
+
+function updateSortHeaders(table) {
+  // Find the table's parent view and update th classes
+  var viewMap = {'if':'view-interfaces','tl':'view-timelog','op':'view-openpoints','val':'view-validation'};
+  var view = document.getElementById(viewMap[table]);
+  if (!view) return;
+  view.querySelectorAll('th.sortable').forEach(function(th) {
+    th.classList.remove('sort-asc','sort-desc');
+  });
+  var s = sortState[table];
+  if (!s) return;
+  // Find the th that matches this column by onclick attribute
+  view.querySelectorAll('th.sortable').forEach(function(th) {
+    var onclick = th.getAttribute('onclick') || '';
+    if (onclick.indexOf("'" + s.col + "'") !== -1) {
+      th.classList.add(s.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+  });
+}
+
+function applySorting(table, arr, getVal) {
+  var s = sortState[table];
+  if (!s) return arr;
+  var dir = s.dir === 'asc' ? 1 : -1;
+  var col = s.col;
+  return arr.slice().sort(function(a, b) {
+    var va = getVal(a, col);
+    var vb = getVal(b, col);
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+    va = String(va || '').toLowerCase();
+    vb = String(vb || '').toLowerCase();
+    return va < vb ? -dir : va > vb ? dir : 0;
+  });
+}
+
 // ════════════════════════════════════════════════════════
 // FORM VALIDATION HIGHLIGHT
 // ════════════════════════════════════════════════════════
@@ -1042,6 +1236,26 @@ function highlightEl(el) {
   el.style.boxShadow = '0 0 0 2px rgba(249,96,96,.2)';
   setTimeout(function(){ el.style.borderColor = ''; el.style.boxShadow = ''; }, 2500);
 }
+
+
+// ════════════════════════════════════════════════════════
+// SESSION TIMEOUT (1 hour inactivity)
+// ════════════════════════════════════════════════════════
+var sessionTimer = null;
+var SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
+function resetSessionTimer() {
+  clearTimeout(sessionTimer);
+  if (!currentUser) return;
+  sessionTimer = setTimeout(function() {
+    if (currentUser) {
+      toast('Session expired due to inactivity', 'warning');
+      setTimeout(doLogout, 1500);
+    }
+  }, SESSION_TIMEOUT);
+}
+['click','keydown','mousemove','scroll','touchstart'].forEach(function(evt) {
+  document.addEventListener(evt, resetSessionTimer, {passive:true});
+});
 
 // ════════════════════════════════════════════════════════
 // STATE
@@ -1280,6 +1494,7 @@ function bootApp() {
   setView(state.activeView || 'dashboard');
   updateReqNotification();
   startRealtimeSync();
+  resetSessionTimer();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1326,6 +1541,7 @@ function applyRBAC() {
   const canWriteTL = canWrite('timelog');
   const canWriteOP = canWrite('openpoints');
   document.getElementById('btnAddProject').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btn-editProject').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-deleteProject').style.display = isAdmin ? '' : 'none';
   document.getElementById('btn-addInterface').style.display = canWriteIF ? '' : 'none';
   document.getElementById('btn-logTime').style.display = canWriteTL ? '' : 'none';
@@ -1413,18 +1629,43 @@ function selectProject(id) {
 }
 
 function saveProject() {
-  const name = document.getElementById('proj-name').value.trim();
+  var name = document.getElementById('proj-name').value.trim();
   if (!name) { highlightMissing(['proj-name']); return; }
-  const p = { id:Date.now(), name, code:document.getElementById('proj-code').value.trim().toUpperCase()||name.substring(0,3).toUpperCase(), desc:document.getElementById('proj-desc').value.trim(), landscape:document.getElementById('proj-landscape').value, phase:document.getElementById('proj-phase').value, color:selectedColor, created:new Date().toISOString() };
-  state.projects.push(p);
-  saveState();
-  closeModal('addProject');
-  toast('Project created successfully', 'success');
-  renderProjectList();
-  selectProject(p.id);
-  ['proj-name','proj-code','proj-desc'].forEach(id => document.getElementById(id).value='');
+  var editId = document.getElementById('modal-addProject').dataset.editId;
+  var data = {name:name, code:document.getElementById('proj-code').value.trim().toUpperCase()||name.substring(0,3).toUpperCase(), desc:document.getElementById('proj-desc').value.trim(), landscape:document.getElementById('proj-landscape').value, phase:document.getElementById('proj-phase').value, color:selectedColor};
+  if (editId) {
+    var p = state.projects.find(function(x){return String(x.id)===String(editId);});
+    if (p) Object.assign(p, data);
+    saveState(); closeModal('addProject');
+    toast('Project updated', 'success');
+    selectProject(p.id);
+  } else {
+    data.id = Date.now();
+    data.created = new Date().toISOString();
+    state.projects.push(data);
+    saveState(); closeModal('addProject');
+    toast('Project created successfully', 'success');
+    renderProjectList();
+    selectProject(data.id);
+  }
+  document.getElementById('modal-addProject').dataset.editId = '';
+  ['proj-name','proj-code','proj-desc'].forEach(function(id){document.getElementById(id).value='';});
 }
 
+function editProject() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  var p = state.projects.find(function(x){return x.id===state.activeProject;});
+  if (!p) return;
+  document.getElementById('proj-name').value = p.name || '';
+  document.getElementById('proj-code').value = p.code || '';
+  document.getElementById('proj-desc').value = p.desc || '';
+  document.getElementById('proj-landscape').value = p.landscape || 'S/4HANA Public Cloud';
+  document.getElementById('proj-phase').value = p.phase || 'Build';
+  selectedColor = p.color || '#4f9cf9';
+  document.querySelectorAll('.color-opt').forEach(function(el){el.classList.toggle('selected', el.dataset.color===selectedColor);});
+  document.getElementById('modal-addProject').dataset.editId = p.id;
+  openModal('addProject');
+}
 var deleteProjectArmed = false;
 function deleteProject() {
   if (!currentUser || currentUser.role !== 'admin') return;
@@ -1496,6 +1737,7 @@ function editInterface(id) {
   el.classList.remove('hidden');
   void el.offsetWidth;
   el.classList.add('modal-visible');
+  setTimeout(function(){initMentions();initInputAutocomplete();}, 50);
 }
 function saveInterface() {
   if (!state.activeProject) { toast('Select a project first', 'error'); return; }
@@ -1528,10 +1770,87 @@ function deleteIf(id) {
   var ifc=state.interfaces.find(function(i){return i.id===id;});
   confirmDialog('Delete interface <b>'+(ifc?ifc.ifId+' – '+ifc.name:'')+'</b>?<br><br>This cannot be undone.').then(function(ok){
     if(!ok) return;
+    var removed=state.interfaces.find(function(i){return i.id===id;});
     state.interfaces=state.interfaces.filter(function(i){return i.id!==id;});
     saveState(); renderAll();
-    toast('Interface deleted', 'warning');
+    pushUndo('Interface deleted', function(){state.interfaces.push(removed);saveState();renderAll();});
   });
+}
+
+// ════════════════════════════════════════════════════════
+// INTERFACE IMPORT / EXPORT
+// ════════════════════════════════════════════════════════
+function downloadIfTemplate() {
+  var bom = '\uFEFF';
+  var header = 'Interface ID,Interface Name,Source System,Target System,dIF Template,Status,Priority,Spec Author,Developer';
+  var rows = [header];
+  rows.push('CP001-IF001,Example Interface Name,BTS,SAP S/4HANA,TF001,spec,high,Cédric Baert,TBD');
+  rows.push('CP001-IF002,Another Interface,SAP,Claire,TF005,dev,medium,,');
+  rows.push('');
+  rows.push('# Status values: spec / dev / review / done / parked / blocked');
+  rows.push('# Priority values: high / medium / low');
+  rows.push('# dIF Template values: TF000 / TF001 / TF002 / TF003 / TF004 / TF005 / TF006 / TF007 / TF008.1 / TF008.2 / TF009.1 / TF009.2');
+  rows.push('# Delete the example rows above before importing');
+  var csv = bom + rows.join('\r\n');
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var proj = state.projects.find(function(p){return p.id===state.activeProject;});
+  a.download = 'Interfaces_Import_Template_' + (proj ? proj.code || proj.name : 'Project').replace(/[^a-zA-Z0-9]/g,'') + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Template downloaded', 'info');
+}
+
+function importInterfaces(input) {
+  if (!state.activeProject) { toast('Select a project first', 'error'); return; }
+  var file = input.files[0]; if (!file) return;
+  input.value = '';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var rows = parseImportFile(e.target.result, file.name);
+    if (!rows) return;
+    if (rows.length < 2) { toast('No data rows found in file', 'error'); return; }
+    var header = rows[0].map(function(h){return String(h||'').trim().toLowerCase();});
+    var cm = mapColumns(header, ['interface id','interface name','source system','target system','dif template','status','priority','spec author','developer']);
+    if (cm['interface name'] === undefined && cm['interface id'] === undefined) { toast('Missing required columns: Interface ID or Interface Name', 'error'); return; }
+    var imported = 0, skipped = 0;
+    for (var r = 1; r < rows.length; r++) {
+      var row = rows[r];
+      var name = cm['interface name'] !== undefined ? String(row[cm['interface name']]||'').trim() : '';
+      var ifId = cm['interface id'] !== undefined ? String(row[cm['interface id']]||'').trim() : '';
+      if (!name && !ifId) continue;
+      // Check for duplicate interface ID
+      if (ifId && state.interfaces.find(function(i){return i.projectId===state.activeProject && (i.ifId||'').toLowerCase()===ifId.toLowerCase();})) {
+        skipped++;
+        continue;
+      }
+      var status = cm['status'] !== undefined ? String(row[cm['status']]||'').trim().toLowerCase() : 'spec';
+      if (['spec','dev','review','done','parked','blocked'].indexOf(status)===-1) status = 'spec';
+      var priority = cm['priority'] !== undefined ? String(row[cm['priority']]||'').trim().toLowerCase() : 'medium';
+      if (['high','medium','low'].indexOf(priority)===-1) priority = 'medium';
+      state.interfaces.push({
+        id: Date.now() + r,
+        projectId: state.activeProject,
+        ifId: ifId,
+        name: name || ifId,
+        source: cm['source system'] !== undefined ? String(row[cm['source system']]||'').trim() : '',
+        target: cm['target system'] !== undefined ? String(row[cm['target system']]||'').trim() : '',
+        dif: cm['dif template'] !== undefined ? String(row[cm['dif template']]||'').trim() : '',
+        status: status,
+        priority: priority,
+        specAuthor: cm['spec author'] !== undefined ? String(row[cm['spec author']]||'').trim() : '',
+        dev: cm['developer'] !== undefined ? String(row[cm['developer']]||'').trim() : '',
+        notes: '',
+        created: new Date().toISOString()
+      });
+      imported++;
+    }
+    if (imported > 0) { saveState(); renderAll(); toast(imported + ' interface' + (imported>1?'s':'') + ' imported' + (skipped ? ' (' + skipped + ' duplicates skipped)' : ''), 'success'); }
+    else { toast('No new interfaces found' + (skipped ? ' (' + skipped + ' duplicates skipped)' : ''), 'warning'); }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // ════════════════════════════════════════════════════════
@@ -1568,10 +1887,102 @@ function deleteTime(id) {
   if(!isOwn && !isAdmin) return;
   confirmDialog('Delete time entry by <b>'+entry.person+'</b> ('+entry.hours+'h on '+entry.date+')?').then(function(ok){
     if(!ok) return;
+    var removed=state.timeLogs.find(function(t){return t.id===id;});
     state.timeLogs=state.timeLogs.filter(function(t){return t.id!==id;});
     saveState(); renderAll();
-    toast('Time entry deleted', 'warning');
+    pushUndo('Time entry deleted', function(){state.timeLogs.push(removed);saveState();renderAll();});
   });
+}
+
+// ════════════════════════════════════════════════════════
+// TIME LOG IMPORT / EXPORT
+// ════════════════════════════════════════════════════════
+function downloadTLTemplate() {
+  var ifaces = getProjIf();
+  var bom = '\uFEFF';
+  var header = 'Date,Person,Role,Interface ID,Phase,Hours,Description';
+  var rows = [header];
+  rows.push('2026-03-01,Cédric Baert,Architect,' + (ifaces.length ? ifaces[0].ifId : 'CP001-IF001') + ',Spec Writing,2,Drafted initial specification');
+  rows.push('2026-03-01,TBD,Developer,' + (ifaces.length ? ifaces[0].ifId : 'CP001-IF001') + ',Development,4,Implemented iFlow mapping');
+  rows.push('');
+  rows.push('# Available Interfaces in this project (for reference):');
+  ifaces.forEach(function(i) { rows.push('# ' + (i.ifId||'?') + ' — ' + i.name); });
+  rows.push('');
+  rows.push('# Role values: Architect / Developer / Testing');
+  rows.push('# Phase values: Spec Writing / Development / Integration Test / Review / Fix / Rework / Other');
+  rows.push('# Date format: YYYY-MM-DD');
+  rows.push('# Delete the example rows above before importing');
+  var csv = bom + rows.join('\r\n');
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var proj = state.projects.find(function(p){return p.id===state.activeProject;});
+  a.download = 'TimeLog_Import_Template_' + (proj ? proj.code || proj.name : 'Project').replace(/[^a-zA-Z0-9]/g,'') + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Template downloaded', 'info');
+}
+
+function importTimeLogs(input) {
+  if (!state.activeProject) { toast('Select a project first', 'error'); return; }
+  var file = input.files[0]; if (!file) return;
+  input.value = '';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var rows = parseImportFile(e.target.result, file.name);
+    if (!rows) return;
+    if (rows.length < 2) { toast('No data rows found in file', 'error'); return; }
+    var header = rows[0].map(function(h){return String(h||'').trim().toLowerCase();});
+    var cm = mapColumns(header, ['date','person','role','interface id','phase','hours','description']);
+    if (cm['hours'] === undefined) { toast('Missing required column: Hours', 'error'); return; }
+    var ifaces = getProjIf();
+    var imported = 0, warnings = [];
+    for (var r = 1; r < rows.length; r++) {
+      var row = rows[r];
+      var hours = parseFloat(row[cm['hours']]);
+      if (!hours || hours <= 0) continue;
+      var person = cm['person'] !== undefined ? String(row[cm['person']]||'').trim() : (currentUser ? currentUser.name : 'Unknown');
+      var role = cm['role'] !== undefined ? String(row[cm['role']]||'').trim() : 'Developer';
+      var phase = cm['phase'] !== undefined ? String(row[cm['phase']]||'').trim() : 'Other';
+      var desc = cm['description'] !== undefined ? String(row[cm['description']]||'').trim() : '';
+      var date = cm['date'] !== undefined ? String(row[cm['date']]||'').trim() : new Date().toISOString().slice(0,10);
+      // Normalize date
+      if (date && !isNaN(date)) {
+        var d = new Date((Number(date) - 25569) * 86400 * 1000);
+        date = d.toISOString().slice(0, 10);
+      } else if (date && date.indexOf('/') !== -1) {
+        var parts = date.split('/');
+        if (parts.length === 3) { var yr = parts[2].length === 2 ? '20' + parts[2] : parts[2]; date = yr + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0'); }
+      }
+      // Match interface
+      var ifaceId = cm['interface id'] !== undefined ? String(row[cm['interface id']]||'').trim() : '';
+      var matchedIface = null;
+      if (ifaceId) {
+        matchedIface = ifaces.find(function(i){return (i.ifId||'').toLowerCase()===ifaceId.toLowerCase();});
+        if (!matchedIface) warnings.push('Row ' + (r+1) + ': Interface "' + ifaceId + '" not found');
+      }
+      state.timeLogs.push({
+        id: Date.now() + r,
+        projectId: state.activeProject,
+        person: person || 'Unknown',
+        role: role,
+        interfaceId: matchedIface ? matchedIface.id : null,
+        phase: phase,
+        date: date,
+        hours: hours,
+        desc: desc
+      });
+      imported++;
+    }
+    if (imported > 0) { saveState(); renderAll(); toast(imported + ' time entr' + (imported>1?'ies':'y') + ' imported', 'success'); }
+    else { toast('No valid time entries found in file', 'warning'); }
+    if (warnings.length > 0) {
+      warnings.slice(0, 3).forEach(function(w){ toast(w, 'warning'); });
+      if (warnings.length > 3) toast('...and ' + (warnings.length - 3) + ' more warnings', 'warning');
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // ════════════════════════════════════════════════════════
@@ -1591,6 +2002,7 @@ function editOpenPoint(id) {
   el.classList.remove('hidden');
   void el.offsetWidth;
   el.classList.add('modal-visible');
+  setTimeout(function(){initMentions();initInputAutocomplete();}, 50);
 }
 function saveOpenPoint() {
   if (!state.activeProject) { toast('Select a project first', 'error'); return; }
@@ -1624,10 +2036,90 @@ function deleteOP(id) {
   if(!currentUser||currentUser.role!=='admin') return;
   confirmDialog('Delete this open point?<br><br>This cannot be undone.').then(function(ok){
     if(!ok) return;
+    var removed=state.openPoints.find(function(o){return o.id===id;});
     state.openPoints=state.openPoints.filter(function(o){return o.id!==id;});
     saveState(); renderAll();
-    toast('Open point deleted', 'warning');
+    pushUndo('Open point deleted', function(){state.openPoints.push(removed);saveState();renderAll();});
   });
+}
+
+// ════════════════════════════════════════════════════════
+// OPEN POINTS IMPORT / EXPORT
+// ════════════════════════════════════════════════════════
+function downloadOPTemplate() {
+  // Generate CSV template with current project interfaces as reference
+  var ifaces = getProjIf();
+  var bom = '\uFEFF';
+  var header = 'Interface ID,Priority,Description,Owner,Due Date';
+  var rows = [header];
+  // Add example row
+  rows.push((ifaces.length ? ifaces[0].ifId : 'CP001-IF001') + ',high,Example: Confirm mapping rules for field X with customer,Cédric Baert,2026-03-15');
+  rows.push((ifaces.length > 1 ? ifaces[1].ifId : 'CP001-IF002') + ',medium,Example: Decide on error handling approach for timeout scenarios,TBD,');
+  // Add a reference sheet: list all interfaces in this project
+  rows.push('');
+  rows.push('# Available Interfaces in this project (for reference):');
+  ifaces.forEach(function(i) { rows.push('# ' + (i.ifId||'?') + ' — ' + i.name); });
+  rows.push('');
+  rows.push('# Priority values: high / medium / low');
+  rows.push('# Due Date format: YYYY-MM-DD');
+  rows.push('# Delete the example rows above before importing');
+
+  var csv = bom + rows.join('\r\n');
+  var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var proj = state.projects.find(function(p){return p.id===state.activeProject;});
+  a.download = 'OpenPoints_Import_Template_' + (proj ? proj.code || proj.name : 'Project').replace(/[^a-zA-Z0-9]/g,'') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Template downloaded — fill it in and import', 'info');
+}
+
+function importOpenPoints(input) {
+  if (!state.activeProject) { toast('Select a project first', 'error'); return; }
+  var file = input.files[0]; if (!file) return;
+  input.value = '';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var rows = parseImportFile(e.target.result, file.name);
+    if (!rows) return;
+    if (rows.length < 2) { toast('No data rows found in file', 'error'); return; }
+    var header = rows[0].map(function(h){return String(h||'').trim().toLowerCase();});
+    var cm = mapColumns(header, ['interface id','priority','description','owner','due date']);
+    if (cm['description'] === undefined) { toast('Missing required column: Description', 'error'); return; }
+    var ifaces = getProjIf();
+    var imported = 0, warnings = [];
+    for (var r = 1; r < rows.length; r++) {
+      var row = rows[r];
+      var desc = String(row[cm['description']]||'').trim();
+      if (!desc) continue;
+      var ifaceId = cm['interface id'] !== undefined ? String(row[cm['interface id']]||'').trim() : '';
+      var priority = cm['priority'] !== undefined ? String(row[cm['priority']]||'').trim().toLowerCase() : 'medium';
+      var owner = cm['owner'] !== undefined ? String(row[cm['owner']]||'').trim() : '';
+      var due = cm['due date'] !== undefined ? String(row[cm['due date']]||'').trim() : '';
+      if (['high','medium','low'].indexOf(priority)===-1) priority = 'medium';
+      // Normalize date
+      if (due && !isNaN(due)) { var d = new Date((Number(due) - 25569) * 86400 * 1000); due = d.toISOString().slice(0,10); }
+      else if (due && due.indexOf('/') !== -1) { var parts = due.split('/'); if (parts.length === 3) { var yr = parts[2].length === 2 ? '20' + parts[2] : parts[2]; due = yr + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0'); } }
+      var matchedIface = null;
+      if (ifaceId) {
+        matchedIface = ifaces.find(function(i){return (i.ifId||'').toLowerCase()===ifaceId.toLowerCase();});
+        if (!matchedIface) warnings.push('Row ' + (r+1) + ': Interface "' + ifaceId + '" not found — imported without link');
+      }
+      state.openPoints.push({ id: Date.now() + r, projectId: state.activeProject, interfaceId: matchedIface ? matchedIface.id : null, desc: desc, owner: owner, priority: priority, due: due, status: 'open', created: new Date().toISOString() });
+      imported++;
+    }
+    if (imported > 0) { saveState(); renderAll(); toast(imported + ' open point' + (imported>1?'s':'') + ' imported', 'success'); }
+    else { toast('No valid open points found in file', 'warning'); }
+    if (warnings.length > 0) {
+      warnings.slice(0, 3).forEach(function(w){ toast(w, 'warning'); });
+      if (warnings.length > 3) toast('...and ' + (warnings.length - 3) + ' more warnings', 'warning');
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // ════════════════════════════════════════════════════════
@@ -2054,6 +2546,7 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-label">Total Hours</div><div class="stat-value" data-target="${totalH.toFixed(1)}" style="color:var(--purple)">0</div><div class="stat-sub">${logs.length} entries</div></div>
     <div class="stat-card"><div class="stat-label">Open Points</div><div class="stat-value" data-target="${openOPs}" style="color:var(--orange)">0</div><div class="stat-sub">${ops.length-openOPs} resolved</div></div>`;
   animateCounters();
+  renderDashboardChart();
   const tbody=ifaces.slice(0,8).map(i=>`<tr><td class="td-mono">${i.ifId||'—'}</td><td>${i.name}</td><td>${statusBadge(i.status)}</td></tr>`).join('');
   document.getElementById('dashIfTable').innerHTML=ifaces.length?`<table><thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead><tbody>${tbody}</tbody></table>`:'<div class="empty-state"><div class="empty-icon">⇄</div>No interfaces yet</div>';
   const recent=[...logs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
@@ -2070,27 +2563,34 @@ function renderInterfaces() {
   var fStatus = document.getElementById('flt-if-status').value;
   var fPriority = document.getElementById('flt-if-priority').value;
   var fSearch = (document.getElementById('flt-if-search').value||'').toLowerCase();
-  var fSort = document.getElementById('flt-if-sort').value;
   var ifaces = allIf.filter(function(i){
     if(fStatus && i.status!==fStatus) return false;
     if(fPriority && i.priority!==fPriority) return false;
     if(fSearch && (i.ifId||'').toLowerCase().indexOf(fSearch)===-1 && (i.name||'').toLowerCase().indexOf(fSearch)===-1 && (i.source||'').toLowerCase().indexOf(fSearch)===-1 && (i.target||'').toLowerCase().indexOf(fSearch)===-1) return false;
     return true;
   });
-  // Sorting
+  // Column sorting
   var pOrd={high:0,medium:1,low:2}; var sOrd={spec:0,dev:1,review:2,done:3,parked:4,blocked:5};
-  ifaces.sort(function(a,b){
-    if(fSort==='name') return (a.name||'').localeCompare(b.name||'');
-    if(fSort==='status') return (sOrd[a.status]||0)-(sOrd[b.status]||0);
-    if(fSort==='priority') return (pOrd[a.priority]||1)-(pOrd[b.priority]||1);
-    if(fSort==='hours'){var ha=logs.filter(function(t){return String(t.interfaceId)===String(a.id);}).reduce(function(s,t){return s+t.hours;},0); var hb=logs.filter(function(t){return String(t.interfaceId)===String(b.id);}).reduce(function(s,t){return s+t.hours;},0); return hb-ha;}
-    return (a.ifId||'').localeCompare(b.ifId||'');
+  ifaces = applySorting('if', ifaces, function(i, col) {
+    if(col==='id') return i.ifId||'';
+    if(col==='name') return i.name||'';
+    if(col==='source') return i.source||'';
+    if(col==='target') return i.target||'';
+    if(col==='status') return sOrd[i.status]||0;
+    if(col==='priority') return pOrd[i.priority]||1;
+    if(col==='hours') return logs.filter(function(t){return String(t.interfaceId)===String(i.id);}).reduce(function(s,t){return s+t.hours;},0);
+    return '';
   });
+  updateSortHeaders('if');
   var tbody=ifaces.map(function(i){
     var hours=logs.filter(function(t){return String(t.interfaceId)===String(i.id);}).reduce(function(s,t){return s+t.hours;},0);
-    return '<tr><td class="td-mono">'+(i.ifId||'—')+'</td><td style="max-width:160px">'+i.name+'</td><td class="td-muted">'+(i.source||'—')+'</td><td class="td-muted">'+(i.target||'—')+'</td><td><span class="tag">'+(i.dif||'—')+'</span></td><td>'+(rw?'<select onchange="updateIfStatus('+i.id+',this.value)" style="padding:3px 6px;font-size:11px;background:var(--surface2)">'+['spec','dev','review','done','parked','blocked'].map(function(s){return '<option '+(i.status===s?'selected':'')+' value="'+s+'">'+s+'</option>';}).join('')+'</select>':statusBadge(i.status))+'</td><td>'+priorityBadge(i.priority)+'</td><td class="td-muted">'+(i.specAuthor||'—')+'</td><td class="td-muted">'+(i.dev||'—')+'</td><td class="td-mono">'+(hours>0?hours.toFixed(1)+'h':'—')+'</td><td>'+(rw?'<button class="btn btn-edit btn-sm" onclick="editInterface('+i.id+')" title="Edit">✎</button>':'')+(currentUser&&currentUser.role==='admin'?'<button class="btn btn-danger btn-sm" onclick="deleteIf('+i.id+')" title="Delete">✕</button>':'')+'</td></tr>';
+    var difTmpl=state.difTemplates.find(function(t){return t.code===i.dif;});
+    var difLabel=difTmpl?(difTmpl.code+' – '+difTmpl.name):(i.dif||'—');
+    var isChecked=bulkSelected.interfaces.indexOf(i.id)!==-1;
+    return '<tr draggable="true" ondragstart="dragStart(\'interfaces\','+i.id+',event)" ondragend="dragEnd(event)" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOn(\'interfaces\','+i.id+',event)"><td><input type="checkbox" class="bulk-check" id="bulk-interfaces-'+i.id+'" '+(isChecked?'checked':'')+' onchange="toggleBulk(\'interfaces\','+i.id+')"/></td><td class="td-mono">'+(i.ifId||'—')+'</td><td style="max-width:160px">'+i.name+'</td><td class="td-muted">'+(i.source||'—')+'</td><td class="td-muted">'+(i.target||'—')+'</td><td><span class="tag">'+difLabel+'</span></td><td>'+(rw?'<select onchange="updateIfStatus('+i.id+',this.value)" style="padding:3px 6px;font-size:11px;background:var(--surface2)">'+['spec','dev','review','done','parked','blocked'].map(function(s){return '<option '+(i.status===s?'selected':'')+' value="'+s+'">'+s+'</option>';}).join('')+'</select>':statusBadge(i.status))+'</td><td>'+priorityBadge(i.priority)+'</td><td class="td-muted">'+(i.specAuthor||'—')+'</td><td class="td-muted">'+(i.dev||'—')+'</td><td class="td-mono">'+(hours>0?hours.toFixed(1)+'h':'—')+'</td><td>'+(rw?'<button class="btn btn-edit btn-sm" onclick="editInterface('+i.id+')" title="Edit">✎</button>':'')+(currentUser&&currentUser.role==='admin'?'<button class="btn btn-danger btn-sm" onclick="deleteIf('+i.id+')" title="Delete">✕</button>':'')+'</td></tr>';
   }).join('');
-  document.getElementById('ifTableBody').innerHTML=tbody||'<tr><td colspan="11" class="empty-state">No interfaces match filters.</td></tr>';
+  updateBulkBar('interfaces');
+  document.getElementById('ifTableBody').innerHTML=tbody||'<tr><td colspan="12" class="empty-state">No interfaces match filters.</td></tr>';
 }
 
 function renderTimeLog() {
@@ -2105,10 +2605,10 @@ function renderTimeLog() {
   var totalH=allLogs.reduce(function(s,t){return s+t.hours;},0);
   var archH=allLogs.filter(function(t){return t.role==='Architect';}).reduce(function(s,t){return s+t.hours;},0);
   var devH=allLogs.filter(function(t){return t.role==='Developer';}).reduce(function(s,t){return s+t.hours;},0);
-  var testH=allLogs.filter(function(t){return t.role==='Test Lead';}).reduce(function(s,t){return s+t.hours;},0);
+  var testH=allLogs.filter(function(t){return t.role==='Testing'||t.role==='Test Lead';}).reduce(function(s,t){return s+t.hours;},0);
   document.getElementById('timeStats').innerHTML='<div class="stat-card"><div class="stat-label">Total Hours</div><div class="stat-value" style="color:var(--accent)">'+totalH.toFixed(1)+'</div></div><div class="stat-card"><div class="stat-label">Architect</div><div class="stat-value" style="color:var(--purple)">'+archH.toFixed(1)+'</div></div><div class="stat-card"><div class="stat-label">Developer</div><div class="stat-value" style="color:var(--yellow)">'+devH.toFixed(1)+'</div></div><div class="stat-card"><div class="stat-label">Test</div><div class="stat-value" style="color:var(--green)">'+testH.toFixed(1)+'</div></div>';
   // Filters
-  var fPerson=personSel.value, fRole=document.getElementById('flt-tl-role').value, fPhase=document.getElementById('flt-tl-phase').value, fIface=document.getElementById('flt-tl-iface').value, fSort=document.getElementById('flt-tl-sort').value;
+  var fPerson=personSel.value, fRole=document.getElementById('flt-tl-role').value, fPhase=document.getElementById('flt-tl-phase').value, fIface=document.getElementById('flt-tl-iface').value;
   var logs=allLogs.filter(function(t){
     if(fPerson && t.person!==fPerson) return false;
     if(fRole && t.role!==fRole) return false;
@@ -2116,18 +2616,26 @@ function renderTimeLog() {
     if(fIface && String(t.interfaceId)!==fIface) return false;
     return true;
   });
-  // Sort
-  logs.sort(function(a,b){
-    if(fSort==='date-asc') return (a.date||'').localeCompare(b.date||'');
-    if(fSort==='hours-desc') return b.hours-a.hours;
-    if(fSort==='hours-asc') return a.hours-b.hours;
-    if(fSort==='person') return (a.person||'').localeCompare(b.person||'');
-    return (b.date||'').localeCompare(a.date||'');
-  });
+  // Column sorting (default: date desc)
+  if (sortState['tl']) {
+    logs = applySorting('tl', logs, function(t, col) {
+      if(col==='date') return t.date||'';
+      if(col==='person') return t.person||'';
+      if(col==='role') return t.role||'';
+      if(col==='phase') return t.phase||'';
+      if(col==='hours') return t.hours||0;
+      return '';
+    });
+  } else {
+    logs.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+  }
+  updateSortHeaders('tl');
   var isAdmin=currentUser&&currentUser.role==='admin';
   var myName=currentUser?currentUser.name:'';
-  var tbody=logs.map(function(t){ var ifc=ifaces.find(function(i){return String(i.id)===String(t.interfaceId);}); var canDel=isAdmin||t.person===myName; return '<tr><td class="td-mono">'+t.date+'</td><td style="color:var(--accent);font-weight:600">'+t.person+'</td><td><span class="tag">'+t.role+'</span></td><td class="td-muted">'+(ifc?(ifc.ifId||'')+' '+ifc.name:'— project —')+'</td><td><span class="tag">'+t.phase+'</span></td><td class="td-mono">'+t.hours+'h</td><td class="td-muted" style="max-width:200px;overflow:hidden">'+(t.desc||'').replace(/<[^>]+>/g,' ').slice(0,80)+'</td><td>'+(canDel?'<button class="btn btn-danger btn-sm" onclick="deleteTime('+t.id+')" title="Delete">✕</button>':'')+'</td></tr>'; }).join('');
-  document.getElementById('timeTableBody').innerHTML=tbody||'<tr><td colspan="8" class="empty-state">No time entries match filters.</td></tr>';
+  var tbody=logs.map(function(t){ var ifc=ifaces.find(function(i){return String(i.id)===String(t.interfaceId);}); var canDel=isAdmin||t.person===myName; var isTlChecked=bulkSelected.timeLogs.indexOf(t.id)!==-1;
+    return '<tr><td><input type="checkbox" class="bulk-check" id="bulk-timeLogs-'+t.id+'" '+(isTlChecked?'checked':'')+' onchange="toggleBulk(\'timeLogs\','+t.id+')"/></td><td class="td-mono">'+t.date+'</td><td style="color:var(--accent);font-weight:600">'+t.person+'</td><td><span class="tag">'+t.role+'</span></td><td class="td-muted">'+(ifc?(ifc.ifId||'')+' '+ifc.name:'— project —')+'</td><td><span class="tag">'+t.phase+'</span></td><td class="td-mono">'+t.hours+'h</td><td class="td-muted" style="max-width:200px;overflow:hidden">'+(t.desc||'').replace(/<[^>]+>/g,' ').slice(0,80)+'</td><td>'+(canDel?'<button class="btn btn-danger btn-sm" onclick="deleteTime('+t.id+')" title="Delete">✕</button>':'')+'</td></tr>'; }).join('');
+  updateBulkBar('timeLogs');
+  document.getElementById('timeTableBody').innerHTML=tbody||'<tr><td colspan="9" class="empty-state">No time entries match filters.</td></tr>';
 }
 
 function exportTimeLog() {
@@ -2138,7 +2646,6 @@ function exportTimeLog() {
   var fRole=document.getElementById('flt-tl-role').value;
   var fPhase=document.getElementById('flt-tl-phase').value;
   var fIface=document.getElementById('flt-tl-iface').value;
-  var fSort=document.getElementById('flt-tl-sort').value;
   var logs=allLogs.filter(function(t){
     if(fPerson && t.person!==fPerson) return false;
     if(fRole && t.role!==fRole) return false;
@@ -2146,13 +2653,18 @@ function exportTimeLog() {
     if(fIface && String(t.interfaceId)!==fIface) return false;
     return true;
   });
-  logs.sort(function(a,b){
-    if(fSort==='date-asc') return (a.date||'').localeCompare(b.date||'');
-    if(fSort==='hours-desc') return b.hours-a.hours;
-    if(fSort==='hours-asc') return a.hours-b.hours;
-    if(fSort==='person') return (a.person||'').localeCompare(b.person||'');
-    return (b.date||'').localeCompare(a.date||'');
-  });
+  if (sortState['tl']) {
+    logs = applySorting('tl', logs, function(t, col) {
+      if(col==='date') return t.date||'';
+      if(col==='person') return t.person||'';
+      if(col==='role') return t.role||'';
+      if(col==='phase') return t.phase||'';
+      if(col==='hours') return t.hours||0;
+      return '';
+    });
+  } else {
+    logs.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+  }
   if(!logs.length){ toast('No time entries to export','warning'); return; }
   // Build CSV
   function csvEscape(val){
@@ -2215,7 +2727,6 @@ function renderOpenPoints() {
   var fPriority=document.getElementById('flt-op-priority').value;
   var fOwner=ownerSel.value;
   var fIface=ifaceSel.value;
-  var fSort=document.getElementById('flt-op-sort').value;
   var ops=allOps.filter(function(o){
     if(fStatus && o.status!==fStatus) return false;
     if(fPriority && o.priority!==fPriority) return false;
@@ -2224,16 +2735,24 @@ function renderOpenPoints() {
     return true;
   });
   var pOrd={high:0,medium:1,low:2};
-  ops.sort(function(a,b){
-    if(fSort==='date-desc') return (b.created||'').localeCompare(a.created||'');
-    if(fSort==='date-asc') return (a.created||'').localeCompare(b.created||'');
-    if(fSort==='due') return (a.due||'9999').localeCompare(b.due||'9999');
-    if(fSort==='owner') return (a.owner||'').localeCompare(b.owner||'');
-    return (pOrd[a.priority]||1)-(pOrd[b.priority]||1);
-  });
+  if (sortState['op']) {
+    ops = applySorting('op', ops, function(o, col) {
+      if(col==='priority') return pOrd[o.priority]||1;
+      if(col==='created') return o.created||'';
+      if(col==='due') return o.due||'9999';
+      if(col==='owner') return o.owner||'';
+      if(col==='status') return o.status==='open'?0:1;
+      return '';
+    });
+  } else {
+    ops.sort(function(a,b){ return (pOrd[a.priority]||1)-(pOrd[b.priority]||1); });
+  }
   var rw=canWrite('openpoints');
   var isAdmin=currentUser&&currentUser.role==='admin';
-  document.getElementById('opList').innerHTML=ops.length?ops.map(function(op){ var ifc=ifaces.find(function(i){return String(i.id)===String(op.interfaceId);}); var res=op.status==='resolved'; return '<div class="open-point '+(res?'resolved':'')+'"><div class="open-point-header"><div style="display:flex;gap:8px;align-items:center"><span class="open-point-id">OP-'+String(op.id).slice(-4)+'</span>'+priorityBadge(op.priority)+(ifc?'<span class="tag">'+(ifc.ifId||ifc.name)+'</span>':'')+'</div><div style="display:flex;gap:6px;align-items:center"><span class="open-point-owner">'+(op.owner||'Unassigned')+'</span>'+(op.due?'<span class="td-muted" style="font-size:11px">'+op.due+'</span>':'')+(rw?'<button class="btn btn-edit btn-sm" onclick="editOpenPoint('+op.id+')" title="Edit">✎</button><button class="btn btn-success btn-sm" onclick="resolveOP('+op.id+')" title="'+(res?'Reopen':'Resolve')+'">'+(res?'↩':'✓')+'</button>':'')+(isAdmin?'<button class="btn btn-danger btn-sm" onclick="deleteOP('+op.id+')" title="Delete">✕</button>':'')+'</div></div><div style="margin-top:4px">'+op.desc+'</div></div>'; }).join(''):'<div class="empty-state"><div class="empty-icon">◎</div>No open points match filters</div>';
+  // Sort header bar for open points
+  function opSortTh(col,label){var s=sortState['op']; var cls='sortable'+(s&&s.col===col?(s.dir==='asc'?' sort-asc':' sort-desc'):''); return '<th class="'+cls+'" onclick="colSort(\'op\',\''+col+'\')" style="padding:8px 12px">'+label+'</th>';}
+  var opSortBar='<table style="width:100%;margin-bottom:8px"><thead><tr>'+opSortTh('priority','Priority')+opSortTh('status','Status')+opSortTh('owner','Owner')+opSortTh('due','Due Date')+opSortTh('created','Created')+'</tr></thead></table>';
+  document.getElementById('opList').innerHTML=opSortBar+(ops.length?ops.map(function(op){ var ifc=ifaces.find(function(i){return String(i.id)===String(op.interfaceId);}); var res=op.status==='resolved'; return '<div class="open-point '+(res?'resolved':'')+'"><div class="open-point-header"><div style="display:flex;gap:8px;align-items:center"><span class="open-point-id">OP-'+String(op.id).slice(-4)+'</span>'+priorityBadge(op.priority)+(ifc?'<span class="tag">'+(ifc.ifId||ifc.name)+'</span>':'')+'</div><div style="display:flex;gap:6px;align-items:center"><span class="open-point-owner">'+(op.owner||'Unassigned')+'</span>'+(op.due?'<span class="td-muted" style="font-size:11px">'+op.due+'</span>':'')+(rw?'<button class="btn btn-edit btn-sm" onclick="editOpenPoint('+op.id+')" title="Edit">✎</button><button class="btn btn-success btn-sm" onclick="resolveOP('+op.id+')" title="'+(res?'Reopen':'Resolve')+'">'+(res?'↩':'✓')+'</button>':'')+(isAdmin?'<button class="btn btn-danger btn-sm" onclick="deleteOP('+op.id+')" title="Delete">✕</button>':'')+'</div></div><div style="margin-top:4px">'+op.desc+'</div></div>'; }).join(''):'<div class="empty-state"><div class="empty-icon">◎</div>No open points match filters</div>');
 }
 
 function renderValidation() {
@@ -2250,7 +2769,6 @@ function renderValidation() {
   var rw=canWrite('validation');
   var fStatus=document.getElementById('flt-val-status').value;
   var fSearch=(document.getElementById('flt-val-search').value||'').toLowerCase();
-  var fSort=document.getElementById('flt-val-sort').value;
   var ifData=allIf.map(function(ifc){
     var dc=CHECKS.filter(function(c){return state.validationChecks[ifc.id+'__'+c.id];}).length;
     var pct=CHECKS.length?Math.round(dc/CHECKS.length*100):0;
@@ -2263,14 +2781,19 @@ function renderValidation() {
     if(fSearch && (d.ifc.ifId||'').toLowerCase().indexOf(fSearch)===-1 && (d.ifc.name||'').toLowerCase().indexOf(fSearch)===-1) return false;
     return true;
   });
-  // Sort
-  ifData.sort(function(a,b){
-    if(fSort==='progress-asc') return a.pct-b.pct;
-    if(fSort==='progress-desc') return b.pct-a.pct;
-    if(fSort==='name') return (a.ifc.name||'').localeCompare(b.ifc.name||'');
-    return (a.ifc.ifId||'').localeCompare(b.ifc.ifId||'');
-  });
-  document.getElementById('validationContent').innerHTML=adminPanel+ifData.map(function(d){ var ifc=d.ifc; var dc=d.done; var pct=d.pct; var checks=CHECKS.map(function(c){ var k=ifc.id+'__'+c.id; var done=!!state.validationChecks[k]; return '<div class="checklist-item"><div class="check-box '+(done?'checked':'')+'" '+(rw?'onclick="toggleCheck('+ifc.id+',\''+c.id+'\')"':'')+' style="'+(rw?'':'cursor:default')+'">'+(done?'✓':'')+'</div><span style="'+(done?'text-decoration:line-through;color:var(--text-dim)':'')+'">'+c.label+'</span></div>'; }).join(''); return '<div class="table-wrap" style="padding:14px 16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div><span class="td-mono" style="color:var(--accent)">'+(ifc.ifId||'—')+'</span><span style="margin-left:8px;font-weight:600">'+ifc.name+'</span>'+statusBadge(ifc.status)+'</div><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">'+dc+'/'+CHECKS.length+'</span><div class="progress-bar" style="width:100px;margin:0"><div class="progress-fill '+(pct===100?'green':'')+'" style="width:'+pct+'%"></div></div></div></div>'+checks+'</div>'; }).join('')||'<div class="empty-state">No interfaces match filters</div>';
+  // Column sorting
+  if (sortState['val']) {
+    ifData = applySorting('val', ifData, function(d, col) {
+      if(col==='id') return d.ifc.ifId||'';
+      if(col==='name') return d.ifc.name||'';
+      if(col==='progress') return d.pct;
+      return '';
+    });
+  }
+  // Sort header bar
+  function valSortTh(col,label){var s=sortState['val']; var cls='sortable'+(s&&s.col===col?(s.dir==='asc'?' sort-asc':' sort-desc'):''); return '<th class="'+cls+'" onclick="colSort(\'val\',\''+col+'\')" style="padding:8px 12px">'+label+'</th>';}
+  var valSortBar='<table style="width:100%;margin-bottom:8px"><thead><tr>'+valSortTh('id','ID')+valSortTh('name','Name')+valSortTh('progress','Progress')+'</tr></thead></table>';
+  document.getElementById('validationContent').innerHTML=adminPanel+valSortBar+ifData.map(function(d){ var ifc=d.ifc; var dc=d.done; var pct=d.pct; var checks=CHECKS.map(function(c){ var k=ifc.id+'__'+c.id; var done=!!state.validationChecks[k]; return '<div class="checklist-item"><div class="check-box '+(done?'checked':'')+'" '+(rw?'onclick="toggleCheck('+ifc.id+',\''+c.id+'\')"':'')+' style="'+(rw?'':'cursor:default')+'">'+(done?'✓':'')+'</div><span style="'+(done?'text-decoration:line-through;color:var(--text-dim)':'')+'">'+c.label+'</span></div>'; }).join(''); return '<div class="table-wrap" style="padding:14px 16px;margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div><span class="td-mono" style="color:var(--accent)">'+(ifc.ifId||'—')+'</span><span style="margin-left:8px;font-weight:600">'+ifc.name+'</span>'+statusBadge(ifc.status)+'</div><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:12px;color:var(--text-muted)">'+dc+'/'+CHECKS.length+'</span><div class="progress-bar" style="width:100px;margin:0"><div class="progress-fill '+(pct===100?'green':'')+'" style="width:'+pct+'%"></div></div></div></div>'+checks+'</div>'; }).join('')||'<div class="empty-state">No interfaces match filters</div>';
 }
 
 function renderTemplates() {
@@ -2304,6 +2827,7 @@ function renderAll() {
 // MODALS
 // ════════════════════════════════════════════════════════
 function applyHL(color) { document.execCommand('hiliteColor',false,color); }
+function removeHL() { document.execCommand('hiliteColor',false,'transparent'); document.execCommand('backColor',false,'transparent'); }
 
 function openModal(name) {
   if(name==='logTime'){ populateIfDropdown('tl-interface'); document.getElementById('tl-date').value=new Date().toISOString().slice(0,10); if(currentUser) document.getElementById('tl-person').value=currentUser.name; }
@@ -2313,6 +2837,7 @@ function openModal(name) {
   el.classList.remove('hidden');
   void el.offsetWidth;
   el.classList.add('modal-visible');
+  setTimeout(function(){initMentions();initInputAutocomplete();}, 50);
 }
 function closeModal(name) {
   var el=document.getElementById('modal-'+name);
@@ -2325,6 +2850,391 @@ document.querySelectorAll('.modal-overlay').forEach(function(el){
 });
 
 // ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// @MENTION SYSTEM
+// ════════════════════════════════════════════════════════
+var mentionState = {active:false, query:'', startOffset:0, startNode:null, rteEl:null, selectedIdx:0};
+
+function initMentions() {
+  document.querySelectorAll('.rte-content').forEach(function(el) {
+    if (el.dataset.mentionInit) return;
+    el.dataset.mentionInit = '1';
+    el.addEventListener('input', function(){ handleMentionInput(el); });
+    el.addEventListener('keydown', function(e){ handleMentionKeydown(e, el); });
+    el.addEventListener('blur', function(){ setTimeout(closeMentionDropdown, 200); });
+  });
+}
+
+function handleMentionInput(el) {
+  var sel = window.getSelection();
+  if (!sel.rangeCount) { closeMentionDropdown(); return; }
+  var range = sel.getRangeAt(0);
+  var textNode = range.startContainer;
+  if (textNode.nodeType !== 3) { closeMentionDropdown(); return; }
+  var text = textNode.textContent;
+  var cursor = range.startOffset;
+  // Find @ before cursor
+  var atIdx = -1;
+  for (var i = cursor - 1; i >= 0; i--) {
+    if (text[i] === '@') { atIdx = i; break; }
+    if (text[i] === ' ' || text[i] === '\n') break;
+  }
+  if (atIdx === -1) { closeMentionDropdown(); return; }
+  var query = text.substring(atIdx + 1, cursor).toLowerCase();
+  mentionState = {active:true, query:query, startOffset:atIdx, startNode:textNode, rteEl:el, selectedIdx:0};
+  showMentionDropdown(query, el);
+}
+
+function showMentionDropdown(query, el) {
+  var users = state.users.filter(function(u) {
+    return u.active !== false && ((u.name||'').toLowerCase().indexOf(query) !== -1 || (u.email||'').toLowerCase().indexOf(query) !== -1);
+  });
+  var dd = document.getElementById('mentionDropdown');
+  if (!users.length) { dd.classList.add('hidden'); return; }
+  dd.innerHTML = users.slice(0, 8).map(function(u, idx) {
+    var initials = u.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    var col = avatarColor(u.name);
+    return '<div class="mention-item'+(idx===mentionState.selectedIdx?' active':'')+'" onmousedown="event.preventDefault();insertMention('+u.id+')">'
+      +'<div class="mention-item-avatar" style="background:'+col+'30;color:'+col+'">'+initials+'</div>'
+      +'<div><div class="mention-item-name">'+u.name+'</div><div class="mention-item-role">'+u.role+'</div></div></div>';
+  }).join('');
+  // Position near caret
+  var sel = window.getSelection();
+  if (sel.rangeCount) {
+    var rect = sel.getRangeAt(0).getBoundingClientRect();
+    dd.style.left = rect.left + 'px';
+    dd.style.top = (rect.bottom + 4) + 'px';
+  }
+  dd.classList.remove('hidden');
+}
+
+function handleMentionKeydown(e, el) {
+  if (!mentionState.active) return;
+  var dd = document.getElementById('mentionDropdown');
+  var items = dd.querySelectorAll('.mention-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    mentionState.selectedIdx = Math.min(mentionState.selectedIdx + 1, items.length - 1);
+    items.forEach(function(it,i){it.classList.toggle('active',i===mentionState.selectedIdx);});
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    mentionState.selectedIdx = Math.max(mentionState.selectedIdx - 1, 0);
+    items.forEach(function(it,i){it.classList.toggle('active',i===mentionState.selectedIdx);});
+  } else if (e.key === 'Enter' && mentionState.active) {
+    e.preventDefault();
+    var activeItem = items[mentionState.selectedIdx];
+    if (activeItem) activeItem.dispatchEvent(new Event('mousedown'));
+  } else if (e.key === 'Escape') {
+    closeMentionDropdown();
+  }
+}
+
+function insertMention(userId) {
+  var user = state.users.find(function(u){return u.id===userId;});
+  if (!user || !mentionState.active) return;
+  var textNode = mentionState.startNode;
+  var text = textNode.textContent;
+  var before = text.substring(0, mentionState.startOffset);
+  var after = text.substring(mentionState.startOffset + mentionState.query.length + 1); // +1 for @
+  // Create mention span
+  var mentionSpan = document.createElement('span');
+  mentionSpan.className = 'mention-tag';
+  mentionSpan.contentEditable = 'false';
+  mentionSpan.textContent = '@' + user.name;
+  mentionSpan.dataset.userId = user.id;
+  // Split text node and insert mention
+  textNode.textContent = before;
+  var afterNode = document.createTextNode('\u00A0' + after); // non-breaking space after mention
+  var parent = textNode.parentNode;
+  parent.insertBefore(mentionSpan, textNode.nextSibling);
+  parent.insertBefore(afterNode, mentionSpan.nextSibling);
+  // Place cursor after mention
+  var sel = window.getSelection();
+  var range = document.createRange();
+  range.setStart(afterNode, 1);
+  range.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  closeMentionDropdown();
+}
+
+function closeMentionDropdown() {
+  mentionState.active = false;
+  document.getElementById('mentionDropdown').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════════════
+// INPUT USER AUTOCOMPLETE (for plain text inputs)
+// ════════════════════════════════════════════════════════
+var inputACState = {el:null, selectedIdx:0};
+
+function initInputAutocomplete() {
+  document.querySelectorAll('input[data-user-autocomplete]').forEach(function(el) {
+    if (el.dataset.acInit) return;
+    el.dataset.acInit = '1';
+    el.addEventListener('input', function(){ handleInputAC(el); });
+    el.addEventListener('keydown', function(e){ handleInputACKey(e, el); });
+    el.addEventListener('blur', function(){ setTimeout(closeInputAC, 200); });
+    el.addEventListener('focus', function(){ handleInputAC(el); });
+  });
+}
+
+function handleInputAC(el) {
+  var val = el.value.trim().toLowerCase();
+  if (!val) { closeInputAC(); return; }
+  var users = state.users.filter(function(u) {
+    return u.active !== false && ((u.name||'').toLowerCase().indexOf(val) !== -1 || (u.email||'').toLowerCase().indexOf(val) !== -1);
+  });
+  if (!users.length) { closeInputAC(); return; }
+  inputACState = {el:el, selectedIdx:0};
+  var dd = document.getElementById('inputAutocomplete');
+  dd.innerHTML = users.slice(0, 6).map(function(u, idx) {
+    var initials = u.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    var col = avatarColor(u.name);
+    return '<div class="mention-item'+(idx===0?' active':'')+'" onmousedown="event.preventDefault();selectInputAC(\''+u.name.replace(/'/g,"\\'")+'\')">'
+      +'<div class="mention-item-avatar" style="background:'+col+'30;color:'+col+'">'+initials+'</div>'
+      +'<div><div class="mention-item-name">'+u.name+'</div><div class="mention-item-role">'+u.role+'</div></div></div>';
+  }).join('');
+  var rect = el.getBoundingClientRect();
+  dd.style.left = rect.left + 'px';
+  dd.style.top = (rect.bottom + 4) + 'px';
+  dd.style.width = rect.width + 'px';
+  dd.classList.remove('hidden');
+}
+
+function handleInputACKey(e, el) {
+  var dd = document.getElementById('inputAutocomplete');
+  if (dd.classList.contains('hidden')) return;
+  var items = dd.querySelectorAll('.mention-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    inputACState.selectedIdx = Math.min(inputACState.selectedIdx + 1, items.length - 1);
+    items.forEach(function(it,i){it.classList.toggle('active',i===inputACState.selectedIdx);});
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    inputACState.selectedIdx = Math.max(inputACState.selectedIdx - 1, 0);
+    items.forEach(function(it,i){it.classList.toggle('active',i===inputACState.selectedIdx);});
+  } else if (e.key === 'Enter') {
+    var activeItem = items[inputACState.selectedIdx];
+    if (activeItem) { e.preventDefault(); activeItem.dispatchEvent(new Event('mousedown')); }
+  } else if (e.key === 'Escape') {
+    closeInputAC();
+  }
+}
+
+function selectInputAC(name) {
+  if (inputACState.el) inputACState.el.value = name;
+  closeInputAC();
+}
+
+function closeInputAC() {
+  document.getElementById('inputAutocomplete').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ════════════════════════════════════════════════════════
+function doGlobalSearch(q) {
+  var box = document.getElementById('globalSearchResults');
+  if (!q || q.length < 2) { box.classList.add('hidden'); box.innerHTML=''; return; }
+  q = q.toLowerCase();
+  var results = [];
+  state.interfaces.forEach(function(i) {
+    var proj = state.projects.find(function(p){return p.id===i.projectId;});
+    if ((i.ifId||'').toLowerCase().indexOf(q)!==-1 || (i.name||'').toLowerCase().indexOf(q)!==-1 || (i.source||'').toLowerCase().indexOf(q)!==-1 || (i.target||'').toLowerCase().indexOf(q)!==-1)
+      results.push({type:'Interface', label:(i.ifId||'')+' – '+i.name, proj:proj?proj.name:'', pid:i.projectId, view:'interfaces'});
+  });
+  state.openPoints.forEach(function(o) {
+    var proj = state.projects.find(function(p){return p.id===o.projectId;});
+    if ((o.desc||'').toLowerCase().indexOf(q)!==-1 || (o.owner||'').toLowerCase().indexOf(q)!==-1)
+      results.push({type:'Open Point', label:'OP-'+String(o.id).slice(-4)+' '+(o.desc||'').replace(/<[^>]+>/g,'').slice(0,40), proj:proj?proj.name:'', pid:o.projectId, view:'openpoints'});
+  });
+  state.timeLogs.forEach(function(t) {
+    var proj = state.projects.find(function(p){return p.id===t.projectId;});
+    if ((t.person||'').toLowerCase().indexOf(q)!==-1 || (t.desc||'').toLowerCase().indexOf(q)!==-1 || (t.phase||'').toLowerCase().indexOf(q)!==-1)
+      results.push({type:'Time', label:t.date+' '+t.person+' '+t.hours+'h', proj:proj?proj.name:'', pid:t.projectId, view:'timelog'});
+  });
+  if (!results.length) { box.innerHTML='<div style="padding:8px;color:var(--text-dim)">No results</div>'; box.classList.remove('hidden'); return; }
+  box.innerHTML = results.slice(0,10).map(function(r){
+    return '<div style="padding:5px 4px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:6px;align-items:center" onclick="selectProject('+r.pid+');setView(\''+r.view+'\');document.getElementById(\'globalSearch\').value=\'\';document.getElementById(\'globalSearchResults\').classList.add(\'hidden\')">'
+      +'<span class="tag" style="font-size:9px">'+r.type+'</span>'
+      +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.label+'</span>'
+      +'<span style="color:var(--text-dim);font-size:10px">'+r.proj+'</span></div>';
+  }).join('') + (results.length > 10 ? '<div style="padding:4px;color:var(--text-dim);text-align:center">+' + (results.length-10) + ' more</div>' : '');
+  box.classList.remove('hidden');
+}
+
+// ════════════════════════════════════════════════════════
+// BULK ACTIONS (select + delete)
+// ════════════════════════════════════════════════════════
+var bulkSelected = {interfaces:[], timeLogs:[], openPoints:[]};
+
+function toggleBulk(type, id) {
+  var idx = bulkSelected[type].indexOf(id);
+  if (idx === -1) bulkSelected[type].push(id); else bulkSelected[type].splice(idx, 1);
+  updateBulkBar(type);
+  // Toggle checkbox visual
+  var cb = document.getElementById('bulk-'+type+'-'+id);
+  if (cb) cb.checked = idx === -1;
+}
+function toggleBulkAll(type) {
+  var items = [];
+  if (type==='interfaces') items = getProjIf();
+  else if (type==='timeLogs') items = getProjTL();
+  else if (type==='openPoints') items = getProjOP();
+  if (bulkSelected[type].length === items.length) bulkSelected[type] = [];
+  else bulkSelected[type] = items.map(function(i){return i.id;});
+  if (type==='interfaces') renderInterfaces();
+  else if (type==='timeLogs') renderTimeLog();
+  else if (type==='openPoints') renderOpenPoints();
+  updateBulkBar(type);
+}
+function updateBulkBar(type) {
+  var bar = document.getElementById('bulkBar-'+type);
+  if (!bar) return;
+  var count = bulkSelected[type].length;
+  bar.style.display = count > 0 ? 'flex' : 'none';
+  var countEl = bar.querySelector('.bulk-count');
+  if (countEl) countEl.textContent = count + ' selected';
+}
+function bulkDelete(type) {
+  var count = bulkSelected[type].length;
+  if (!count) return;
+  var label = type==='interfaces'?'interface(s)':type==='timeLogs'?'time entry(ies)':'open point(s)';
+  confirmDialog('Delete <b>'+count+'</b> '+label+'?<br><br>This cannot be undone.').then(function(ok){
+    if (!ok) return;
+    var ids = bulkSelected[type].slice();
+    var removed = [];
+    if (type==='interfaces') { removed=state.interfaces.filter(function(i){return ids.indexOf(i.id)!==-1;}); state.interfaces=state.interfaces.filter(function(i){return ids.indexOf(i.id)===-1;}); }
+    else if (type==='timeLogs') { removed=state.timeLogs.filter(function(t){return ids.indexOf(t.id)!==-1;}); state.timeLogs=state.timeLogs.filter(function(t){return ids.indexOf(t.id)===-1;}); }
+    else if (type==='openPoints') { removed=state.openPoints.filter(function(o){return ids.indexOf(o.id)!==-1;}); state.openPoints=state.openPoints.filter(function(o){return ids.indexOf(o.id)===-1;}); }
+    bulkSelected[type] = [];
+    saveState(); renderAll();
+    pushUndo(count+' '+label+' deleted', function(){
+      if(type==='interfaces') removed.forEach(function(r){state.interfaces.push(r);});
+      else if(type==='timeLogs') removed.forEach(function(r){state.timeLogs.push(r);});
+      else if(type==='openPoints') removed.forEach(function(r){state.openPoints.push(r);});
+      saveState(); renderAll();
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// DRAG & DROP PRIORITY REORDER (interfaces & open points)
+// ════════════════════════════════════════════════════════
+var dragState = {type:null, id:null};
+function dragStart(type, id, ev) {
+  dragState = {type:type, id:id};
+  ev.dataTransfer.effectAllowed = 'move';
+  ev.target.style.opacity = '0.5';
+}
+function dragEnd(ev) { ev.target.style.opacity = '1'; }
+function dragOver(ev) { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; ev.currentTarget.style.borderTop = '2px solid var(--accent)'; }
+function dragLeave(ev) { ev.currentTarget.style.borderTop = ''; }
+function dropOn(type, targetId, ev) {
+  ev.preventDefault();
+  ev.currentTarget.style.borderTop = '';
+  if (dragState.type !== type || dragState.id === targetId) return;
+  var arr = type === 'interfaces' ? state.interfaces : state.openPoints;
+  var fromIdx = arr.findIndex(function(x){return x.id===dragState.id;});
+  var toIdx = arr.findIndex(function(x){return x.id===targetId;});
+  if (fromIdx===-1||toIdx===-1) return;
+  var item = arr.splice(fromIdx, 1)[0];
+  arr.splice(toIdx, 0, item);
+  saveState(); renderAll();
+  toast('Reordered', 'info');
+}
+
+// ════════════════════════════════════════════════════════
+// DASHBOARD CHARTS (hours per person bar chart)
+// ════════════════════════════════════════════════════════
+function renderDashboardChart() {
+  var container = document.getElementById('dashChart');
+  if (!container) return;
+  var logs = getProjTL();
+  if (!logs.length) { container.innerHTML = '<div class="empty-state" style="padding:20px">No time data to chart</div>'; return; }
+  // Hours per person
+  var byPerson = {};
+  logs.forEach(function(t) {
+    byPerson[t.person] = (byPerson[t.person]||0) + t.hours;
+  });
+  var people = Object.keys(byPerson).sort(function(a,b){return byPerson[b]-byPerson[a];});
+  var maxH = Math.max.apply(null, people.map(function(p){return byPerson[p];}));
+  var bars = people.map(function(p) {
+    var pct = maxH > 0 ? (byPerson[p]/maxH*100) : 0;
+    var col = avatarColor(p);
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      +'<span style="width:80px;font-size:11px;font-family:var(--mono);color:var(--text-muted);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.split(' ')[0]+'</span>'
+      +'<div style="flex:1;height:18px;background:var(--surface2);border-radius:3px;overflow:hidden">'
+      +'<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:3px;transition:width .4s ease"></div></div>'
+      +'<span style="width:40px;font-size:11px;font-family:var(--mono);font-weight:600">'+byPerson[p].toFixed(1)+'h</span></div>';
+  }).join('');
+  container.innerHTML = '<div class="section-header"><span class="section-title">Hours per Person</span></div>' + bars;
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT PROJECT SUMMARY (CSV report)
+// ════════════════════════════════════════════════════════
+function exportProjectSummary() {
+  var proj = state.projects.find(function(p){return p.id===state.activeProject;});
+  if (!proj) { toast('Select a project first', 'error'); return; }
+  var ifaces = getProjIf(), logs = getProjTL(), ops = getProjOP();
+  var bom = '\uFEFF';
+  var rows = [];
+  // Header
+  rows.push('PROJECT SUMMARY REPORT');
+  rows.push('Project,' + proj.name);
+  rows.push('Code,' + (proj.code||''));
+  rows.push('Landscape,' + (proj.landscape||''));
+  rows.push('Phase,' + (proj.phase||''));
+  rows.push('Generated,' + new Date().toISOString().slice(0,10));
+  rows.push('');
+  // Stats
+  var totalH = logs.reduce(function(s,t){return s+t.hours;},0);
+  var doneCount = ifaces.filter(function(i){return i.status==='done';}).length;
+  rows.push('SUMMARY');
+  rows.push('Total Interfaces,' + ifaces.length);
+  rows.push('Completed,' + doneCount);
+  rows.push('Total Hours,' + totalH.toFixed(1));
+  rows.push('Open Points,' + ops.filter(function(o){return o.status==='open';}).length);
+  rows.push('');
+  // Interfaces
+  rows.push('INTERFACES');
+  rows.push('ID,Name,Source,Target,Template,Status,Priority,Spec Author,Developer,Hours');
+  ifaces.forEach(function(i) {
+    var hours = logs.filter(function(t){return String(t.interfaceId)===String(i.id);}).reduce(function(s,t){return s+t.hours;},0);
+    var tmpl = state.difTemplates.find(function(t){return t.code===i.dif;});
+    rows.push([i.ifId,i.name,i.source,i.target,tmpl?(tmpl.code+' '+tmpl.name):(i.dif||''),i.status,i.priority,i.specAuthor,i.dev,hours.toFixed(1)].map(function(v){v=String(v||'');return v.indexOf(',')!==-1?'"'+v+'"':v;}).join(','));
+  });
+  rows.push('');
+  // Time Log
+  rows.push('TIME LOG');
+  rows.push('Date,Person,Role,Interface,Phase,Hours,Description');
+  logs.forEach(function(t) {
+    var ifc = ifaces.find(function(i){return String(i.id)===String(t.interfaceId);});
+    rows.push([t.date,t.person,t.role,ifc?(ifc.ifId||''):'',t.phase,t.hours,(t.desc||'').replace(/<[^>]+>/g,' ').slice(0,100)].map(function(v){v=String(v||'');return v.indexOf(',')!==-1?'"'+v+'"':v;}).join(','));
+  });
+  rows.push('');
+  // Open Points
+  rows.push('OPEN POINTS');
+  rows.push('ID,Interface,Priority,Status,Owner,Due Date,Description');
+  ops.forEach(function(o) {
+    var ifc = ifaces.find(function(i){return String(i.id)===String(o.interfaceId);});
+    rows.push(['OP-'+String(o.id).slice(-4),ifc?(ifc.ifId||''):'',o.priority,o.status,o.owner,o.due,(o.desc||'').replace(/<[^>]+>/g,' ').slice(0,100)].map(function(v){v=String(v||'');return v.indexOf(',')!==-1?'"'+v+'"':v;}).join(','));
+  });
+  var csv = bom + rows.join('\r\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ProjectSummary_' + (proj.code||proj.name).replace(/[^a-zA-Z0-9]/g,'') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Project summary exported', 'success');
+}
+
 // SIDEBAR COLLAPSE
 // ════════════════════════════════════════════════════════
 function toggleSidebar() {
