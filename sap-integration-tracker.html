@@ -115,8 +115,7 @@ input,select,textarea{font-family:inherit;}
 .sidebar.collapsed .nav-label,
 .sidebar.collapsed .nav a span:not(.ico):not(.nav-count),
 .sidebar.collapsed .nav-count,
-.sidebar.collapsed .projects-card,
-.sidebar.collapsed .sidebar-search{display:none;}
+.sidebar.collapsed .projects-card{display:none;}
 .sidebar.collapsed .nav a{justify-content:center;padding:10px 0;}
 .sidebar.collapsed .user-chip{justify-content:center;padding:8px;}
 .sidebar.collapsed .logo{justify-content:center;padding:0;}
@@ -148,18 +147,6 @@ input,select,textarea{font-family:inherit;}
 }
 .user-chip-logout:hover{background:var(--surface-3);color:var(--danger);}
 
-.sidebar-search{
-  display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);
-  border-radius:999px;padding:7px 13px;
-}
-.sidebar-search svg{color:var(--text-dim);flex-shrink:0;}
-.sidebar-search input{background:none;border:none;outline:none;color:var(--text);font-size:12.5px;flex:1;min-width:0;}
-.sidebar-search input::placeholder{color:var(--text-dim);}
-.sidebar-search kbd{
-  font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:4px;
-  background:var(--surface);border:1px solid var(--border);color:var(--text-muted);
-}
-
 .nav-label{
   font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--text-dim);
   text-transform:uppercase;padding:0 10px;margin-top:4px;
@@ -186,6 +173,35 @@ input,select,textarea{font-family:inherit;}
 .nav a.active .nav-count{background:rgba(255,255,255,.22);color:#fff;}
 [data-theme="dark"] .nav a.active .nav-count{background:rgba(0,0,0,.2);color:#0a120d;}
 
+/* Hover tooltip on nav items when sidebar is collapsed */
+.sidebar.collapsed .nav a{position:relative;}
+.sidebar.collapsed .nav a::after{
+  content:attr(title);
+  position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:var(--text);color:var(--surface);font-size:12px;font-weight:500;
+  padding:5px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .12s ease, transform .12s ease;z-index:100;
+  box-shadow:var(--shadow-md);
+}
+.sidebar.collapsed .nav a:hover::after{opacity:1;}
+.sidebar.collapsed .nav a::before{
+  content:"";position:absolute;left:calc(100% + 4px);top:50%;transform:translateY(-50%);
+  width:0;height:0;border:5px solid transparent;border-right-color:var(--text);
+  opacity:0;transition:opacity .12s ease;pointer-events:none;z-index:100;
+}
+.sidebar.collapsed .nav a:hover::before{opacity:1;}
+/* Same tooltip treatment for the footer buttons when collapsed */
+.sidebar.collapsed .sidebar-footer button{position:relative;}
+.sidebar.collapsed .sidebar-footer button::after{
+  content:attr(title);
+  position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:var(--text);color:var(--surface);font-size:12px;font-weight:500;
+  padding:5px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .12s ease;z-index:100;
+  box-shadow:var(--shadow-md);
+}
+.sidebar.collapsed .sidebar-footer button:hover::after{opacity:1;}
+
 .projects-card{
   background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:10px;
 }
@@ -209,12 +225,22 @@ input,select,textarea{font-family:inherit;}
 .proj-meta{font-family:var(--mono);font-size:10px;color:var(--text-dim);}
 
 .sidebar-spacer{flex:1;}
-.sidebar-footer{display:flex;gap:4px;padding:0 2px;}
+.sidebar-footer{display:flex;gap:6px;padding:4px 2px 0;margin-top:auto;}
 .sidebar-footer button{
-  flex:1;background:transparent;border:none;color:var(--text-dim);cursor:pointer;
-  padding:7px 8px;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;
+  flex:1;background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;
+  padding:8px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;transition:.12s;
 }
-.sidebar-footer button:hover{background:var(--surface-2);color:var(--text);}
+.sidebar-footer button:hover{background:var(--surface-3);color:var(--text);border-color:var(--border-strong);}
+.sidebar-footer button svg{pointer-events:none;}
+/* When collapsed: stack vertically, give each button full width and a taller tap target */
+.sidebar.collapsed .sidebar-footer{flex-direction:column;gap:8px;padding:4px 0 0;}
+.sidebar.collapsed .sidebar-footer button{
+  width:100%;padding:10px 0;background:var(--surface-2);color:var(--text);
+  border:1px solid var(--border-strong);
+}
+.sidebar.collapsed .sidebar-footer button:hover{
+  background:var(--accent-soft);color:var(--accent);border-color:var(--accent);
+}
 
 /* Main area */
 .main{
@@ -1017,8 +1043,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   .sidebar.collapsed .nav-label,
   .sidebar.collapsed .nav a span:not(.ico):not(.nav-count),
   .sidebar.collapsed .nav-count,
-  .sidebar.collapsed .projects-card,
-  .sidebar.collapsed .sidebar-search{display:initial;}
+  .sidebar.collapsed .projects-card{display:initial;}
   .sidebar.collapsed .nav a{justify-content:flex-start;padding:9px 12px;}
   .sidebar.collapsed .user-chip{justify-content:flex-start;padding:10px;}
   .sidebar.collapsed .logo{justify-content:flex-start;padding:4px 8px;}
@@ -1221,20 +1246,14 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
       <button class="user-chip-logout" onclick="doLogout()" title="Sign out">↩</button>
     </div>
 
-    <div class="sidebar-search">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-      <input id="globalSearch" placeholder="Search…" oninput="doGlobalSearch(this.value)"/>
-      <kbd>⌘K</kbd>
-    </div>
-
     <div>
       <div class="nav-label">Workspace</div>
       <nav class="nav" id="navPrimary">
-        <a data-view="dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
-        <a data-view="tasks" class="active"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
-        <a data-view="workitems"><span class="ico">◰</span><span>Work items</span> <span class="nav-count" id="navWorkCount">0</span></a>
-        <a data-view="interfaces"><span class="ico">⇄</span><span>Interfaces</span> <span class="nav-count" id="navIfaceCount">0</span></a>
-        <a data-view="timelog"><span class="ico">◷</span><span>Time log</span></a>
+        <a data-view="dashboard" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
+        <a data-view="tasks" class="active" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
+        <a data-view="workitems" title="Work items"><span class="ico">◰</span><span>Work items</span> <span class="nav-count" id="navWorkCount">0</span></a>
+        <a data-view="interfaces" title="Interfaces"><span class="ico">⇄</span><span>Interfaces</span> <span class="nav-count" id="navIfaceCount">0</span></a>
+        <a data-view="timelog" title="Time log"><span class="ico">◷</span><span>Time log</span></a>
       </nav>
     </div>
 
@@ -1248,14 +1267,14 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
     <div>
       <div class="nav-label">Admin</div>
       <nav class="nav" id="navAdmin">
-        <a data-view="templates"><span class="ico">⊞</span><span>Templates</span></a>
-        <a data-view="users"><span class="ico">⊙</span><span>Users</span> <span class="nav-count" id="navReqCount" style="display:none"></span></a>
+        <a data-view="templates" title="Templates"><span class="ico">⊞</span><span>Templates</span></a>
+        <a data-view="users" title="Users"><span class="ico">⊙</span><span>Users</span> <span class="nav-count" id="navReqCount" style="display:none"></span></a>
       </nav>
     </div>
 
     <div class="sidebar-footer">
-      <button onclick="toggleTheme()" title="Toggle theme"><span id="themeIcon">☾</span></button>
-      <button onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
+      <button id="themeToggleBtn" onclick="toggleTheme()" title="Switch to dark mode"></button>
+      <button id="sidebarToggleBtn" onclick="toggleSidebar()" title="Collapse sidebar"></button>
     </div>
   </aside>
 
@@ -1366,6 +1385,10 @@ const ICONS = {
   close:  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>`,
   expand: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`,
   plus:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
+  sun:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg>`,
+  moon:   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+  panelOpen:  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg>`,
+  panelClose: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="m17 9-3 3 3 3"/></svg>`,
 };
 
 function escHtml(s){
@@ -1599,21 +1622,47 @@ function toggleTheme(){
   const cur = document.body.dataset.theme || 'light';
   const next = cur === 'light' ? 'dark' : 'light';
   document.body.dataset.theme = next;
-  document.getElementById('themeIcon').textContent = next === 'light' ? '☾' : '☀';
+  updateThemeBtn(next);
   try{ localStorage.setItem(LS_THEME, next); }catch(e){}
 }
 function restoreTheme(){
   const t = localStorage.getItem(LS_THEME) || 'light';
   document.body.dataset.theme = t;
-  document.getElementById('themeIcon').textContent = t === 'light' ? '☾' : '☀';
+  updateThemeBtn(t);
+}
+function updateThemeBtn(theme){
+  const btn = document.getElementById('themeToggleBtn');
+  if(!btn) return;
+  // Show the icon for the MODE THE BUTTON WILL SWITCH TO (so user knows what will happen)
+  if(theme === 'light'){
+    btn.innerHTML = ICONS.moon;
+    btn.title = 'Switch to dark mode';
+  } else {
+    btn.innerHTML = ICONS.sun;
+    btn.title = 'Switch to light mode';
+  }
 }
 function toggleSidebar(){
   const sb = document.getElementById('sidebar');
   sb.classList.toggle('collapsed');
+  updateSidebarBtn();
   try{ localStorage.setItem(LS_COLLAPSE, sb.classList.contains('collapsed') ? '1' : '0'); }catch(e){}
 }
 function restoreSidebar(){
   if(localStorage.getItem(LS_COLLAPSE) === '1') document.getElementById('sidebar').classList.add('collapsed');
+  updateSidebarBtn();
+}
+function updateSidebarBtn(){
+  const btn = document.getElementById('sidebarToggleBtn');
+  const sb = document.getElementById('sidebar');
+  if(!btn || !sb) return;
+  if(sb.classList.contains('collapsed')){
+    btn.innerHTML = ICONS.panelOpen;
+    btn.title = 'Expand sidebar';
+  } else {
+    btn.innerHTML = ICONS.panelClose;
+    btn.title = 'Collapse sidebar';
+  }
 }
 function isMobileViewport(){
   if(typeof window === 'undefined') return false;
@@ -1809,7 +1858,7 @@ function renderDashboard(){
 
   const groups = [
     {k:'todo',    label:'Todo',    dot:'var(--text-dim)'},
-    {k:'doing',   label:'Doing',   dot:'var(--warn)'},
+    {k:'doing',   label:'In progress', dot:'var(--warn)'},
     {k:'review',  label:'Review',  dot:'var(--info)'},
     {k:'done',    label:'Done',    dot:'var(--accent)'},
     {k:'blocked', label:'Blocked', dot:'var(--danger)'},
@@ -1949,7 +1998,7 @@ function renderDashboard(){
         </div>
         <div class="legend">
           <div class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Done ${doneTasks}</div>
-          <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span>Doing ${doing}</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span>In progress ${doing}</div>
           <div class="legend-item"><span class="legend-dot" style="background:var(--surface-3)"></span>Todo ${todo}</div>
         </div>
       </div>
@@ -2011,12 +2060,15 @@ function renderWorkView(opts){
     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`;
   setTopbar(title, sub, actions);
 
+  const groupByLabel = opts.kindFilter === 'interface' ? 'By interface'
+                     : opts.kindFilter === 'work'      ? 'By work item'
+                     : 'By parent';
   const filters = tasksViewState;
   const content = document.getElementById('content');
   content.innerHTML = `
     <div class="view-toolbar">
       <div class="group-toggle" id="groupToggle">
-        <button data-g="workitem" class="${filters.groupBy==='workitem'?'active':''}">By work item</button>
+        <button data-g="workitem" class="${filters.groupBy==='workitem'?'active':''}">${groupByLabel}</button>
         <button data-g="status"   class="${filters.groupBy==='status'?'active':''}">By status</button>
         <button data-g="assignee" class="${filters.groupBy==='assignee'?'active':''}">By assignee</button>
         <button data-g="date"     class="${filters.groupBy==='date'?'active':''}">By date</button>
@@ -2119,7 +2171,7 @@ function groupByWorkItem(workItems, parents, subs){
 function groupByStatus(workItems, parents, subs){
   const statuses = [
     {k:'todo',    label:'Todo',    color:'var(--text-dim)'},
-    {k:'doing',   label:'Doing',   color:'var(--warn)'},
+    {k:'doing',   label:'In progress', color:'var(--warn)'},
     {k:'review',  label:'Review',  color:'var(--info)'},
     {k:'blocked', label:'Blocked', color:'var(--danger)'},
     {k:'done',    label:'Done',    color:'var(--accent)'},
@@ -2228,7 +2280,7 @@ function wiStatusChip(wi, tasks){
   if(stats.blocked) return `<span class="chip chip-danger">Blocked</span>`;
   if(tasks.length && stats.done === tasks.length) return `<span class="chip chip-success">Done</span>`;
   if(stats.review) return `<span class="chip chip-info">Review</span>`;
-  if(stats.doing)  return `<span class="chip chip-warn">Doing</span>`;
+  if(stats.doing)  return `<span class="chip chip-warn">In progress</span>`;
   return `<span class="chip chip-muted">Todo</span>`;
 }
 
@@ -2239,7 +2291,7 @@ function renderTaskRow(t, workItems, subs){
   const prioChip = `<span class="chip chip-${prio==='high'?'danger':prio==='low'?'muted':'warn'}">${prio[0].toUpperCase()+prio.slice(1)}</span>`;
   const st = t.status || 'todo';
   const stChipCls = `chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}`;
-  const stChipHtml = `<button class="stat-btn" data-pop-status="${t.id}" title="Click to change status"><span class="${stChipCls}">${st[0].toUpperCase()+st.slice(1)}</span></button>`;
+  const stChipHtml = `<button class="stat-btn" data-pop-status="${t.id}" title="Click to change status"><span class="${stChipCls}">${fmtStatus(st)}</span></button>`;
   const type = t.type || 'task';
   const typeLbl = fmtType(type);
   const subCount = subs.length ? `<span class="subtask-count">· ${subs.length} subtask${subs.length===1?'':'s'}${subs.filter(s=>s.status==='done').length?', '+subs.filter(s=>s.status==='done').length+' done':''}</span>` : '';
@@ -2276,7 +2328,7 @@ function renderTaskRow(t, workItems, subs){
       const sH = sLogs.reduce((sm,l) => sm + (Number(l.hours)||0), 0);
       const sSt = s.status || 'todo';
       const sStChipCls = `chip chip-${sSt==='done'?'success':sSt==='doing'?'warn':sSt==='review'?'info':sSt==='blocked'?'danger':'muted'}`;
-      const sStChipHtml = `<button class="stat-btn" data-pop-status="${s.id}" title="Click to change status"><span class="${sStChipCls}">${sSt[0].toUpperCase()+sSt.slice(1)}</span></button>`;
+      const sStChipHtml = `<button class="stat-btn" data-pop-status="${s.id}" title="Click to change status"><span class="${sStChipCls}">${fmtStatus(sSt)}</span></button>`;
       const sDueDays = s.due ? daysUntil(s.due) : null;
       const sDueClass = sDueDays !== null && sSt !== 'done' ? (sDueDays < 0 ? 'overdue' : sDueDays <= 3 ? 'soon' : '') : '';
       return `<div class="task-row subtask ${sDone?'done':''}" data-tid="${s.id}">
@@ -2345,7 +2397,7 @@ function openRowStatusPopover(anchor, tid){
   if(!canWriteView('tasks')){ toast('No permission to change status', 'warning'); return; }
   const cur = t.status || 'todo';
   const options = ['todo','doing','review','blocked','done'].map(s => ({
-    label: s[0].toUpperCase()+s.slice(1),
+    label: fmtStatus(s),
     value: s,
     selected: s === cur
   }));
@@ -2429,7 +2481,7 @@ function renderSidePanel(){
 
         <span class="sp-prop-key">Status</span>
         <div class="sp-prop-val"><button class="pill-btn" data-pop="status">
-          <span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${st[0].toUpperCase()+st.slice(1)}</span>
+          <span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${fmtStatus(st)}</span>
         </button></div>
 
         <span class="sp-prop-key">Priority</span>
@@ -2522,7 +2574,7 @@ function renderSidePanel(){
   sp.querySelectorAll('[data-pop]').forEach(btn => {
     btn.onclick = () => {
       const kind = btn.dataset.pop;
-      if(kind === 'status') openPopover(btn, statusOptions.map(s => ({label: s[0].toUpperCase()+s.slice(1), value:s, selected:s===st})), v => mutateTask(task.id, t => { const old = t.status; t.status = v; pushActivity(t, `changed status ${old||'todo'} → ${v}`); }));
+      if(kind === 'status') openPopover(btn, statusOptions.map(s => ({label: fmtStatus(s), value:s, selected:s===st})), v => mutateTask(task.id, t => { const old = t.status; t.status = v; pushActivity(t, `changed status ${old||'todo'} → ${v}`); }));
       else if(kind === 'priority') openPopover(btn, prioOptions.map(s => ({label: s[0].toUpperCase()+s.slice(1), value:s, selected:s===(task.priority||'medium')})), v => mutateTask(task.id, t => { t.priority = v; pushActivity(t, `set priority to ${v}`); }));
       else if(kind === 'type') openPopover(btn, typeOptions.map(s => ({label: fmtType(s), value:s, selected:s===(task.type||'task')})), v => mutateTask(task.id, t => { t.type = v; pushActivity(t, `changed type to ${fmtType(v)}`); }));
       else if(kind === 'assignee'){
@@ -2564,6 +2616,15 @@ function fmtType(type){
   if(t === 'task') return 'Task';
   // Legacy values from before the DevOps simplification — keep them readable if they appear
   return t[0].toUpperCase() + t.slice(1);
+}
+function fmtStatus(status){
+  const s = status || 'todo';
+  if(s === 'doing') return 'In progress';
+  if(s === 'todo') return 'Todo';
+  if(s === 'review') return 'Review';
+  if(s === 'blocked') return 'Blocked';
+  if(s === 'done') return 'Done';
+  return s[0].toUpperCase() + s.slice(1);
 }
 function typeChipClass(type){
   const t = type || 'task';
@@ -2817,6 +2878,15 @@ function openWorkItemModal(opts){
   const o = document.getElementById('wiOverlay');
   requestAnimationFrame(() => o.classList.add('visible'));
   o.addEventListener('click', e => { if(e.target === o) closeWiModal(); });
+  setTimeout(() => {
+    const el = document.getElementById('wi-title');
+    if(el){
+      el.focus();
+      // For new: cursor at start of empty field; for edit: at end of existing text
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    }
+  }, 50);
 }
 function closeWiModal(){
   const o = document.getElementById('wiOverlay'); if(!o) return;
@@ -2929,7 +2999,7 @@ function openNewTaskModal(prefilledWorkItemId){
         <div class="form-row cols-2">
           <div class="form-group"><label>Estimate (hours)</label><input id="t-estimate" type="number" min="0" step="0.5" placeholder="0"/></div>
           <div class="form-group"><label>Status</label><select id="t-status">
-            <option value="todo" selected>Todo</option><option value="doing">Doing</option><option value="review">Review</option><option value="blocked">Blocked</option><option value="done">Done</option>
+            <option value="todo" selected>Todo</option><option value="doing">In progress</option><option value="review">Review</option><option value="blocked">Blocked</option><option value="done">Done</option>
           </select></div>
         </div>
         <div class="form-row">
@@ -2973,7 +3043,6 @@ function saveNewTask(){
   toast('Task created', 'success');
   tasksViewState.openGroups.add('wi:'+wiId);
   renderAll();
-  openSidePanel(t.id);
 }
 
 /* ════════════════════════════════════════════════════════
@@ -2991,7 +3060,7 @@ function renderKanban(){
 
   const cols = [
     {k:'todo',    label:'Todo',    dot:'var(--text-dim)'},
-    {k:'doing',   label:'Doing',   dot:'var(--warn)'},
+    {k:'doing',   label:'In progress', dot:'var(--warn)'},
     {k:'review',  label:'Review',  dot:'var(--info)'},
     {k:'blocked', label:'Blocked', dot:'var(--danger)'},
     {k:'done',    label:'Done',    dot:'var(--accent)'},
@@ -3103,7 +3172,7 @@ function renderFullTask(){
         </div>
         <input class="ft-title-input" id="ft-title" value="${escHtml(task.title||'')}" ${canWrite?'':'readonly'}/>
         <div class="ft-meta-bar">
-          <span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${st[0].toUpperCase()+st.slice(1)}</span>
+          <span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${fmtStatus(st)}</span>
           <span class="chip chip-${task.priority==='high'?'danger':task.priority==='low'?'muted':'warn'}">${(task.priority||'medium')[0].toUpperCase()+(task.priority||'medium').slice(1)}</span>
           ${typeChip(task.type)}
           ${task.due?`<span style="color:${daysUntil(task.due)<0 && st!=='done'?'var(--danger)':'var(--text-muted)'};font-size:12.5px;font-family:var(--mono);padding:3px 0">Due ${fmtDate(task.due)}</span>`:''}
@@ -3123,7 +3192,7 @@ function renderFullTask(){
                 <span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">${escHtml(s.code||'')}</span>
                 <div class="ft-sub-text">${escHtml(s.title)}</div>
               </div>
-              <span class="chip chip-${s.status==='done'?'success':s.status==='doing'?'warn':s.status==='review'?'info':s.status==='blocked'?'danger':'muted'}">${(s.status||'todo')[0].toUpperCase()+(s.status||'todo').slice(1)}</span>
+              <span class="chip chip-${s.status==='done'?'success':s.status==='doing'?'warn':s.status==='review'?'info':s.status==='blocked'?'danger':'muted'}">${fmtStatus(s.status)}</span>
               <span class="ft-sub-due">${s.due?fmtDate(s.due):''}</span>
               ${s.assignee?avatarEl(s.assignee,22):'<span></span>'}
             </div>`).join('')}</div>` : `<div style="color:var(--text-dim);font-size:12.5px;padding:8px 0">No subtasks.</div>`}
@@ -3144,7 +3213,7 @@ function renderFullTask(){
           <h4>Properties</h4>
           ${wi?`<div class="ft-prop"><span class="ft-prop-key">Parent</span><span class="ft-prop-val" style="color:var(--accent)">${escHtml(wi.code)}</span></div>`:''}
           <div class="ft-prop"><span class="ft-prop-key">Type</span><span class="ft-prop-val">${typeChip(task.type)}</span></div>
-          <div class="ft-prop"><span class="ft-prop-key">Status</span><span class="ft-prop-val"><span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${st[0].toUpperCase()+st.slice(1)}</span></span></div>
+          <div class="ft-prop"><span class="ft-prop-key">Status</span><span class="ft-prop-val"><span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${fmtStatus(st)}</span></span></div>
           <div class="ft-prop"><span class="ft-prop-key">Priority</span><span class="ft-prop-val"><span class="chip chip-${task.priority==='high'?'danger':task.priority==='low'?'muted':'warn'}">${(task.priority||'medium')[0].toUpperCase()+(task.priority||'medium').slice(1)}</span></span></div>
           <div class="ft-prop"><span class="ft-prop-key">Assignee</span><span class="ft-prop-val">${task.assignee?avatarEl(task.assignee,20)+escHtml(task.assignee):'<span style="color:var(--text-dim)">Unassigned</span>'}</span></div>
           <div class="ft-prop"><span class="ft-prop-key">Due</span><span class="ft-prop-val">${task.due?fmtDate(task.due):'—'}</span></div>
@@ -3601,17 +3670,6 @@ function denyRequest(id){
   });
 }
 
-/* ════════════════════════════════════════════════════════
-   GLOBAL SEARCH
-   ════════════════════════════════════════════════════════ */
-function doGlobalSearch(q){
-  q = (q||'').trim().toLowerCase();
-  if(!q){ return; }
-  tasksViewState.search = q;
-  setView('tasks');
-  setTimeout(() => { const el = document.getElementById('taskSearch'); if(el){ el.value = q; el.focus(); } }, 100);
-}
-
 
 /* ════════════════════════════════════════════════════════
    NEW PROJECT MODAL
@@ -3707,15 +3765,6 @@ restoreSidebar();
 loadState().then(() => {
   const saved = loadCurrentUser();
   if(saved){ currentUser = saved; bootApp(); }
-});
-
-/* Keyboard shortcuts */
-document.addEventListener('keydown', e => {
-  if((e.metaKey || e.ctrlKey) && e.key === 'k'){
-    e.preventDefault();
-    const s = document.getElementById('globalSearch');
-    if(s) s.focus();
-  }
 });
 
 /* Update mobile menu button visibility on resize */
