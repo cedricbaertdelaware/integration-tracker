@@ -303,6 +303,55 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .pw-field .pw-gen:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
 .pw-field .pw-toggle:active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
 
+/* Day chips for availability */
+.day-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.day-chip{
+  flex:1;min-width:46px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border);
+  background:var(--surface);cursor:pointer;user-select:none;transition:.15s;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-family:var(--mono);font-size:10.5px;color:var(--text-muted);
+}
+.day-chip:hover{border-color:var(--border-strong);color:var(--text);}
+.day-chip .day-initial{
+  font-family:var(--serif);font-size:17px;font-weight:400;letter-spacing:-.01em;
+  font-style:italic;line-height:1;color:var(--text);
+}
+.day-chip.on{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+  box-shadow:0 3px 10px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+[data-theme="dark"] .day-chip.on{color:#0a120d;}
+.day-chip.on .day-initial{color:inherit;}
+.day-chip .day-full{font-size:9px;letter-spacing:.05em;}
+.availability-summary{
+  font-size:12px;color:var(--text-muted);margin-top:8px;font-family:var(--mono);
+}
+.availability-summary b{color:var(--text);font-weight:500;}
+
+/* Availability list on dashboard */
+.avail-today-list{display:flex;flex-direction:column;gap:2px;}
+.avail-today-row{
+  display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;transition:.1s;
+}
+.avail-today-row.on{background:transparent;}
+.avail-today-row.off{opacity:.42;}
+.avail-today-row.on .avail-dot{background:var(--accent);}
+.avail-today-row.off .avail-dot{background:var(--border-strong);}
+.avail-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.avail-today-name{font-size:13px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.avail-today-days{
+  font-family:var(--mono);font-size:10.5px;color:var(--text-dim);
+  display:flex;gap:3px;flex-shrink:0;
+}
+.avail-mini-day{
+  width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface-3);color:var(--text-dim);font-weight:500;
+}
+.avail-mini-day.on{background:var(--accent-soft);color:var(--accent-deep);}
+[data-theme="dark"] .avail-mini-day.on{color:var(--accent);}
+.avail-mini-day.today{box-shadow:inset 0 0 0 1.5px var(--text);}
+.avail-mini-day.today.on{box-shadow:inset 0 0 0 1.5px var(--accent);}
+
 /* ════════════════════════════════════════════════════════
    CHIPS
    ════════════════════════════════════════════════════════ */
@@ -777,7 +826,8 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .card-progress{grid-column:span 3;display:flex;flex-direction:column;align-items:center;text-align:center;}
 .card-pipeline{grid-column:span 12;display:flex;flex-direction:column;}
 .card-list{grid-column:span 4;}
-.card-team{grid-column:span 8;}
+.card-team{grid-column:span 4;}
+.card-avail{grid-column:span 4;}
 .chart-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:10px;}
 .chart-head h3{font-family:var(--serif);font-size:20px;font-weight:400;}
 .chart-head p{color:var(--text-muted);font-size:12px;margin-top:2px;}
@@ -1654,6 +1704,38 @@ function renderDashboard(){
     </div>`;
   }).join('') : `<div style="padding:20px;color:var(--text-dim);font-size:12.5px;text-align:center">No activity yet. Start working on tasks.</div>`;
 
+  // Availability: sort users with today first, then others. Mon=0..Fri=4, weekend shows "today" greyed
+  const jsDow = new Date().getDay(); // Sun=0 .. Sat=6
+  const todayIdx = (jsDow >= 1 && jsDow <= 5) ? jsDow - 1 : -1;
+  const isWeekend = todayIdx === -1;
+  const dayLabels = ['M','T','W','T','F'];
+  const activeUsers = state.users.filter(u => u.active !== false);
+  const availRows = activeUsers.map(u => {
+    const avail = u.availability || [true,true,true,true,true];
+    const availToday = todayIdx >= 0 ? !!avail[todayIdx] : false;
+    const count = avail.filter(Boolean).length;
+    return { user: u, avail, availToday, count };
+  }).sort((a,b) => {
+    // Available today first
+    if(a.availToday !== b.availToday) return a.availToday ? -1 : 1;
+    // Then by count desc, then name
+    if(a.count !== b.count) return b.count - a.count;
+    return a.user.name.localeCompare(b.user.name);
+  });
+  const availToday = availRows.filter(r => r.availToday).length;
+  const availSubtitle = isWeekend
+    ? `Weekend · showing weekly pattern`
+    : `${availToday} of ${activeUsers.length} in today`;
+  const availHtml = availRows.length ? availRows.map(r => `
+    <div class="avail-today-row ${r.availToday ? 'on' : 'off'}">
+      ${avatarEl(r.user.name, 28)}
+      <div class="avail-today-name">${escHtml(r.user.name)}</div>
+      <div class="avail-today-days">
+        ${r.avail.map((on, i) => `<span class="avail-mini-day ${on?'on':''} ${i===todayIdx?'today':''}">${dayLabels[i]}</span>`).join('')}
+      </div>
+    </div>
+  `).join('') : `<div style="padding:14px;color:var(--text-dim);font-size:12.5px">No users yet.</div>`;
+
   document.getElementById('content').innerHTML = `
     <div class="bento">
       <div class="card card-hero">
@@ -1715,6 +1797,16 @@ function renderDashboard(){
       <div class="card card-team">
         <div class="list-head"><h3>Recent activity</h3></div>
         ${teamHtml}
+      </div>
+
+      <div class="card card-avail">
+        <div class="list-head">
+          <div>
+            <h3>${isWeekend ? 'Team availability' : "Who's in today"}</h3>
+            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">${availSubtitle}</p>
+          </div>
+        </div>
+        <div class="avail-today-list">${availHtml}</div>
       </div>
 
       <div class="card card-list">
@@ -3164,6 +3256,21 @@ function openUserModal(id){
             </div>
           </div>
         </div>
+        <div class="form-group" style="margin-bottom:12px"><label>Availability</label>
+          <div class="day-chips" id="u-avail-chips">
+            ${['M','T','W','T','F'].map((init, idx) => {
+              const labels = ['Mon','Tue','Wed','Thu','Fri'];
+              const avail = u.availability || [true,true,true,true,true];
+              return `<div class="day-chip ${avail[idx]?'on':''}" data-day="${idx}">
+                <span class="day-initial">${init}</span>
+                <span class="day-full">${labels[idx].toUpperCase()}</span>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="availability-summary" id="u-avail-summary">
+            <b>${((u.availability || [true,true,true,true,true]).filter(Boolean).length)}</b> day${((u.availability || [true,true,true,true,true]).filter(Boolean).length)===1?'':'s'}/week
+          </div>
+        </div>
         <div class="form-group" style="margin-bottom:12px"><label>Permissions</label>
           <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px">
             ${ALL_VIEWS.map(v => `
@@ -3185,6 +3292,18 @@ function openUserModal(id){
   const o = document.getElementById('userOverlay');
   requestAnimationFrame(() => o.classList.add('visible'));
   o.addEventListener('click', e => { if(e.target === o) closeUserModal(); });
+  // Day-chip toggling
+  const chipsEl = document.getElementById('u-avail-chips');
+  if(chipsEl){
+    chipsEl.addEventListener('click', e => {
+      const chip = e.target.closest('.day-chip');
+      if(!chip) return;
+      chip.classList.toggle('on');
+      const count = chipsEl.querySelectorAll('.day-chip.on').length;
+      const sum = document.getElementById('u-avail-summary');
+      if(sum) sum.innerHTML = `<b>${count}</b> day${count===1?'':'s'}/week`;
+    });
+  }
 }
 function generateAndFillPw(){
   // 14-char password: upper, lower, digit, symbol guaranteed
@@ -3258,11 +3377,16 @@ function saveUser(editId){
   if(!name || !email){ toast('Name and email required', 'error'); return; }
   if(!editId && !pw){ toast('Password required for new user', 'error'); return; }
   const perms = readUserPerms();
+  // Read availability from chips (5 booleans, Mon-Fri)
+  const availability = [0,1,2,3,4].map(i => {
+    const chip = document.querySelector(`.day-chip[data-day="${i}"]`);
+    return chip ? chip.classList.contains('on') : true;
+  });
   const doSave = hashedPw => {
     if(editId){
       const u = state.users.find(x => x.id === editId);
       if(!u) return;
-      u.name = name; u.email = email; u.role = role; u.perms = perms;
+      u.name = name; u.email = email; u.role = role; u.perms = perms; u.availability = availability;
       if(hashedPw) u.password = hashedPw;
       if(currentUser && currentUser.id === u.id){
         currentUser = u;
@@ -3273,7 +3397,7 @@ function saveUser(editId){
     }else{
       if(state.users.find(x => x.email.toLowerCase() === email.toLowerCase())){ toast('Email already in use', 'error'); return; }
       if(!hashedPw) return;
-      state.users.push({id: uid(), name, email, role, perms, password:hashedPw, active:true, created:new Date().toISOString()});
+      state.users.push({id: uid(), name, email, role, perms, availability, password:hashedPw, active:true, created:new Date().toISOString()});
     }
     saveState(); closeUserModal(); renderAll();
     toast(editId?'User updated':'User created', 'success');
