@@ -207,12 +207,12 @@ input,select,textarea{font-family:inherit;}
 }
 .projects-card h4{
   font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--text-dim);padding:2px 4px 8px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  color:var(--text-dim);padding:4px 4px 8px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:26px;
 }
 .projects-card h4 button{
-  width:22px;height:22px;flex-shrink:0;
+  width:24px;height:24px;flex-shrink:0;
   background:var(--surface);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;
-  border-radius:6px;padding:0;line-height:0;transition:.12s;
+  border-radius:7px;padding:0;line-height:0;transition:.12s;
   display:inline-flex;align-items:center;justify-content:center;
 }
 .projects-card h4 button:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
@@ -1253,8 +1253,8 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
     <div>
       <div class="nav-label">Workspace</div>
       <nav class="nav" id="navPrimary">
-        <a data-view="dashboard" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
-        <a data-view="tasks" class="active" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
+        <a data-view="dashboard" class="active" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
+        <a data-view="tasks" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
         <a data-view="workitems" title="Work items"><span class="ico">◰</span><span>Work items</span> <span class="nav-count" id="navWorkCount">0</span></a>
         <a data-view="interfaces" title="Interfaces"><span class="ico">⇄</span><span>Interfaces</span> <span class="nav-count" id="navIfaceCount">0</span></a>
         <a data-view="timelog" title="Time log"><span class="ico">◷</span><span>Time log</span></a>
@@ -1262,7 +1262,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
     </div>
 
     <div class="projects-card">
-      <h4>Projects <button id="btnAddProject" onclick="openNewProjectModal()" title="New project">${ICONS.plus}</button></h4>
+      <h4>Projects <button id="btnAddProject" onclick="openNewProjectModal()" title="New project"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button></h4>
       <div id="projectList"></div>
     </div>
 
@@ -1388,7 +1388,7 @@ const ICONS = {
   open:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
   close:  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>`,
   expand: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`,
-  plus:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
+  plus:   `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
   sun:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg>`,
   moon:   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
   panelOpen:  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg>`,
@@ -1706,7 +1706,7 @@ function bootApp(){
   if(!state.activeProject && state.projects.length) state.activeProject = state.projects[0].id;
   renderProjectList();
   renderNav();
-  setView(state.activeView || 'tasks');
+  setView('dashboard');
   startRealtimeSync();
   updateMobileMenuBtn();
 }
