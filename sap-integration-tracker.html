@@ -319,6 +319,8 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 [data-theme="dark"] .chip-accent{color:var(--accent);}
 .chip-type{background:var(--surface-3);color:var(--text-muted);font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;}
 .chip-type::before{display:none;}
+.chip-type.t-bug{background:var(--danger-soft);color:var(--danger);}
+.chip-type.t-cr{background:var(--info-soft);color:var(--info);}
 
 .chip-filter{
   display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;
@@ -1593,7 +1595,7 @@ function renderDashboard(){
     .slice(0,5);
   const upcomingHtml = upcoming.length ? upcoming.map(({t,d}) => {
     const wi = workItems.find(w => w.id === t.workItemId);
-    const icon = t.type === 'decision' ? '◎' : t.type === 'validation' ? '✓' : t.type === 'spec' ? '✎' : '⇄';
+    const icon = t.type === 'bug' ? '⚠' : t.type === 'cr' ? '↻' : '☰';
     const color = d < 0 ? 'var(--danger)' : d <= 2 ? 'var(--warn)' : 'var(--accent)';
     const dueLabel = d < 0 ? `Overdue ${Math.abs(d)}d` : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `In ${d}d`;
     return `<div class="list-item" onclick="openSidePanel(${t.id})">
@@ -1952,7 +1954,7 @@ function renderTaskRow(t, workItems, subs){
   const st = t.status || 'todo';
   const stChip = `<span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${st[0].toUpperCase()+st.slice(1)}</span>`;
   const type = t.type || 'task';
-  const typeLbl = type[0].toUpperCase()+type.slice(1);
+  const typeLbl = fmtType(type);
   const subCount = subs.length ? `<span class="subtask-count">· ${subs.length} subtask${subs.length===1?'':'s'}${subs.filter(s=>s.status==='done').length?', '+subs.filter(s=>s.status==='done').length+' done':''}</span>` : '';
   const dueDays = t.due ? daysUntil(t.due) : null;
   const dueClass = dueDays !== null && st !== 'done' ? (dueDays < 0 ? 'overdue' : dueDays <= 3 ? 'soon' : '') : '';
@@ -1967,7 +1969,7 @@ function renderTaskRow(t, workItems, subs){
     <span class="tc-toggle ${subs.length?(subOpen?'open':''):'empty'}" data-toggle-subs="${t.id}">▸</span>
     <div class="tc-title">
       <div class="tc-title-main">${escHtml(t.title||'Untitled')}</div>
-      <div class="tc-title-sub"><span class="chip chip-type">${typeLbl}</span>${subCount}</div>
+      <div class="tc-title-sub">${typeChip(type)}${subCount}</div>
     </div>
     ${stChip}
     <div class="tc-assignee">${t.assignee?avatarEl(t.assignee, 22)+`<span class="tc-assignee-name">${escHtml(t.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">—</span>'}</div>
@@ -2084,7 +2086,7 @@ function renderSidePanel(){
 
   const canWrite = canWriteView('tasks');
   const statusOptions = ['todo','doing','review','blocked','done'];
-  const typeOptions = ['task','spec','dev','review','validation','decision','sign-off'];
+  const typeOptions = ['task','bug','cr'];
   const prioOptions = ['low','medium','high'];
   const st = task.status || 'todo';
 
@@ -2103,7 +2105,7 @@ function renderSidePanel(){
 
       <div class="sp-props">
         <span class="sp-prop-key">Type</span>
-        <div class="sp-prop-val"><button class="pill-btn" data-pop="type"><span class="chip chip-type">${escHtml(task.type||'task')}</span></button></div>
+        <div class="sp-prop-val"><button class="pill-btn" data-pop="type">${typeChip(task.type)}</button></div>
 
         <span class="sp-prop-key">Status</span>
         <div class="sp-prop-val"><button class="pill-btn" data-pop="status">
@@ -2202,7 +2204,7 @@ function renderSidePanel(){
       const kind = btn.dataset.pop;
       if(kind === 'status') openPopover(btn, statusOptions.map(s => ({label: s[0].toUpperCase()+s.slice(1), value:s, selected:s===st})), v => mutateTask(task.id, t => { const old = t.status; t.status = v; pushActivity(t, `changed status ${old||'todo'} → ${v}`); }));
       else if(kind === 'priority') openPopover(btn, prioOptions.map(s => ({label: s[0].toUpperCase()+s.slice(1), value:s, selected:s===(task.priority||'medium')})), v => mutateTask(task.id, t => { t.priority = v; pushActivity(t, `set priority to ${v}`); }));
-      else if(kind === 'type') openPopover(btn, typeOptions.map(s => ({label: s[0].toUpperCase()+s.slice(1), value:s, selected:s===(task.type||'task')})), v => mutateTask(task.id, t => { t.type = v; pushActivity(t, `changed type to ${v}`); }));
+      else if(kind === 'type') openPopover(btn, typeOptions.map(s => ({label: fmtType(s), value:s, selected:s===(task.type||'task')})), v => mutateTask(task.id, t => { t.type = v; pushActivity(t, `changed type to ${fmtType(v)}`); }));
       else if(kind === 'assignee'){
         const people = state.users.filter(u => u.active !== false).map(u => ({label:u.name, value:u.name, selected:u.name===task.assignee, avatar:u.name}));
         people.unshift({label:'Unassigned', value:null, selected:!task.assignee});
@@ -2234,6 +2236,23 @@ function renderComment(c){
 }
 function renderCommentText(s){
   return escHtml(s).replace(/@([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-\.]*(?:\s[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-\.]*)?)/g, '<span class="mention">@$1</span>').replace(/\n/g,'<br>');
+}
+function fmtType(type){
+  const t = type || 'task';
+  if(t === 'cr') return 'CR';
+  if(t === 'bug') return 'Bug';
+  if(t === 'task') return 'Task';
+  // Legacy values from before the DevOps simplification — keep them readable if they appear
+  return t[0].toUpperCase() + t.slice(1);
+}
+function typeChipClass(type){
+  const t = type || 'task';
+  if(t === 'bug') return 'chip chip-type t-bug';
+  if(t === 'cr')  return 'chip chip-type t-cr';
+  return 'chip chip-type';
+}
+function typeChip(type){
+  return `<span class="${typeChipClass(type)}">${fmtType(type)}</span>`;
 }
 function fmtRelTime(iso){
   if(!iso) return '';
@@ -2554,7 +2573,7 @@ function openNewTaskModal(prefilledWorkItemId){
             ${workItems.map(w => `<option value="${w.id}" ${w.id===prefilledWorkItemId?'selected':''}>${escHtml(w.code)} — ${escHtml(w.title)}</option>`).join('')}
           </select></div>
           <div class="form-group"><label>Type</label><select id="t-type">
-            ${['task','spec','dev','review','validation','decision','sign-off'].map(t => `<option value="${t}">${t[0].toUpperCase()+t.slice(1)}</option>`).join('')}
+            ${['task','bug','cr'].map(t => `<option value="${t}">${fmtType(t)}</option>`).join('')}
           </select></div>
         </div>
         <div class="form-row">
@@ -2749,7 +2768,7 @@ function renderFullTask(){
         <div class="ft-meta-bar">
           <span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${st[0].toUpperCase()+st.slice(1)}</span>
           <span class="chip chip-${task.priority==='high'?'danger':task.priority==='low'?'muted':'warn'}">${(task.priority||'medium')[0].toUpperCase()+(task.priority||'medium').slice(1)}</span>
-          <span class="chip chip-type">${escHtml(task.type||'task')}</span>
+          ${typeChip(task.type)}
           ${task.due?`<span style="color:${daysUntil(task.due)<0 && st!=='done'?'var(--danger)':'var(--text-muted)'};font-size:12.5px;font-family:var(--mono);padding:3px 0">Due ${fmtDate(task.due)}</span>`:''}
         </div>
 
@@ -2787,7 +2806,7 @@ function renderFullTask(){
         <div class="ft-side-block">
           <h4>Properties</h4>
           ${wi?`<div class="ft-prop"><span class="ft-prop-key">Parent</span><span class="ft-prop-val" style="color:var(--accent)">${escHtml(wi.code)}</span></div>`:''}
-          <div class="ft-prop"><span class="ft-prop-key">Type</span><span class="ft-prop-val"><span class="chip chip-type">${escHtml(task.type||'task')}</span></span></div>
+          <div class="ft-prop"><span class="ft-prop-key">Type</span><span class="ft-prop-val">${typeChip(task.type)}</span></div>
           <div class="ft-prop"><span class="ft-prop-key">Status</span><span class="ft-prop-val"><span class="chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}">${st[0].toUpperCase()+st.slice(1)}</span></span></div>
           <div class="ft-prop"><span class="ft-prop-key">Priority</span><span class="ft-prop-val"><span class="chip chip-${task.priority==='high'?'danger':task.priority==='low'?'muted':'warn'}">${(task.priority||'medium')[0].toUpperCase()+(task.priority||'medium').slice(1)}</span></span></div>
           <div class="ft-prop"><span class="ft-prop-key">Assignee</span><span class="ft-prop-val">${task.assignee?avatarEl(task.assignee,20)+escHtml(task.assignee):'<span style="color:var(--text-dim)">Unassigned</span>'}</span></div>
@@ -2871,7 +2890,7 @@ function renderTimeLog(){
         <div style="font-size:11.5px;color:var(--text-muted);font-family:var(--mono)">${wi?escHtml(wi.code):''} ${l.note?'· '+escHtml(l.note):''}</div>
       </div>
       <span>${escHtml(l.person)}</span>
-      <span>${t?escHtml(t.type||'task'):'—'}</span>
+      <span>${t?fmtType(t.type):'—'}</span>
       <span class="tlog-hrs">${Number(l.hours).toFixed(1)}h</span>
       ${(currentUser.role==='admin'||l.person===currentUser.name)?`<button class="tlog-del" onclick="deleteTimeLog(${l.id})">✕</button>`:'<span></span>'}
     </div>`;
