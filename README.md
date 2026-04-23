@@ -4,6 +4,8 @@
 
 Built as a single HTML file with zero build tools, zero dependencies on npm/node, and zero server-side code. Deploy anywhere that serves static files.
 
+URL: https://cedricbaertdelaware.github.io/integration-tracker/sap-integration-tracker.html
+
 ---
 
 ## What it does
@@ -125,7 +127,7 @@ Admin-only actions: delete project, delete interfaces/time/open points, manage u
 On first run, the app creates an admin account:
 
 - **Email**: `cedric.baert@delaware.pro`
-- **Password**: `Tie2eiha3759`
+- **Password**: `***`
 
 Change this password after first login via Users → Edit.
 
