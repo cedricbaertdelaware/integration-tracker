@@ -997,10 +997,172 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .tl-row:hover{background:var(--surface-2);}
 .tl-row .tlog-date,.tl-row .tlog-note{font-size:13px;}
 
+/* ════════════════════════════════════════════════════════
+   RESPONSIVE — mobile + tablet
+   ════════════════════════════════════════════════════════ */
+/* Tablet: down to ~900px */
 @media (max-width:900px){
-  .sidebar{position:fixed;z-index:50;top:0;bottom:0;left:0;box-shadow:var(--shadow-lg);}
-  .sidebar:not(.mobile-open){transform:translateX(-100%);}
+  .bento{grid-template-columns:repeat(6,1fr);}
+  .card-hero,.card-chart,.card-progress,.card-pipeline,.card-team,.card-avail,.card-list{grid-column:span 6;}
+  .card[style*="span 3"]{grid-column:span 3 !important;}
+}
+
+/* Mobile: down to ~720px (phones in portrait) */
+@media (max-width:720px){
+  /* Sidebar becomes a drawer */
+  .sidebar{
+    position:fixed;z-index:60;top:0;bottom:0;left:0;width:260px;min-width:260px;
+    box-shadow:var(--shadow-lg);transform:translateX(-100%);transition:transform .2s ease;
+  }
+  .sidebar.mobile-open{transform:translateX(0);}
+  .sidebar.collapsed{width:260px;min-width:260px;padding:20px 14px;}
+  .sidebar.collapsed .logo-text,
+  .sidebar.collapsed .user-chip-info,
+  .sidebar.collapsed .user-chip-logout,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav a span:not(.ico):not(.nav-count),
+  .sidebar.collapsed .nav-count,
+  .sidebar.collapsed .projects-card,
+  .sidebar.collapsed .sidebar-search{display:initial;}
+  .sidebar.collapsed .nav a{justify-content:flex-start;padding:9px 12px;}
+  .sidebar.collapsed .user-chip{justify-content:flex-start;padding:10px;}
+  .sidebar.collapsed .logo{justify-content:flex-start;padding:4px 8px;}
   .app{grid-template-columns:1fr;}
+  /* Backdrop when sidebar open */
+  .mobile-sidebar-backdrop{
+    position:fixed;inset:0;z-index:55;background:rgba(15,18,15,.4);backdrop-filter:blur(3px);
+    display:none;animation:fadeIn .15s;
+  }
+  .mobile-sidebar-backdrop.visible{display:block;}
+  /* Hamburger button in topbar */
+  .mobile-menu-btn{
+    display:inline-flex !important;align-items:center;justify-content:center;
+    width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);cursor:pointer;flex-shrink:0;
+  }
+
+  /* Topbar reflow */
+  .topbar{padding:14px 16px 6px;gap:10px;flex-wrap:wrap;}
+  .greeting{font-size:22px;}
+  .greeting-sub{font-size:12px;}
+  .topbar-right{flex-wrap:wrap;gap:6px;}
+  .topbar-right .btn{padding:7px 12px;font-size:12px;}
+
+  /* Content padding */
+  .content{padding:8px 16px 24px;gap:12px;}
+
+  /* Dashboard: stack cards */
+  .bento{grid-template-columns:1fr;gap:10px;}
+  .bento .card,
+  .card-hero,.card-chart,.card-progress,.card-pipeline,.card-team,.card-avail,.card-list{
+    grid-column:span 1 !important;
+  }
+  .bento .card[style*="span"]{grid-column:span 1 !important;}
+  .card{padding:16px;}
+  .stat-value{font-size:36px;}
+  .bars{height:110px;gap:8px;padding:16px 2px 0;}
+  .bar{max-width:28px;}
+  .donut-wrap{width:140px;height:140px;}
+  .donut-pct{font-size:34px;}
+  .pipeline{grid-template-columns:repeat(2,1fr);}
+
+  /* View toolbar stacks */
+  .view-toolbar{padding:8px 10px;gap:8px;flex-direction:column;align-items:stretch;}
+  .view-toolbar > *{flex-shrink:0;}
+  .group-toggle{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .group-toggle button{padding:6px 10px;font-size:11.5px;white-space:nowrap;}
+  .vt-divider{display:none;}
+  .vt-search{max-width:none;width:100%;}
+
+  /* Task rows → compact card layout on mobile */
+  .task-row{
+    display:flex;flex-direction:column;gap:6px;padding:12px 14px;position:relative;
+  }
+  .task-row .drag-handle{display:none;}
+  .task-row .tc-toggle{display:none;}  /* hide subtask caret on mobile; use side panel to view subs */
+  .task-row .tc-actions{opacity:1;position:absolute;top:8px;right:10px;}
+  .task-row .tc-title{order:1;padding-right:80px;}
+  .task-row .stat-btn{order:2;align-self:flex-start;}
+  .task-row > .chip{display:none;}  /* priority chip hidden on mobile to save space */
+  .task-row .tc-assignee{order:3;font-size:12px;}
+  .task-row .tc-assignee-name{display:inline;max-width:120px;}
+  .task-row .tc-due{order:4;text-align:left;}
+  .task-row .tc-hours{order:5;text-align:left;}
+  .task-row.subtask{padding-left:28px;}
+
+  /* Group header compacts */
+  .group-header{padding:11px 14px;gap:8px;flex-wrap:wrap;}
+  .gh-route,.gh-tags,.gh-progress{display:none;}
+  .gh-actions{opacity:1;}
+  .gh-title{font-size:13.5px;flex-basis:100%;order:10;}
+
+  /* Side panel: full-width bottom sheet */
+  .side-panel{
+    width:100%;top:auto;bottom:0;height:85vh;max-height:85vh;
+    border-left:none;border-top:1px solid var(--border);
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    animation:slideUp .25s cubic-bezier(.2,.8,.3,1);
+  }
+  @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .sp-body{padding:16px 18px;}
+  .sp-props{grid-template-columns:90px 1fr;gap:5px 10px;}
+  .sp-title{font-size:22px;}
+
+  /* Modals: fill width, slide up */
+  .modal-overlay{align-items:flex-end;padding:0;}
+  .modal{
+    width:100%;max-width:100%;max-height:92vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    padding:20px 18px 24px;animation:slideUp .22s cubic-bezier(.2,.8,.3,1);
+  }
+  .form-row.cols-2,.form-row.cols-3{grid-template-columns:1fr;}
+  .modal-actions{flex-wrap:wrap;}
+  .modal-actions .btn{flex:1 1 auto;justify-content:center;}
+
+  /* Kanban: horizontal scroll */
+  .kanban{grid-template-columns:repeat(5,minmax(260px,1fr));overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+
+  /* Full task view: single column */
+  .full-task-wrap{grid-template-columns:1fr;gap:24px;padding:8px 16px 32px;}
+  .ft-side{border-left:none;border-top:1px solid var(--border);padding-left:0;padding-top:20px;}
+  .ft-title-input{font-size:28px;}
+
+  /* Time log table → card list */
+  .tl-head-row{display:none;}
+  .tl-row{
+    display:flex;flex-wrap:wrap;gap:6px 10px;padding:12px 14px;align-items:center;
+  }
+  .tl-row > *:nth-child(1){flex:0 0 auto;font-weight:500;}
+  .tl-row > *:nth-child(2){flex:1 1 100%;order:3;}
+  .tl-row > *:nth-child(3){flex:0 0 auto;font-size:11.5px;color:var(--text-muted);}
+  .tl-row > *:nth-child(4){flex:0 0 auto;font-size:11.5px;color:var(--text-muted);}
+  .tl-row > *:nth-child(5){flex:0 0 auto;margin-left:auto;}
+  .tl-row > *:nth-child(6){flex:0 0 auto;}
+
+  /* Templates + users grid stacks */
+  .two-col{grid-template-columns:1fr;gap:16px;}
+
+  /* Availability chips on mobile stay readable but smaller */
+  .day-chip{min-width:40px;padding:7px 2px;}
+  .day-chip .day-initial{font-size:15px;}
+  .day-chip .day-full{font-size:8px;}
+
+  /* Popover: constrain to viewport */
+  .popover{max-width:calc(100vw - 20px);}
+
+  /* Toasts: full width on bottom instead of top-right */
+  .toast-container{top:auto;bottom:16px;left:16px;right:16px;align-items:stretch;}
+  .toast{max-width:none;}
+
+  /* Dashboard: simplify availability mini-day row */
+  .avail-today-days{gap:2px;}
+  .avail-mini-day{width:16px;height:16px;font-size:9.5px;}
+}
+
+/* Very small phones */
+@media (max-width:380px){
+  .sidebar{width:90vw;min-width:90vw;}
+  .greeting{font-size:20px;}
+  .stat-value{font-size:30px;}
 }
 </style>
 </head>
@@ -1063,6 +1225,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 
 <!-- MAIN APP -->
 <div class="app hidden" id="app">
+  <div class="mobile-sidebar-backdrop" id="mobileSidebarBackdrop" onclick="closeMobileSidebar()"></div>
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="logo">
@@ -1120,6 +1283,9 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   <!-- MAIN -->
   <main class="main">
     <div class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()" title="Menu" style="display:none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+      </button>
       <div class="topbar-left">
         <div class="greeting" id="topbarTitle">—</div>
         <div class="greeting-sub" id="topbarSub">—</div>
@@ -1470,6 +1636,27 @@ function toggleSidebar(){
 function restoreSidebar(){
   if(localStorage.getItem(LS_COLLAPSE) === '1') document.getElementById('sidebar').classList.add('collapsed');
 }
+function isMobileViewport(){
+  if(typeof window === 'undefined') return false;
+  if(window.matchMedia) return window.matchMedia('(max-width:720px)').matches;
+  return (window.innerWidth || 1024) <= 720;
+}
+function toggleMobileSidebar(){
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('mobileSidebarBackdrop');
+  const open = !sb.classList.contains('mobile-open');
+  sb.classList.toggle('mobile-open', open);
+  bd.classList.toggle('visible', open);
+}
+function closeMobileSidebar(){
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('mobileSidebarBackdrop').classList.remove('visible');
+}
+function updateMobileMenuBtn(){
+  const btn = document.getElementById('mobileMenuBtn');
+  if(!btn) return;
+  btn.style.display = isMobileViewport() ? 'inline-flex' : 'none';
+}
 
 /* ════════════════════════════════════════════════════════
    BOOT
@@ -1487,6 +1674,7 @@ function bootApp(){
   renderNav();
   setView(state.activeView || 'tasks');
   startRealtimeSync();
+  updateMobileMenuBtn();
 }
 
 function applyRBAC(){
@@ -1562,6 +1750,7 @@ function setView(v){
   state.activeView = v;
   document.querySelectorAll('.nav a[data-view]').forEach(a => a.classList.toggle('active', a.dataset.view === v));
   renderAll();
+  if(isMobileViewport()) closeMobileSidebar();
 }
 function renderAll(){
   if(!currentUser) return;
@@ -3548,6 +3737,13 @@ document.addEventListener('keydown', e => {
     const s = document.getElementById('globalSearch');
     if(s) s.focus();
   }
+});
+
+/* Update mobile menu button visibility on resize */
+window.addEventListener('resize', () => {
+  updateMobileMenuBtn();
+  // If resized up from mobile to desktop, close any open mobile drawer
+  if(!isMobileViewport()) closeMobileSidebar();
 });
 </script>
 </body>
