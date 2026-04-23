@@ -998,18 +998,12 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .tl-row .tlog-date,.tl-row .tlog-note{font-size:13px;}
 
 /* ════════════════════════════════════════════════════════
-   RESPONSIVE — mobile + tablet
+   RESPONSIVE — mobile only. Desktop/laptop layout stays untouched.
    ════════════════════════════════════════════════════════ */
-/* Tablet: down to ~900px */
-@media (max-width:900px){
-  .bento{grid-template-columns:repeat(6,1fr);}
-  .card-hero,.card-chart,.card-progress,.card-pipeline,.card-team,.card-avail,.card-list{grid-column:span 6;}
-  .card[style*="span 3"]{grid-column:span 3 !important;}
-}
 
-/* Mobile: down to ~720px (phones in portrait) */
-@media (max-width:720px){
-  /* Sidebar becomes a drawer */
+/* Mobile: phones in portrait. Kept narrow so laptops never hit this. */
+@media only screen and (max-width:680px){
+  /* Sidebar becomes an overlay drawer */
   .sidebar{
     position:fixed;z-index:60;top:0;bottom:0;left:0;width:260px;min-width:260px;
     box-shadow:var(--shadow-lg);transform:translateX(-100%);transition:transform .2s ease;
@@ -1027,37 +1021,37 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   .sidebar.collapsed .nav a{justify-content:flex-start;padding:9px 12px;}
   .sidebar.collapsed .user-chip{justify-content:flex-start;padding:10px;}
   .sidebar.collapsed .logo{justify-content:flex-start;padding:4px 8px;}
+
+  /* App becomes single column since sidebar is overlaid */
   .app{grid-template-columns:1fr;}
-  /* Backdrop when sidebar open */
+
+  /* Backdrop appears behind the open drawer */
   .mobile-sidebar-backdrop{
-    position:fixed;inset:0;z-index:55;background:rgba(15,18,15,.4);backdrop-filter:blur(3px);
-    display:none;animation:fadeIn .15s;
+    position:fixed;inset:0;z-index:55;background:rgba(15,18,15,.4);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+    display:none;
   }
   .mobile-sidebar-backdrop.visible{display:block;}
-  /* Hamburger button in topbar */
+
+  /* Hamburger button */
   .mobile-menu-btn{
     display:inline-flex !important;align-items:center;justify-content:center;
     width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);cursor:pointer;flex-shrink:0;
   }
 
-  /* Topbar reflow */
+  /* Topbar compacts */
   .topbar{padding:14px 16px 6px;gap:10px;flex-wrap:wrap;}
   .greeting{font-size:22px;}
   .greeting-sub{font-size:12px;}
   .topbar-right{flex-wrap:wrap;gap:6px;}
   .topbar-right .btn{padding:7px 12px;font-size:12px;}
 
-  /* Content padding */
   .content{padding:8px 16px 24px;gap:12px;}
 
   /* Dashboard: stack cards */
   .bento{grid-template-columns:1fr;gap:10px;}
-  .bento .card,
-  .card-hero,.card-chart,.card-progress,.card-pipeline,.card-team,.card-avail,.card-list{
-    grid-column:span 1 !important;
-  }
-  .bento .card[style*="span"]{grid-column:span 1 !important;}
+  .bento .card{grid-column:span 1 !important;}
   .card{padding:16px;}
   .stat-value{font-size:36px;}
   .bars{height:110px;gap:8px;padding:16px 2px 0;}
@@ -1066,24 +1060,23 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   .donut-pct{font-size:34px;}
   .pipeline{grid-template-columns:repeat(2,1fr);}
 
-  /* View toolbar stacks */
-  .view-toolbar{padding:8px 10px;gap:8px;flex-direction:column;align-items:stretch;}
-  .view-toolbar > *{flex-shrink:0;}
-  .group-toggle{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* View toolbar: wrap but stay horizontal */
+  .view-toolbar{padding:8px 10px;gap:8px;flex-wrap:wrap;}
+  .group-toggle{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;}
   .group-toggle button{padding:6px 10px;font-size:11.5px;white-space:nowrap;}
   .vt-divider{display:none;}
-  .vt-search{max-width:none;width:100%;}
+  .vt-search{max-width:none;flex:1 1 100%;}
 
-  /* Task rows → compact card layout on mobile */
+  /* Task rows: compact flex card layout */
   .task-row{
     display:flex;flex-direction:column;gap:6px;padding:12px 14px;position:relative;
   }
   .task-row .drag-handle{display:none;}
-  .task-row .tc-toggle{display:none;}  /* hide subtask caret on mobile; use side panel to view subs */
+  .task-row .tc-toggle{display:none;}
   .task-row .tc-actions{opacity:1;position:absolute;top:8px;right:10px;}
   .task-row .tc-title{order:1;padding-right:80px;}
   .task-row .stat-btn{order:2;align-self:flex-start;}
-  .task-row > .chip{display:none;}  /* priority chip hidden on mobile to save space */
+  .task-row > .chip{display:none;}
   .task-row .tc-assignee{order:3;font-size:12px;}
   .task-row .tc-assignee-name{display:inline;max-width:120px;}
   .task-row .tc-due{order:4;text-align:left;}
@@ -1108,7 +1101,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   .sp-props{grid-template-columns:90px 1fr;gap:5px 10px;}
   .sp-title{font-size:22px;}
 
-  /* Modals: fill width, slide up */
+  /* Modals: bottom sheet */
   .modal-overlay{align-items:flex-end;padding:0;}
   .modal{
     width:100%;max-width:100%;max-height:92vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
@@ -1121,45 +1114,30 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   /* Kanban: horizontal scroll */
   .kanban{grid-template-columns:repeat(5,minmax(260px,1fr));overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
 
-  /* Full task view: single column */
+  /* Full task: single column */
   .full-task-wrap{grid-template-columns:1fr;gap:24px;padding:8px 16px 32px;}
   .ft-side{border-left:none;border-top:1px solid var(--border);padding-left:0;padding-top:20px;}
   .ft-title-input{font-size:28px;}
 
-  /* Time log table → card list */
+  /* Time log: flex card list */
   .tl-head-row{display:none;}
-  .tl-row{
-    display:flex;flex-wrap:wrap;gap:6px 10px;padding:12px 14px;align-items:center;
-  }
-  .tl-row > *:nth-child(1){flex:0 0 auto;font-weight:500;}
+  .tl-row{display:flex;flex-wrap:wrap;gap:6px 10px;padding:12px 14px;align-items:center;}
   .tl-row > *:nth-child(2){flex:1 1 100%;order:3;}
-  .tl-row > *:nth-child(3){flex:0 0 auto;font-size:11.5px;color:var(--text-muted);}
-  .tl-row > *:nth-child(4){flex:0 0 auto;font-size:11.5px;color:var(--text-muted);}
-  .tl-row > *:nth-child(5){flex:0 0 auto;margin-left:auto;}
-  .tl-row > *:nth-child(6){flex:0 0 auto;}
 
-  /* Templates + users grid stacks */
+  /* Misc */
   .two-col{grid-template-columns:1fr;gap:16px;}
-
-  /* Availability chips on mobile stay readable but smaller */
   .day-chip{min-width:40px;padding:7px 2px;}
   .day-chip .day-initial{font-size:15px;}
   .day-chip .day-full{font-size:8px;}
-
-  /* Popover: constrain to viewport */
   .popover{max-width:calc(100vw - 20px);}
-
-  /* Toasts: full width on bottom instead of top-right */
   .toast-container{top:auto;bottom:16px;left:16px;right:16px;align-items:stretch;}
   .toast{max-width:none;}
-
-  /* Dashboard: simplify availability mini-day row */
   .avail-today-days{gap:2px;}
   .avail-mini-day{width:16px;height:16px;font-size:9.5px;}
 }
 
 /* Very small phones */
-@media (max-width:380px){
+@media only screen and (max-width:380px){
   .sidebar{width:90vw;min-width:90vw;}
   .greeting{font-size:20px;}
   .stat-value{font-size:30px;}
