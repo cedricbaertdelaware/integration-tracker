@@ -276,7 +276,7 @@ input,select,textarea{font-family:inherit;}
 .icon-btn.danger:hover{color:var(--danger);border-color:var(--danger);}
 
 /* Form controls */
-input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],select,textarea{
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],input:not([type]),select,textarea{
   width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;
   padding:9px 12px;color:var(--text);font-size:13.5px;outline:none;transition:.15s;
 }
@@ -290,6 +290,17 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .form-row{display:grid;gap:12px;margin-bottom:12px;}
 .form-row.cols-2{grid-template-columns:1fr 1fr;}
 .form-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+
+.pw-field{display:flex;gap:4px;align-items:stretch;}
+.pw-field input{flex:1;}
+.pw-field button{
+  width:38px;flex-shrink:0;border:1px solid var(--border);background:var(--surface-2);
+  border-radius:10px;cursor:pointer;font-size:14px;color:var(--text-muted);transition:.12s;
+  display:flex;align-items:center;justify-content:center;
+}
+.pw-field button:hover{background:var(--surface-3);color:var(--text);border-color:var(--border-strong);}
+.pw-field .pw-gen:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+.pw-field .pw-toggle:active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
 
 /* ════════════════════════════════════════════════════════
    CHIPS
@@ -435,13 +446,16 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .gh-progress{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);font-family:var(--mono);flex-shrink:0;}
 .gh-bar{width:80px;height:5px;background:var(--surface-3);border-radius:3px;overflow:hidden;}
 .gh-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s;}
-.gh-actions{display:flex;gap:4px;opacity:0;transition:.12s;flex-shrink:0;}
+.gh-actions{display:flex;gap:4px;opacity:.55;transition:.12s;flex-shrink:0;}
 .group-header:hover .gh-actions{opacity:1;}
 .gh-actions button{
-  width:26px;height:26px;border-radius:7px;border:none;background:transparent;color:var(--text-muted);
-  cursor:pointer;font-size:12px;
+  width:28px;height:28px;border-radius:7px;border:1px solid transparent;background:transparent;
+  cursor:pointer;font-size:13px;transition:.12s;
 }
-.gh-actions button:hover{background:var(--surface);color:var(--text);}
+.gh-actions button[data-edit-wi]{color:var(--accent);}
+.gh-actions button[data-edit-wi]:hover{background:var(--accent-soft);border-color:var(--accent);}
+.gh-actions button[data-del-wi]{color:var(--danger);}
+.gh-actions button[data-del-wi]:hover{background:var(--danger-soft);border-color:var(--danger);}
 
 .group-body{background:var(--surface);display:none;}
 .group.open .group-body{display:block;}
@@ -488,13 +502,13 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .tc-due.soon{color:var(--warn);font-weight:500;}
 .tc-hours{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
 .tc-hours b{color:var(--text);font-weight:500;}
-.tc-actions{opacity:0;display:flex;gap:2px;justify-content:flex-end;}
+.tc-actions{opacity:.4;display:flex;gap:2px;justify-content:flex-end;transition:opacity .12s;}
 .task-row:hover .tc-actions{opacity:1;}
 .tc-actions button{
-  width:26px;height:26px;border-radius:7px;border:none;background:transparent;color:var(--text-muted);
-  cursor:pointer;font-size:12px;
+  width:28px;height:28px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--accent);
+  cursor:pointer;font-size:13px;transition:.12s;
 }
-.tc-actions button:hover{background:var(--surface-3);color:var(--text);}
+.tc-actions button:hover{background:var(--accent-soft);border-color:var(--accent);}
 .add-task-row{
   display:flex;align-items:center;gap:10px;padding:9px 18px 13px 54px;color:var(--text-dim);
   font-size:12.5px;cursor:pointer;transition:.1s;
@@ -619,10 +633,10 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .sub-item.done .sub-text{text-decoration:line-through;color:var(--text-muted);}
 .sub-text{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .sub-due{font-family:var(--mono);font-size:10.5px;color:var(--text-muted);}
-.sub-actions{display:flex;gap:2px;opacity:0;}
+.sub-actions{display:flex;gap:2px;opacity:.5;transition:opacity .12s;}
 .sub-item:hover .sub-actions{opacity:1;}
-.sub-actions button{width:22px;height:22px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:11px;}
-.sub-actions button:hover{background:var(--surface-3);color:var(--text);}
+.sub-actions button{width:24px;height:24px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--danger);cursor:pointer;font-size:11px;transition:.12s;}
+.sub-actions button:hover{background:var(--danger-soft);border-color:var(--danger);}
 .sub-add{
   display:flex;align-items:center;gap:8px;padding:7px 8px;color:var(--text-dim);
   font-size:12.5px;cursor:pointer;border-radius:8px;
@@ -2398,10 +2412,12 @@ function openWorkItemModal(opts){
     <div class="modal-overlay" id="wiOverlay">
       <div class="modal">
         <div class="modal-title">${editing?'Edit':'New'} ${kind==='interface'?'interface':'work item'}<button class="modal-close" onclick="closeWiModal()">×</button></div>
-        <div class="form-row cols-2">
-          <div class="form-group"><label>Code<span class="req">*</span></label><input id="wi-code" value="${escHtml(wi.code||'')}" placeholder="${kind==='interface'?'TH-IF014':'TH-WK001'}"/></div>
+        ${editing ? `<div class="form-row cols-2">
+          <div class="form-group"><label>Code</label><input id="wi-code" value="${escHtml(wi.code||'')}" readonly style="opacity:.7;cursor:not-allowed"/></div>
           <div class="form-group"><label>Title<span class="req">*</span></label><input id="wi-title" value="${escHtml(wi.title||'')}" placeholder="Short descriptive title"/></div>
-        </div>
+        </div>` : `<div class="form-row">
+          <div class="form-group"><label>Title<span class="req">*</span></label><input id="wi-title" value="${escHtml(wi.title||'')}" placeholder="Short descriptive title"/></div>
+        </div>`}
         ${kind === 'interface' ? `
           <div class="form-row cols-2">
             <div class="form-group"><label>Source system</label><input id="wi-source" value="${escHtml(wi.source||'')}" placeholder="BTS"/></div>
@@ -2451,12 +2467,23 @@ function closeWiModal(){
   o.classList.remove('visible');
   setTimeout(() => document.getElementById('modalRoot').innerHTML = '', 180);
 }
+function generateWorkItemCode(kind){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  const prefix = (proj && proj.code) ? proj.code.toUpperCase() : 'XX';
+  const mid = kind === 'interface' ? 'IF' : 'WK';
+  const pattern = new RegExp(`^${prefix}-${mid}(\\d+)$`);
+  const existing = state.workItems
+    .filter(w => w.projectId === state.activeProject && w.kind === kind)
+    .map(w => { const m = (w.code||'').match(pattern); return m ? parseInt(m[1], 10) : 0; });
+  const next = (existing.length ? Math.max(...existing) : 0) + 1;
+  return `${prefix}-${mid}${String(next).padStart(3, '0')}`;
+}
+
 function saveWorkItem(editId, kind){
-  const code  = document.getElementById('wi-code').value.trim();
   const title = document.getElementById('wi-title').value.trim();
-  if(!code || !title){ toast('Code and title are required', 'error'); return; }
+  if(!title){ toast('Title is required', 'error'); return; }
   const data = {
-    projectId: state.activeProject, kind, code, title,
+    projectId: state.activeProject, kind, title,
     priority: document.getElementById('wi-priority').value,
     owner:    document.getElementById('wi-owner').value || null,
     description: document.getElementById('wi-desc').value.trim(),
@@ -2472,8 +2499,12 @@ function saveWorkItem(editId, kind){
   }
   if(editId){
     const wi = state.workItems.find(w => w.id === editId);
-    if(wi) Object.assign(wi, data);
+    if(wi){
+      data.code = wi.code; // preserve existing code on edit
+      Object.assign(wi, data);
+    }
   }else{
+    data.code = generateWorkItemCode(kind);
     data.id = uid();
     data.createdAt = new Date().toISOString();
     data.createdBy = currentUser.name;
@@ -2481,7 +2512,7 @@ function saveWorkItem(editId, kind){
   }
   saveState();
   closeWiModal();
-  toast(editId ? 'Updated' : 'Created', 'success');
+  toast(editId ? 'Updated' : `Created ${data.code}`, 'success');
   renderAll();
 }
 function deleteWorkItemFromModal(id){ closeWiModal(); deleteWorkItem(id); }
@@ -3029,7 +3060,13 @@ function openUserModal(id){
           <div class="form-group"><label>Role</label><select id="u-role" onchange="applyRoleToUserForm(this.value)">
             ${['admin','architect','developer','viewer','custom'].map(r => `<option value="${r}" ${r===u.role?'selected':''}>${r[0].toUpperCase()+r.slice(1)}</option>`).join('')}
           </select></div>
-          <div class="form-group"><label>${editing?'New password (leave blank to keep)':'Password'}${editing?'':'<span class="req">*</span>'}</label><input id="u-pw" type="password" placeholder="${editing?'Leave blank':'Set a password'}"/></div>
+          <div class="form-group"><label>${editing?'New password (leave blank to keep)':'Password'}${editing?'':'<span class="req">*</span>'}</label>
+            <div class="pw-field">
+              <input id="u-pw" type="password" placeholder="${editing?'Leave blank':'Set a password'}" autocomplete="new-password"/>
+              <button type="button" class="pw-toggle" onmousedown="revealPw(true)" onmouseup="revealPw(false)" onmouseleave="revealPw(false)" ontouchstart="revealPw(true)" ontouchend="revealPw(false)" title="Hold to reveal">👁</button>
+              <button type="button" class="pw-gen" onclick="generateAndFillPw()" title="Generate secure password">⟳</button>
+            </div>
+          </div>
         </div>
         <div class="form-group" style="margin-bottom:12px"><label>Permissions</label>
           <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px">
@@ -3053,6 +3090,50 @@ function openUserModal(id){
   requestAnimationFrame(() => o.classList.add('visible'));
   o.addEventListener('click', e => { if(e.target === o) closeUserModal(); });
 }
+function generateAndFillPw(){
+  // 14-char password: upper, lower, digit, symbol guaranteed
+  const U = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const L = 'abcdefghijkmnopqrstuvwxyz';
+  const D = '23456789';
+  const S = '!@#$%^&*-_+=';
+  const all = U+L+D+S;
+  function pick(set){ return set[Math.floor(Math.random()*set.length)]; }
+  const chars = [pick(U), pick(L), pick(D), pick(S)];
+  for(let i=0;i<10;i++) chars.push(pick(all));
+  // Fisher-Yates shuffle
+  for(let i = chars.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  const pw = chars.join('');
+  const input = document.getElementById('u-pw');
+  if(!input) return;
+  input.value = pw;
+  // Reveal briefly so admin can copy it
+  input.type = 'text';
+  // Copy to clipboard if possible
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(pw).then(
+      () => toast('Password generated and copied to clipboard', 'success'),
+      () => toast('Password generated — copy it now', 'info')
+    );
+  }else{
+    toast('Password generated — copy it now', 'info');
+  }
+  // Re-mask after 8 seconds
+  clearTimeout(window._pwUnmaskTimer);
+  window._pwUnmaskTimer = setTimeout(() => {
+    if(input && input.type === 'text') input.type = 'password';
+  }, 8000);
+}
+function revealPw(show){
+  // Hold-to-reveal: only admins (checked via currentUser.role)
+  if(!currentUser || currentUser.role !== 'admin') return;
+  const input = document.getElementById('u-pw');
+  if(!input) return;
+  input.type = show ? 'text' : 'password';
+}
+
 function applyRoleToUserForm(role){
   const d = ROLE_DEFAULTS[role] || ROLE_DEFAULTS.custom;
   document.querySelectorAll('.u-perm').forEach(cb => {
