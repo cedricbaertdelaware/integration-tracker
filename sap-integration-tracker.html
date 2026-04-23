@@ -195,6 +195,7 @@ input,select,textarea{font-family:inherit;}
 }
 .projects-card h4 button{
   background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0 2px;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;
 }
 .projects-card h4 button:hover{color:var(--accent);}
 .proj-item{
@@ -453,6 +454,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .gh-actions button{
   width:28px;height:28px;border-radius:7px;border:1px solid transparent;background:transparent;
   cursor:pointer;font-size:13px;transition:.12s;
+  display:inline-flex;align-items:center;justify-content:center;
 }
 .gh-actions button[data-edit-wi]{color:var(--accent);}
 .gh-actions button[data-edit-wi]:hover{background:var(--accent-soft);border-color:var(--accent);}
@@ -515,8 +517,10 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .tc-actions button{
   width:28px;height:28px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--accent);
   cursor:pointer;font-size:13px;transition:.12s;
+  display:inline-flex;align-items:center;justify-content:center;
 }
 .tc-actions button:hover{background:var(--accent-soft);border-color:var(--accent);}
+.tc-actions button svg,.gh-actions button svg,.sub-actions button svg,.sp-head-btn svg,.sp-section h4 button svg,.projects-card h4 button svg{pointer-events:none;}
 .tc-actions button.danger{color:var(--danger);}
 .tc-actions button.danger:hover{background:var(--danger-soft);border-color:var(--danger);}
 .add-task-row{
@@ -588,11 +592,13 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .sp-breadcrumb a{color:var(--text-muted);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
 .sp-breadcrumb a:hover{color:var(--accent);}
 .sp-head-btn{
-  width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);
-  cursor:pointer;font-size:14px;flex-shrink:0;
+  width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--text-muted);
+  cursor:pointer;font-size:14px;flex-shrink:0;transition:.12s;
+  display:inline-flex;align-items:center;justify-content:center;
 }
 .sp-head-btn:hover{background:var(--surface-2);color:var(--text);}
-.sp-head-btn.danger:hover{color:var(--danger);}
+.sp-head-btn.danger{color:var(--danger);}
+.sp-head-btn.danger:hover{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
 .sp-body{flex:1;overflow-y:auto;padding:20px 24px;}
 .sp-title{
   font-family:var(--serif);font-size:26px;line-height:1.2;font-weight:400;letter-spacing:-.015em;
@@ -625,7 +631,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:6px;
 }
 .sp-section h4 span{color:var(--text-dim);font-weight:400;}
-.sp-section h4 button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:5px;}
+.sp-section h4 button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;}
 .sp-section h4 button:hover{color:var(--accent);background:var(--surface-2);}
 
 .sp-desc{font-size:13.5px;line-height:1.65;color:var(--text);}
@@ -645,7 +651,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .sub-due{font-family:var(--mono);font-size:10.5px;color:var(--text-muted);}
 .sub-actions{display:flex;gap:2px;opacity:.5;transition:opacity .12s;}
 .sub-item:hover .sub-actions{opacity:1;}
-.sub-actions button{width:24px;height:24px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--danger);cursor:pointer;font-size:11px;transition:.12s;}
+.sub-actions button{width:24px;height:24px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--danger);cursor:pointer;font-size:11px;transition:.12s;display:inline-flex;align-items:center;justify-content:center;}
 .sub-actions button:hover{background:var(--danger-soft);border-color:var(--danger);}
 .sub-add{
   display:flex;align-items:center;gap:8px;padding:7px 8px;color:var(--text-dim);
@@ -1041,7 +1047,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
     </div>
 
     <div class="projects-card">
-      <h4>Projects <button id="btnAddProject" onclick="openNewProjectModal()" title="New project">＋</button></h4>
+      <h4>Projects <button id="btnAddProject" onclick="openNewProjectModal()" title="New project">${ICONS.plus}</button></h4>
       <div id="projectList"></div>
     </div>
 
@@ -1154,6 +1160,18 @@ function confirmResolve(val){
   setTimeout(() => o.classList.add('hidden'), 180);
   if(confirmResolver){ confirmResolver(val); confirmResolver = null; }
 }
+
+/* ════════════════════════════════════════════════════════
+   SVG ICONS — unified icon set, inherits color via currentColor
+   ════════════════════════════════════════════════════════ */
+const ICONS = {
+  edit:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
+  trash:  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
+  open:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
+  close:  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>`,
+  expand: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`,
+  plus:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
+};
 
 function escHtml(s){
   return String(s==null?'':s)
@@ -1936,8 +1954,8 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
       ${statusChip}
       <div class="gh-progress"><div class="gh-bar"><div class="gh-bar-fill" style="width:${pct}%"></div></div><span>${doneCount} / ${wTasks.length}</span></div>
       <div class="gh-actions">
-        <button title="Edit" data-edit-wi="${wi.id}">✎</button>
-        ${currentUser.role==='admin'?`<button title="Delete" data-del-wi="${wi.id}">✕</button>`:''}
+        <button title="Edit" data-edit-wi="${wi.id}">${ICONS.edit}</button>
+        ${currentUser.role==='admin'?`<button title="Delete" data-del-wi="${wi.id}">${ICONS.trash}</button>`:''}
       </div>
     </div>
     <div class="group-body">${rowsHtml}</div>
@@ -1985,8 +2003,8 @@ function renderTaskRow(t, workItems, subs){
     <span class="tc-due ${dueClass}">${dueLabel}</span>
     <span class="tc-hours">${hoursLabel}</span>
     <div class="tc-actions">
-      <button data-open="${t.id}" title="Open">↗</button>
-      ${currentUser.role==='admin'?`<button class="danger" data-del-task="${t.id}" title="Delete">✕</button>`:''}
+      <button data-open="${t.id}" title="Open">${ICONS.open}</button>
+      ${currentUser.role==='admin'?`<button class="danger" data-del-task="${t.id}" title="Delete">${ICONS.trash}</button>`:''}
     </div>
   </div>`;
 
@@ -2011,8 +2029,8 @@ function renderTaskRow(t, workItems, subs){
         <span class="tc-due ${sDueClass}">${s.due?fmtDate(s.due):'—'}</span>
         <span class="tc-hours">${sH?`<b>${sH.toFixed(1)}</b>h`:'—'}</span>
         <div class="tc-actions">
-          <button data-open="${s.id}" title="Open">↗</button>
-          ${currentUser.role==='admin'?`<button class="danger" data-del-task="${s.id}" title="Delete">✕</button>`:''}
+          <button data-open="${s.id}" title="Open">${ICONS.open}</button>
+          ${currentUser.role==='admin'?`<button class="danger" data-del-task="${s.id}" title="Delete">${ICONS.trash}</button>`:''}
         </div>
       </div>`;
     }).join('');
@@ -2137,9 +2155,9 @@ function renderSidePanel(){
       <div class="sp-breadcrumb">
         ${wi ? `<a data-open-wi="${wi.id}">${escHtml(wi.code)}</a><span class="bc-sep">/</span><a data-open-wi="${wi.id}">${escHtml(wi.title)}</a>` : '<span>Task</span>'}
       </div>
-      <button class="sp-head-btn" title="Expand to full view" onclick="openFullTask(${task.id})">⤢</button>
-      ${canWrite && currentUser.role==='admin' ? `<button class="sp-head-btn danger" title="Delete" onclick="deleteTaskFromPanel(${task.id})">🗑</button>` : ''}
-      <button class="sp-head-btn" title="Close" onclick="closeSidePanel()">✕</button>
+      <button class="sp-head-btn" title="Expand to full view" onclick="openFullTask(${task.id})">${ICONS.expand}</button>
+      ${canWrite && currentUser.role==='admin' ? `<button class="sp-head-btn danger" title="Delete" onclick="deleteTaskFromPanel(${task.id})">${ICONS.trash}</button>` : ''}
+      <button class="sp-head-btn" title="Close" onclick="closeSidePanel()">${ICONS.close}</button>
     </div>
     <div class="sp-body">
       <input class="sp-title" id="sp-title-input" value="${escHtml(task.title||'')}" placeholder="Task title…" ${canWrite?'':'readonly'}/>
@@ -2176,14 +2194,14 @@ function renderSidePanel(){
       </div>
 
       <div class="sp-section">
-        <h4>Description ${canWrite?'<button title="Edit" onclick="toggleSpDesc()">✎</button>':''}</h4>
+        <h4>Description ${canWrite?`<button title="Edit" onclick="toggleSpDesc()">${ICONS.edit}</button>`:''}</h4>
         <div class="sp-desc" id="sp-desc">
           ${task.description ? escHtml(task.description).replace(/\n/g,'<br>') : (canWrite ? '<div class="empty" onclick="toggleSpDesc()">Add a description…</div>' : '<div class="empty">No description</div>')}
         </div>
       </div>
 
       <div class="sp-section">
-        <h4>Subtasks <span>· ${subs.filter(s=>s.status==='done').length} of ${subs.length} done</span> ${canWrite?'<button title="Add" onclick="addSubtaskInline()">＋</button>':''}</h4>
+        <h4>Subtasks <span>· ${subs.filter(s=>s.status==='done').length} of ${subs.length} done</span> ${canWrite?`<button title="Add" onclick="addSubtaskInline()">${ICONS.plus}</button>`:''}</h4>
         <div class="sub-list" id="sub-list">
           ${subs.map(s => renderSubItem(s)).join('') || '<div style="color:var(--text-dim);font-size:12px;padding:6px 8px">No subtasks.</div>'}
           ${canWrite?`<div class="sub-add" onclick="addSubtaskInline()">+ Add subtask</div>`:''}
@@ -2263,7 +2281,7 @@ function renderSubItem(s){
     <span class="sub-text" onclick="openSidePanel(${s.id})">${escHtml(s.title)}</span>
     ${s.assignee ? avatarEl(s.assignee, 20) : '<span></span>'}
     <span class="sub-due">${s.due?fmtDate(s.due):''}</span>
-    <div class="sub-actions">${currentUser.role==='admin'?`<button onclick="deleteTask(${s.id})" title="Delete">✕</button>`:''}</div>
+    <div class="sub-actions">${currentUser.role==='admin'?`<button onclick="deleteTask(${s.id})" title="Delete">${ICONS.trash}</button>`:''}</div>
   </div>`;
 }
 function renderComment(c){
