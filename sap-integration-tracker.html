@@ -78,13 +78,13 @@ input,select,textarea{font-family:inherit;}
   width:40px;height:40px;border-radius:12px;
   background:linear-gradient(135deg,var(--accent),var(--accent-deep));
   display:flex;align-items:center;justify-content:center;color:#fff;
-  font-family:var(--serif);font-size:22px;font-style:italic;
+  font-family:var(--sans);font-size:18px;font-weight:700;
   box-shadow:0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
 }
-.login-title{font-family:var(--serif);font-size:22px;letter-spacing:-.01em;}
+.login-title{font-family:var(--sans);font-size:20px;font-weight:600;letter-spacing:-.01em;}
 .login-sub{color:var(--text-muted);font-size:13px;}
-.login-heading{font-family:var(--serif);font-size:28px;letter-spacing:-.015em;margin-bottom:6px;}
-.login-heading em{color:var(--accent);font-style:italic;}
+.login-heading{font-family:var(--sans);font-size:26px;font-weight:600;letter-spacing:-.02em;margin-bottom:6px;}
+.login-heading em{color:var(--accent);font-style:normal;font-weight:600;}
 .login-msg{color:var(--text-muted);font-size:13px;margin-bottom:22px;}
 .login-error,.login-success{
   padding:10px 12px; border-radius:10px; font-size:12.5px; margin-bottom:14px; display:none;
@@ -129,10 +129,10 @@ input,select,textarea{font-family:inherit;}
   width:32px;height:32px;border-radius:10px;flex-shrink:0;
   background:linear-gradient(135deg,var(--accent),var(--accent-deep));
   display:flex;align-items:center;justify-content:center;color:#fff;
-  font-family:var(--serif);font-size:18px;font-style:italic;
+  font-family:var(--sans);font-size:14px;font-weight:700;
   box-shadow:0 2px 8px color-mix(in srgb, var(--accent) 35%, transparent);
 }
-.logo-text{font-family:var(--serif);font-size:19px;letter-spacing:-.01em;white-space:nowrap;}
+.logo-text{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;}
 
 .user-chip{
   display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius);
@@ -261,10 +261,10 @@ input,select,textarea{font-family:inherit;}
 }
 .topbar-left{min-width:0;}
 .greeting{
-  font-family:var(--serif);font-size:30px;line-height:1.1;letter-spacing:-.015em;
+  font-family:var(--sans);font-size:24px;font-weight:600;line-height:1.2;letter-spacing:-.02em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.greeting em{font-style:italic;color:var(--accent);}
+.greeting em{font-style:normal;color:var(--accent);font-weight:600;}
 .greeting-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
@@ -281,7 +281,7 @@ input,select,textarea{font-family:inherit;}
   width:60px;height:60px;border-radius:50%;background:var(--surface-2);
   display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;color:var(--accent);
 }
-.empty-screen h3{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--text);margin-bottom:6px;}
+.empty-screen h3{font-family:var(--sans);font-size:18px;font-weight:600;letter-spacing:-.01em;color:var(--text);margin-bottom:6px;}
 
 /* ════════════════════════════════════════════════════════
    BUTTONS
@@ -346,8 +346,8 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .day-chip:hover{border-color:var(--border-strong);color:var(--text);}
 .day-chip .day-initial{
-  font-family:var(--serif);font-size:17px;font-weight:400;letter-spacing:-.01em;
-  font-style:italic;line-height:1;color:var(--text);
+  font-family:var(--sans);font-size:15px;font-weight:600;letter-spacing:-.01em;
+  line-height:1;color:var(--text);
 }
 .day-chip.on{
   background:var(--accent);border-color:var(--accent);color:#fff;
@@ -467,7 +467,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .modal-overlay.visible .modal{transform:scale(1);}
 .modal-title{
-  font-family:var(--serif);font-size:22px;font-weight:400;margin-bottom:18px;
+  font-family:var(--sans);font-size:18px;font-weight:600;letter-spacing:-.01em;margin-bottom:18px;
   display:flex;align-items:center;justify-content:space-between;
 }
 .modal-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;padding:4px;}
@@ -690,7 +690,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .sp-head-btn.danger:hover{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
 .sp-body{flex:1;overflow-y:auto;padding:20px 24px;}
 .sp-title{
-  font-family:var(--serif);font-size:26px;line-height:1.2;font-weight:400;letter-spacing:-.015em;
+  font-family:var(--sans);font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-.02em;
   margin-bottom:4px;border:none;outline:none;background:transparent;color:var(--text);width:100%;
   padding:2px 0;
 }
@@ -883,7 +883,8 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .card-hero .stat-label{color:rgba(255,255,255,.75);}
 [data-theme="dark"] .card-hero .stat-label{color:rgba(10,18,13,.7);}
 .stat-value{
-  font-family:var(--serif);font-size:44px;line-height:1;letter-spacing:-.02em;margin-bottom:6px;
+  font-family:var(--sans);font-size:40px;line-height:1;letter-spacing:-.025em;margin-bottom:6px;
+  font-weight:500;font-variant-numeric:tabular-nums;
 }
 .stat-sub{font-size:12px;color:var(--text-muted);}
 .card-hero .stat-sub{color:rgba(255,255,255,.8);}
@@ -895,7 +896,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .card-team{grid-column:span 4;}
 .card-avail{grid-column:span 4;}
 .chart-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:10px;}
-.chart-head h3{font-family:var(--serif);font-size:20px;font-weight:400;}
+.chart-head h3{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;}
 .chart-head p{color:var(--text-muted);font-size:12px;margin-top:2px;}
 .bars{display:flex;align-items:flex-end;gap:14px;height:140px;padding:20px 6px 0;}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;}
@@ -918,7 +919,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .donut-bg{stroke:var(--surface-3);}
 .donut-fg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .8s;}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.donut-pct{font-family:var(--serif);font-size:40px;line-height:1;letter-spacing:-.02em;}
+.donut-pct{font-family:var(--sans);font-size:36px;line-height:1;letter-spacing:-.025em;font-weight:500;font-variant-numeric:tabular-nums;}
 .donut-lbl{font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
 .legend{display:flex;gap:14px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);}
@@ -949,7 +950,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 
 /* Up next / activity lists */
 .list-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.list-head h3{font-family:var(--serif);font-size:18px;font-weight:400;}
+.list-head h3{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;}
 .list-item{
   display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;
 }
@@ -983,14 +984,14 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .ft-breadcrumb a{color:var(--text-muted);text-decoration:none;cursor:pointer;}
 .ft-breadcrumb a:hover{color:var(--accent);}
 .ft-title-input{
-  font-family:var(--serif);font-size:40px;line-height:1.15;font-weight:400;letter-spacing:-.02em;
+  font-family:var(--sans);font-size:32px;line-height:1.2;font-weight:600;letter-spacing:-.025em;
   margin-bottom:10px;border:none;outline:none;background:transparent;color:var(--text);width:100%;
   padding:2px 0;
 }
 .ft-title-input:focus{outline:2px solid var(--accent-soft);outline-offset:4px;border-radius:4px;}
 .ft-meta-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;}
 .ft-section{margin-bottom:28px;}
-.ft-section h3{font-family:var(--serif);font-size:18px;font-weight:400;margin-bottom:12px;}
+.ft-section h3{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;margin-bottom:12px;}
 .ft-desc{font-size:14.5px;line-height:1.7;color:var(--text);}
 .ft-desc .empty{color:var(--text-dim);font-style:italic;cursor:pointer;}
 .ft-sublist{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:4px 12px;}
@@ -3665,7 +3666,7 @@ function renderUsersView(){
   document.getElementById('content').innerHTML = `
     <div class="two-col">
       <div>
-        <h3 style="font-family:var(--serif);font-size:18px;font-weight:400;margin-bottom:10px">Access requests ${pending.length?`<span class="chip chip-warn" style="margin-left:6px">${pending.length}</span>`:''}</h3>
+        <h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;margin-bottom:10px">Access requests ${pending.length?`<span class="chip chip-warn" style="margin-left:6px">${pending.length}</span>`:''}</h3>
         ${pending.length ? pending.map(r => `
           <div class="req-card">
             <div class="req-header">
@@ -3683,7 +3684,7 @@ function renderUsersView(){
           </div>`).join('') : '<div style="padding:20px;color:var(--text-dim);font-size:13px">No pending requests.</div>'}
       </div>
       <div>
-        <h3 style="font-family:var(--serif);font-size:18px;font-weight:400;margin-bottom:10px">Active users</h3>
+        <h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;margin-bottom:10px">Active users</h3>
         ${users.map(u => `
           <div class="user-card">
             ${avatarEl(u.name, 36)}
