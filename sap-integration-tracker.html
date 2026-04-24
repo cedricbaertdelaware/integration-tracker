@@ -3102,12 +3102,12 @@ function renderSidePanel(){
   sp.querySelector('#sp-title-input').onchange = e => {
     const v = e.target.value.trim();
     if(!v){ e.target.value = task.title || ''; return; }
-    mutateTask(task.id, t => { const old = t.title; t.title = v; pushActivity(t, `renamed from "${old}"`); });
+    mutateTaskQuiet(task.id, t => { const old = t.title; t.title = v; pushActivity(t, `renamed from "${old}"`); });
   };
   const dueInput = sp.querySelector('#sp-due');
-  if(dueInput) dueInput.onchange = e => { mutateTask(task.id, t => { t.due = e.target.value || null; pushActivity(t, `set due to ${t.due || 'none'}`); }); };
+  if(dueInput) dueInput.onchange = e => { mutateTaskQuiet(task.id, t => { t.due = e.target.value || null; pushActivity(t, `set due to ${t.due || 'none'}`); }); };
   const estInput = sp.querySelector('#sp-estimate');
-  if(estInput) estInput.onchange = e => { mutateTask(task.id, t => { t.estimate = e.target.value ? Number(e.target.value) : null; pushActivity(t, `set estimate to ${t.estimate||'—'}h`); }); };
+  if(estInput) estInput.onchange = e => { mutateTaskQuiet(task.id, t => { t.estimate = e.target.value ? Number(e.target.value) : null; pushActivity(t, `set estimate to ${t.estimate||'—'}h`); }); };
 
   sp.querySelectorAll('[data-pop]').forEach(btn => {
     btn.onclick = () => {
@@ -3381,6 +3381,19 @@ function mutateTask(id, fn){
   fn(t);
   saveState();
   renderSidePanel();
+  if(state.activeView === 'tasks' || state.activeView === 'workitems' || state.activeView === 'interfaces') renderTaskGroups({kindFilter:tasksViewState.kindFilter});
+  else if(state.activeView === 'kanban') renderKanban();
+  else if(state.activeView === 'gantt') renderGantt();
+  else if(state.activeView === 'dashboard') renderDashboard();
+}
+// Variant for inline inputs (date, estimate, title) where re-rendering the side panel
+// would steal focus from the field the user is editing.
+function mutateTaskQuiet(id, fn){
+  const t = state.tasks.find(x => x.id === id);
+  if(!t) return;
+  fn(t);
+  saveState();
+  // Skip renderSidePanel — the input already shows the new value
   if(state.activeView === 'tasks' || state.activeView === 'workitems' || state.activeView === 'interfaces') renderTaskGroups({kindFilter:tasksViewState.kindFilter});
   else if(state.activeView === 'kanban') renderKanban();
   else if(state.activeView === 'gantt') renderGantt();
