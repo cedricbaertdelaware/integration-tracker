@@ -405,6 +405,27 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .chip-type.t-bug{background:var(--danger-soft);color:var(--danger);}
 .chip-type.t-cr{background:var(--info-soft);color:var(--info);}
 
+/* SAP Activate phase chips — flat color-coded badges */
+.chip-phase{
+  display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;
+  font:500 10.5px var(--sans);letter-spacing:.01em;white-space:nowrap;
+}
+.chip-phase::before{
+  content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;
+}
+.chip-phase.p-discover{background:#EEEDFE;color:#3C3489;}
+.chip-phase.p-prepare {background:#E6F1FB;color:#0C447C;}
+.chip-phase.p-explore {background:#E1F5EE;color:#085041;}
+.chip-phase.p-realize {background:#FAEEDA;color:#633806;}
+.chip-phase.p-deploy  {background:#FAECE7;color:#712B13;}
+.chip-phase.p-run     {background:#F1EFE8;color:#2C2C2A;}
+[data-theme="dark"] .chip-phase.p-discover{background:rgba(127,119,221,.18);color:#AFA9EC;}
+[data-theme="dark"] .chip-phase.p-prepare {background:rgba(55,138,221,.18);color:#85B7EB;}
+[data-theme="dark"] .chip-phase.p-explore {background:rgba(29,158,117,.18);color:#5DCAA5;}
+[data-theme="dark"] .chip-phase.p-realize {background:rgba(186,117,23,.2);color:#FAC775;}
+[data-theme="dark"] .chip-phase.p-deploy  {background:rgba(216,90,48,.2);color:#F0997B;}
+[data-theme="dark"] .chip-phase.p-run     {background:rgba(95,94,90,.25);color:#B4B2A9;}
+
 .chip-filter{
   display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;
   background:var(--surface);border:1px solid var(--border);
@@ -631,6 +652,147 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 /* ════════════════════════════════════════════════════════
    KANBAN
    ════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   GANTT
+   ════════════════════════════════════════════════════════ */
+.gantt-toolbar{
+  display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;
+}
+.gantt-container{
+  --gantt-side-w:200px;
+  --gantt-assignee-w:130px;
+  --gantt-status-w:140px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:auto;max-height:calc(100vh - 220px);
+}
+.gantt-header{
+  display:flex;position:sticky;top:0;z-index:5;background:var(--surface-2);border-bottom:1px solid var(--border);
+}
+.gantt-side-cell{
+  width:var(--gantt-side-w);min-width:var(--gantt-side-w);max-width:var(--gantt-side-w);
+  flex-shrink:0;padding:8px 14px;border-right:1px solid var(--border);background:inherit;
+  position:sticky;left:0;z-index:2;display:flex;align-items:center;
+}
+.gantt-side-head{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);}
+.gantt-assignee-cell{
+  width:var(--gantt-assignee-w);min-width:var(--gantt-assignee-w);max-width:var(--gantt-assignee-w);
+  flex-shrink:0;padding:6px 10px;border-right:1px solid var(--border);background:inherit;
+  position:sticky;left:var(--gantt-side-w);z-index:2;display:flex;align-items:center;
+}
+.gantt-status-cell{
+  width:var(--gantt-status-w);min-width:var(--gantt-status-w);max-width:var(--gantt-status-w);
+  flex-shrink:0;padding:6px 12px;border-right:1px solid var(--border);background:inherit;
+  position:sticky;left:calc(var(--gantt-side-w) + var(--gantt-assignee-w));z-index:2;display:flex;align-items:center;
+}
+.gantt-timeline-head{position:relative;height:48px;}
+.gantt-month-band{position:relative;height:24px;border-bottom:1px solid var(--border);}
+.gantt-month-cell{
+  position:absolute;top:0;height:24px;display:flex;align-items:center;padding:0 10px;
+  font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text);
+  border-right:1px dashed var(--border);
+}
+.gantt-week-band{position:relative;height:24px;}
+.gantt-week-tick{
+  position:absolute;top:0;height:24px;display:flex;align-items:center;padding:0 6px;
+  font-family:var(--mono);font-size:10px;color:var(--text-muted);border-right:1px solid var(--border);
+  white-space:nowrap;overflow:hidden;
+}
+.gantt-body{position:relative;}
+.gantt-row,.gantt-phase-row{display:flex;border-bottom:1px solid var(--border);min-height:36px;}
+
+/* Phase row */
+.gantt-phase-row{
+  background:var(--surface-2);min-height:42px;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border-strong);
+}
+.gantt-phase-name{padding:6px 12px;gap:10px;}
+.gantt-phase-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  background:var(--phase-color);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--phase-color) 15%, transparent);
+}
+.gantt-phase-label{
+  font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.005em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.gantt-phase-meta{
+  font-family:var(--mono);font-size:10.5px;color:var(--text-muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.gantt-phase-track{position:relative;background:transparent;}
+.gantt-phase-band{
+  position:absolute;top:8px;height:26px;border-radius:8px;
+  background:color-mix(in srgb, var(--phase-color) 15%, transparent);
+  border:1.5px solid var(--phase-color);
+}
+
+/* Task row left columns */
+.gantt-task-cell{
+  font-size:12.5px;cursor:pointer;background:var(--surface);transition:.1s;color:var(--text);
+}
+.gantt-task-cell:hover{background:var(--surface-2);}
+.gantt-task-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Assignee button */
+.gantt-as-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:6px;
+  background:var(--surface);border:1px solid var(--border);cursor:pointer;width:100%;
+  transition:.12s;
+}
+.gantt-as-btn:hover:not(:disabled){background:var(--surface-2);border-color:var(--border-strong);}
+.gantt-as-btn:disabled{cursor:default;opacity:.7;}
+.gantt-as-empty{border-style:dashed;background:transparent;}
+.gantt-as-empty .gantt-as-name.muted{color:var(--text-muted);}
+.gantt-as-name{
+  font-size:12px;color:var(--text);flex:1;text-align:left;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.gantt-pop-caret{font-size:9px;color:var(--text-muted);flex-shrink:0;opacity:.7;}
+
+/* Status button */
+.gantt-st-btn{
+  display:inline-flex;align-items:center;gap:4px;padding:0;border-radius:999px;
+  background:transparent;border:none;cursor:pointer;white-space:nowrap;
+}
+.gantt-st-btn:disabled{cursor:default;}
+.gantt-st-chip{
+  display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+}
+.gantt-st-chip::after{
+  content:"▾";font-size:9px;opacity:.7;margin-left:2px;
+}
+.gantt-st-btn:disabled .gantt-st-chip::after{display:none;}
+
+/* Timeline track */
+.gantt-track{position:relative;flex-shrink:0;}
+
+/* Bar — empty rectangle, color = phase color */
+.gantt-bar{
+  position:absolute;top:6px;height:24px;border-radius:6px;
+  cursor:pointer;transition:filter .12s, transform .12s, box-shadow .12s;
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.gantt-bar:hover{
+  filter:brightness(1.08);transform:translateY(-1px);
+  box-shadow:0 2px 6px rgba(0,0,0,.12), 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.gb-overdue{outline:2px solid var(--danger);outline-offset:-2px;}
+.gantt-today-line{
+  position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:3;pointer-events:none;
+}
+.gantt-today-line::before{
+  content:"Today";position:absolute;top:4px;left:6px;background:var(--accent);color:#fff;
+  font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;
+  padding:1px 6px;border-radius:4px;white-space:nowrap;
+}
+[data-theme="dark"] .gantt-today-line::before{color:#0a120d;}
+.gantt-undated-row{
+  padding:8px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;
+  background:var(--surface);font-size:13px;cursor:pointer;transition:.1s;color:var(--text);
+}
+.gantt-undated-row:hover{border-color:var(--accent);background:var(--surface-2);}
+
 .kanban{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;}
 .kb-col{
   background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);
@@ -897,6 +1059,39 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .card-chart{grid-column:span 9;min-height:200px;}
 .card-progress{grid-column:span 3;display:flex;flex-direction:column;align-items:center;text-align:center;}
 .card-pipeline{grid-column:span 12;display:flex;flex-direction:column;}
+.card-phases{grid-column:span 12;display:flex;flex-direction:column;}
+.phase-grid{
+  display:grid;grid-template-columns:repeat(6, 1fr);gap:10px;
+}
+.phase-cell{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;cursor:pointer;transition:.12s;
+  display:flex;flex-direction:column;gap:8px;
+}
+.phase-cell:hover{border-color:var(--border-strong);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+.phase-cell.is-empty{opacity:.55;cursor:default;}
+.phase-cell.is-empty:hover{transform:none;box-shadow:none;border-color:var(--border);}
+.phase-cell-head{display:flex;align-items:center;gap:7px;}
+.phase-cell-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.phase-cell-label{flex:1;font-size:13px;font-weight:500;letter-spacing:-.005em;color:var(--text);}
+.phase-cell-count{
+  font-family:var(--mono);font-size:11px;color:var(--text-muted);
+  background:var(--surface-2);padding:1px 7px;border-radius:999px;
+}
+.phase-cell-bar{display:flex;align-items:center;gap:8px;}
+.phase-cell-segments{
+  flex:1;display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--surface-3);
+}
+.phase-cell-segments .seg{height:100%;}
+.phase-cell-segments .seg-done{background:var(--accent);}
+.phase-cell-segments .seg-progress{background:var(--warn);}
+.phase-cell-segments .seg-todo{background:var(--text-dim);opacity:.5;}
+.phase-cell-segments .seg-blocked{background:var(--danger);}
+.phase-cell-pct{
+  font-family:var(--mono);font-size:11px;color:var(--text-muted);
+  flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.phase-cell-empty{color:var(--text-dim);font-size:11.5px;font-style:italic;}
 .card-list{grid-column:span 4;}
 .card-team{grid-column:span 4;}
 .card-avail{grid-column:span 4;}
@@ -1130,6 +1325,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   .donut-wrap{width:140px;height:140px;}
   .donut-pct{font-size:34px;}
   .pipeline{grid-template-columns:repeat(2,1fr);}
+  .phase-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
 
   /* View toolbar: wrap but stay horizontal */
   .view-toolbar{padding:8px 10px;gap:8px;flex-wrap:wrap;}
@@ -1419,6 +1615,21 @@ function confirmResolve(val){
   setTimeout(() => o.classList.add('hidden'), 180);
   if(confirmResolver){ confirmResolver(val); confirmResolver = null; }
 }
+
+/* ════════════════════════════════════════════════════════
+   SAP ACTIVATE METHODOLOGY — phase definitions
+   ════════════════════════════════════════════════════════ */
+const PHASES = [
+  { k:'discover', label:'Discover', short:'Disc', color:'#7F77DD', soft:'#EEEDFE', deep:'#3C3489', desc:'Solution exploration & business value' },
+  { k:'prepare',  label:'Prepare',  short:'Prep', color:'#378ADD', soft:'#E6F1FB', deep:'#0C447C', desc:'Project planning & team mobilization' },
+  { k:'explore',  label:'Explore',  short:'Expl', color:'#1D9E75', soft:'#E1F5EE', deep:'#085041', desc:'Fit-to-standard analysis & design' },
+  { k:'realize',  label:'Realize',  short:'Real', color:'#BA7517', soft:'#FAEEDA', deep:'#633806', desc:'Build, test & integrate the solution' },
+  { k:'deploy',   label:'Deploy',   short:'Depl', color:'#D85A30', soft:'#FAECE7', deep:'#712B13', desc:'Cutover, go-live & user readiness' },
+  { k:'run',      label:'Run',      short:'Run',  color:'#5F5E5A', soft:'#F1EFE8', deep:'#2C2C2A', desc:'Hypercare & continuous improvement' },
+];
+const PHASE_KEYS = PHASES.map(p => p.k);
+function phaseDef(k){ return PHASES.find(p => p.k === k) || null; }
+function fmtPhase(k){ return phaseDef(k)?.label || '—'; }
 
 /* ════════════════════════════════════════════════════════
    SVG ICONS — unified icon set, inherits color via currentColor
@@ -1819,7 +2030,7 @@ function selectProject(id){
    ════════════════════════════════════════════════════════ */
 function setView(v){
   // Kanban and fulltask borrow permissions from 'tasks' since they're alternative task views
-  const permKey = (v === 'kanban' || v === 'fulltask') ? 'tasks' : v;
+  const permKey = (v === 'kanban' || v === 'fulltask' || v === 'gantt') ? 'tasks' : v;
   if(!canReadView(permKey)) v = 'dashboard';
   if(!canReadView('dashboard') && !canReadView(v)) v = ALL_VIEWS.find(canReadView);
   state.activeView = v;
@@ -1842,6 +2053,7 @@ function renderAll(){
     if(v === 'dashboard')  renderDashboard();
     else if(v === 'tasks') renderTasks();
     else if(v === 'kanban') renderKanban();
+    else if(v === 'gantt')  renderGantt();
     else if(v === 'workitems') renderWorkItemsView();
     else if(v === 'interfaces') renderInterfacesView();
     else if(v === 'timelog') renderTimeLog();
@@ -1926,6 +2138,20 @@ function renderDashboard(){
       ${more > 0 ? `<div class="pl-more">+${more} more</div>` : ''}
     </div>`;
   }).join('');
+
+  // SAP Activate phase breakdown
+  const phaseRows = PHASES.map(p => {
+    const items = parents.filter(t => t.phase === p.k);
+    const total = items.length;
+    const done = items.filter(t => t.status === 'done').length;
+    const inProgress = items.filter(t => t.status === 'doing' || t.status === 'review').length;
+    const todo = items.filter(t => !t.status || t.status === 'todo').length;
+    const blocked = items.filter(t => t.status === 'blocked').length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return { phase:p, total, done, inProgress, todo, blocked, pct };
+  });
+  const totalPhased = phaseRows.reduce((s,r) => s + r.total, 0);
+  const noPhaseCount = parents.filter(t => !t.phase).length;
 
   const upcoming = parents
     .filter(t => t.due && t.status !== 'done')
@@ -2050,6 +2276,39 @@ function renderDashboard(){
         </div>
       </div>
 
+      <div class="card card-phases">
+        <div class="chart-head">
+          <div>
+            <h3>SAP Activate phases</h3>
+            <p>${totalPhased} of ${parents.length} task${parents.length===1?'':'s'} mapped${noPhaseCount?` · ${noPhaseCount} unphased`:''}</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Open Gantt →</button>
+        </div>
+        <div class="phase-grid">
+          ${phaseRows.map(r => `
+            <div class="phase-cell ${r.total===0?'is-empty':''}" data-phase="${r.phase.k}" onclick="openPhaseInTasks('${r.phase.k}')" title="${escHtml(r.phase.desc)}">
+              <div class="phase-cell-head">
+                <span class="phase-cell-dot" style="background:${r.phase.color}"></span>
+                <span class="phase-cell-label">${r.phase.label}</span>
+                <span class="phase-cell-count">${r.total}</span>
+              </div>
+              <div class="phase-cell-bar">
+                ${r.total === 0
+                  ? '<div class="phase-cell-empty">No tasks yet</div>'
+                  : `<div class="phase-cell-segments">
+                      ${r.done?`<div class="seg seg-done" style="flex:${r.done}" title="${r.done} done"></div>`:''}
+                      ${r.inProgress?`<div class="seg seg-progress" style="flex:${r.inProgress}" title="${r.inProgress} in progress / review"></div>`:''}
+                      ${r.todo?`<div class="seg seg-todo" style="flex:${r.todo}" title="${r.todo} todo"></div>`:''}
+                      ${r.blocked?`<div class="seg seg-blocked" style="flex:${r.blocked}" title="${r.blocked} blocked"></div>`:''}
+                    </div>
+                    <div class="phase-cell-pct">${r.pct}%</div>`
+                }
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
       <div class="card card-pipeline">
         <div class="chart-head">
           <div><h3>Status pipeline</h3><p>${parents.length} tasks across ${groups.length} stages</p></div>
@@ -2084,6 +2343,8 @@ function renderDashboard(){
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
 let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:false };
+let ganttViewState = { zoom:'week' };  // 'day' | 'week' | 'month'
+let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 
 function renderTasks(){ renderWorkView({kindFilter: null}); }
 function renderWorkItemsView(){ renderWorkView({kindFilter: 'work', title: 'Work items', sub: 'Generic work items in this project'}); }
@@ -2104,6 +2365,7 @@ function renderWorkView(opts){
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
     <button class="btn btn-ghost btn-sm" onclick="setView('kanban')">Board view</button>
+    <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Gantt view</button>
     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`;
   setTopbar(title, sub, actions);
 
@@ -2116,6 +2378,7 @@ function renderWorkView(opts){
     <div class="view-toolbar">
       <div class="group-toggle" id="groupToggle">
         <button data-g="workitem" class="${filters.groupBy==='workitem'?'active':''}">${groupByLabel}</button>
+        <button data-g="phase"    class="${filters.groupBy==='phase'?'active':''}">By phase</button>
         <button data-g="status"   class="${filters.groupBy==='status'?'active':''}">By status</button>
         <button data-g="assignee" class="${filters.groupBy==='assignee'?'active':''}">By assignee</button>
         <button data-g="date"     class="${filters.groupBy==='date'?'active':''}">By date</button>
@@ -2153,6 +2416,9 @@ function renderWorkView(opts){
       const groupBy = tasksViewState.groupBy;
       if(groupBy === 'workitem'){
         workItems.forEach(wi => tasksViewState.openGroups.add('wi:'+wi.id));
+      } else if(groupBy === 'phase'){
+        PHASES.forEach(p => tasksViewState.openGroups.add('ph:'+p.k));
+        tasksViewState.openGroups.add('ph:none');
       } else if(groupBy === 'status'){
         ['todo','doing','review','blocked','done'].forEach(k => tasksViewState.openGroups.add('st:'+k));
       } else if(groupBy === 'assignee'){
@@ -2223,6 +2489,7 @@ function renderTaskGroups(opts){
 
   const g = tasksViewState.groupBy;
   if(g === 'workitem')       container.innerHTML = groupByWorkItem(workItems, filteredParents, subs);
+  else if(g === 'phase')     container.innerHTML = groupByPhase(workItems, filteredParents, subs);
   else if(g === 'status')    container.innerHTML = groupByStatus(workItems, filteredParents, subs);
   else if(g === 'assignee')  container.innerHTML = groupByAssignee(workItems, filteredParents, subs);
   else if(g === 'date')      container.innerHTML = groupByDate(workItems, filteredParents, subs);
@@ -2256,6 +2523,30 @@ function groupByStatus(workItems, parents, subs){
         <svg class="gh-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
         <span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0"></span>
         <span class="gh-title">${s.label}</span>
+        <span class="chip chip-muted" style="margin-left:auto">${items.length}</span>
+      </div>
+      <div class="group-body">
+        ${items.map(t => renderTaskRow(t, workItems, subs.filter(x => x.parentTaskId === t.id))).join('')}
+      </div>
+    </div>`;
+  }).join('') || `<div class="empty-screen" style="padding:40px"><p>No tasks match your filters.</p></div>`;
+}
+
+function groupByPhase(workItems, parents, subs){
+  // Add a synthetic 'unassigned' bucket at the end
+  const buckets = PHASES.concat([{k:null, label:'No phase set', color:'var(--text-dim)', soft:'var(--surface-3)'}]);
+  return buckets.map(p => {
+    const items = parents.filter(t => (t.phase || null) === p.k);
+    if(!items.length) return '';
+    const gid = 'ph:' + (p.k || 'none');
+    const isOpen = tasksViewState.openGroups.has(gid) || (!tasksViewState.allCollapsed && p.k !== null);
+    const dot = p.color || 'var(--text-dim)';
+    return `<div class="group ${isOpen?'open':''}" data-gid="${gid}">
+      <div class="group-header">
+        <svg class="gh-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+        <span style="width:8px;height:8px;border-radius:50%;background:${dot};flex-shrink:0"></span>
+        <span class="gh-title">${p.label}</span>
+        ${p.desc?`<span style="color:var(--text-muted);font-size:12px;margin-left:8px">${p.desc}</span>`:''}
         <span class="chip chip-muted" style="margin-left:auto">${items.length}</span>
       </div>
       <div class="group-body">
@@ -2414,7 +2705,7 @@ function renderTaskRow(t, workItems, subs){
     <span class="tc-toggle ${subs.length?(subOpen?'open':''):'empty'}" data-toggle-subs="${t.id}">▸</span>
     <div class="tc-title">
       <div class="tc-title-main">${escHtml(t.title||'Untitled')}</div>
-      <div class="tc-title-sub">${typeChip(type)}${subCount}${attCount(t)}</div>
+      <div class="tc-title-sub">${typeChip(type)}${t.phase?phaseChip(t.phase):''}${subCount}${attCount(t)}</div>
     </div>
     ${stChipHtml}
     <button class="tc-assignee as-btn" data-pop-assignee="${t.id}" title="Click to change assignee">${t.assignee?avatarEl(t.assignee, 22)+`<span class="tc-assignee-name">${escHtml(t.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">— assign</span>'}</button>
@@ -2591,7 +2882,8 @@ function openRowStatusPopover(anchor, tid){
     saveState();
     // If the side panel is open on this task, re-render it too
     if(openPanelTaskId === tid) renderSidePanel();
-    renderTaskGroups({kindFilter: tasksViewState.kindFilter});
+    if(state.activeView === 'gantt') renderGantt();
+    else renderTaskGroups({kindFilter: tasksViewState.kindFilter});
   });
 }
 
@@ -2612,7 +2904,8 @@ function openRowAssigneePopover(anchor, tid){
     pushActivity(t, cur ? (newVal ? `reassigned from ${cur} to ${newVal}` : `unassigned from ${cur}`) : `assigned to ${newVal}`);
     saveState();
     if(openPanelTaskId === tid) renderSidePanel();
-    renderTaskGroups({kindFilter: tasksViewState.kindFilter});
+    if(state.activeView === 'gantt') renderGantt();
+    else renderTaskGroups({kindFilter: tasksViewState.kindFilter});
   });
 }
 
@@ -2621,6 +2914,16 @@ function openRowAssigneePopover(anchor, tid){
    ════════════════════════════════════════════════════════ */
 let openPanelTaskId = null;
 let spDescEditing = false;
+
+function openPhaseInTasks(phaseKey){
+  if(!phaseKey) return;
+  // Switch to the Tasks view, group by phase, open just this phase
+  tasksViewState.groupBy = 'phase';
+  tasksViewState.allCollapsed = true;
+  tasksViewState.openGroups.clear();
+  tasksViewState.openGroups.add('ph:'+phaseKey);
+  setView('tasks');
+}
 
 function openSidePanel(taskId){
   const task = state.tasks.find(t => t.id === taskId);
@@ -2691,6 +2994,11 @@ function renderSidePanel(){
         <span class="sp-prop-key">Priority</span>
         <div class="sp-prop-val"><button class="pill-btn" data-pop="priority">
           <span class="chip chip-${task.priority==='high'?'danger':task.priority==='low'?'muted':'warn'}">${(task.priority||'medium')[0].toUpperCase()+(task.priority||'medium').slice(1)}</span>
+        </button></div>
+
+        <span class="sp-prop-key">Phase</span>
+        <div class="sp-prop-val"><button class="pill-btn" data-pop="phase">
+          ${task.phase ? phaseChip(task.phase) : '<span class="muted">Not set</span>'}
         </button></div>
 
         <span class="sp-prop-key">Assignee</span>
@@ -2799,6 +3107,16 @@ function renderSidePanel(){
         const people = state.users.filter(u => u.active !== false).map(u => ({label:u.name, value:u.name, selected:u.name===task.assignee, avatar:u.name}));
         people.unshift({label:'Unassigned', value:null, selected:!task.assignee});
         openPopover(btn, people, v => mutateTask(task.id, t => { t.assignee = v; pushActivity(t, v ? `assigned to ${v}` : 'unassigned'); }));
+      }
+      else if(kind === 'phase'){
+        const opts = [{label:'Not set', value:null, selected:!task.phase}].concat(
+          PHASES.map(p => ({label: p.label, value: p.k, selected: p.k === task.phase}))
+        );
+        openPopover(btn, opts, v => mutateTask(task.id, t => {
+          const old = t.phase;
+          t.phase = v;
+          pushActivity(t, v ? `set phase to ${fmtPhase(v)}` : `cleared phase (was ${fmtPhase(old)})`);
+        }));
       }
     };
   });
@@ -2961,6 +3279,12 @@ function typeChipClass(type){
 }
 function typeChip(type){
   return `<span class="${typeChipClass(type)}">${fmtType(type)}</span>`;
+}
+function phaseChip(phase){
+  if(!phase) return '';
+  const def = phaseDef(phase);
+  if(!def) return '';
+  return `<span class="chip-phase p-${phase}" title="SAP Activate: ${def.label}">${def.label}</span>`;
 }
 function attCount(t){
   const n = (t.attachments||[]).length;
@@ -3335,6 +3659,12 @@ function openNewTaskModal(prefilledWorkItemId){
           </select></div>
         </div>
         <div class="form-row">
+          <div class="form-group"><label>SAP Activate phase</label><select id="t-phase">
+            <option value="">— Not set —</option>
+            ${PHASES.map(p => `<option value="${p.k}">${p.label} — ${p.desc}</option>`).join('')}
+          </select></div>
+        </div>
+        <div class="form-row">
           <div class="form-group"><label>Description</label><textarea id="t-desc" rows="3"></textarea></div>
         </div>
         <div class="modal-actions">
@@ -3365,6 +3695,7 @@ function saveNewTask(){
     assignee: document.getElementById('t-assignee').value || null,
     due: document.getElementById('t-due').value || null,
     estimate: document.getElementById('t-estimate').value ? Number(document.getElementById('t-estimate').value) : null,
+    phase: document.getElementById('t-phase').value || null,
     description: document.getElementById('t-desc').value.trim(),
     comments: [], activity: [{id:uid(), by:currentUser.name, text:'created task', at:new Date().toISOString()}],
     createdAt: new Date().toISOString(), createdBy: currentUser.name,
@@ -3378,6 +3709,262 @@ function saveNewTask(){
 }
 
 /* ════════════════════════════════════════════════════════
+   GANTT CHART
+   ════════════════════════════════════════════════════════ */
+function renderGantt(){
+  const pid = state.activeProject;
+  const workItems = state.workItems.filter(w => w.projectId === pid);
+  const allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
+  const canWrite = canWriteView('tasks');
+
+  setTopbar('Gantt', `${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
+    `<button class="btn btn-ghost btn-sm" onclick="setView('tasks')">List view</button>
+     <button class="btn btn-ghost btn-sm" onclick="setView('kanban')">Board view</button>
+     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
+
+  const content = document.getElementById('content');
+  if(!allTasks.length){
+    content.innerHTML = `<div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▭</div><h3>No tasks yet</h3><p>Create a task to see it on the timeline.</p></div>`;
+    return;
+  }
+
+  // Compute task bars: end = due date; start = end − ceil(estimate / 8) working days, fallback 1 day
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const bars = [];
+  const undated = [];
+  allTasks.forEach(t => {
+    if(!t.due){ undated.push(t); return; }
+    const end = new Date(t.due);
+    if(isNaN(end)){ undated.push(t); return; }
+    end.setHours(0,0,0,0);
+    const days = Math.max(1, Math.ceil((Number(t.estimate) || 0) / 8));
+    const start = new Date(end); start.setDate(start.getDate() - (days - 1));
+    bars.push({ task: t, start, end, days });
+  });
+
+  if(!bars.length){
+    content.innerHTML = `
+      <div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▭</div><h3>No dated tasks</h3><p>Add a due date to your tasks to see them on the Gantt.</p></div>
+      ${undated.length ? `<div style="padding:0 28px 28px"><h4 style="font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">${undated.length} task${undated.length===1?'':'s'} without a date</h4>${undated.map(t => `<div class="gantt-undated-row" data-tid="${t.id}">${escHtml(t.title)}</div>`).join('')}</div>` : ''}`;
+    document.getElementById('content').onclick = e => {
+      const row = e.target.closest('.gantt-undated-row');
+      if(row) openSidePanel(Number(row.dataset.tid));
+    };
+    return;
+  }
+
+  // Span: pad before/after for breathing room, snap to Mondays
+  let minDate = new Date(Math.min(...bars.map(b => b.start.getTime())));
+  let maxDate = new Date(Math.max(...bars.map(b => b.end.getTime())));
+  if(today < minDate) minDate = new Date(today);
+  if(today > maxDate) maxDate = new Date(today);
+  minDate = snapToMonday(minDate);
+  minDate.setDate(minDate.getDate() - 7);
+  maxDate = snapToMonday(maxDate);
+  maxDate.setDate(maxDate.getDate() + 14);
+
+  const zoom = ganttViewState.zoom;
+  const dayPx = zoom === 'day' ? 36 : zoom === 'week' ? 18 : 6;
+  const totalDays = Math.round((maxDate - minDate) / 86400000);
+  const timelineWidth = totalDays * dayPx;
+
+  // Build week ticks (every week, all zoom levels) + month band
+  const weekTicks = [];
+  const monthBand = [];
+  let cursor = new Date(minDate);
+  let curMonth = -1, monthStart = 0;
+  for(let i = 0; i < totalDays; i++){
+    if(cursor.getDay() === 1 || i === 0){
+      const left = i * dayPx;
+      const wk = isoWeek(cursor);
+      // Every zoom level: just "Wk N" label, fits even at month zoom
+      const lbl = `Wk ${wk}`;
+      weekTicks.push(`<div class="gantt-week-tick" style="left:${left}px;width:${7*dayPx}px"><span>${lbl}</span></div>`);
+    }
+    if(cursor.getMonth() !== curMonth){
+      if(curMonth !== -1){
+        monthBand.push(`<div class="gantt-month-cell" style="left:${monthStart*dayPx}px;width:${(i-monthStart)*dayPx}px">${monthLabel(curMonth, cursor.getFullYear())}</div>`);
+      }
+      curMonth = cursor.getMonth();
+      monthStart = i;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  monthBand.push(`<div class="gantt-month-cell" style="left:${monthStart*dayPx}px;width:${(totalDays-monthStart)*dayPx}px">${monthLabel(curMonth, cursor.getFullYear())}</div>`);
+
+  const todayOffset = Math.round((today - minDate) / 86400000) * dayPx;
+  const showTodayLine = todayOffset >= 0 && todayOffset <= timelineWidth;
+
+  // Group bars by SAP Activate phase
+  const byPhase = new Map();
+  PHASES.forEach(p => byPhase.set(p.k, []));
+  byPhase.set(null, []);
+  bars.forEach(b => {
+    const ph = b.task.phase || null;
+    if(!byPhase.has(ph)) byPhase.set(ph, []);
+    byPhase.get(ph).push(b);
+  });
+  byPhase.forEach(arr => arr.sort((a,b) => a.start - b.start));
+  const phaseOrder = PHASES.map(p => p.k).concat([null]);
+
+  // Helper to render an assignee cell: shows avatar+name as a button (popover trigger)
+  const renderAssigneeCell = (task) => {
+    if(!task.assignee){
+      return `<div class="gantt-assignee-cell">
+        <button class="gantt-as-btn gantt-as-empty" data-pop-assignee="${task.id}" ${canWrite?'':'disabled'}>
+          <span class="gantt-as-name muted">— assign</span>
+          ${canWrite?'<span class="gantt-pop-caret">▾</span>':''}
+        </button>
+      </div>`;
+    }
+    return `<div class="gantt-assignee-cell">
+      <button class="gantt-as-btn" data-pop-assignee="${task.id}" ${canWrite?'':'disabled'}>
+        ${avatarEl(task.assignee, 22)}
+        <span class="gantt-as-name">${escHtml(task.assignee.split(' ')[0])}</span>
+        ${canWrite?'<span class="gantt-pop-caret">▾</span>':''}
+      </button>
+    </div>`;
+  };
+
+  // Helper to render a status cell
+  const renderStatusCell = (task) => {
+    const st = task.status || 'todo';
+    const stChipCls = `chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}`;
+    return `<div class="gantt-status-cell">
+      <button class="gantt-st-btn" data-pop-status="${task.id}" ${canWrite?'':'disabled'}>
+        <span class="${stChipCls} gantt-st-chip">${fmtStatus(st)}</span>
+        ${canWrite?'<span class="gantt-pop-caret">▾</span>':''}
+      </button>
+    </div>`;
+  };
+
+  let rowIdx = 0;
+  const groupRows = phaseOrder.map(phk => {
+    const phBars = byPhase.get(phk) || [];
+    if(!phBars.length) return '';
+    const def = phk ? phaseDef(phk) : { label:'No phase set', color:'#9aa39c', soft:'#F1EFE8', deep:'#5F5E5A', desc:'' };
+    const phStart = new Date(Math.min(...phBars.map(b => b.start.getTime())));
+    const phEnd = new Date(Math.max(...phBars.map(b => b.end.getTime())));
+    const phStartOffset = Math.round((phStart - minDate) / 86400000) * dayPx;
+    const phEndOffset = Math.round((phEnd - minDate) / 86400000) * dayPx + dayPx;
+    const phWidth = Math.max(dayPx, phEndOffset - phStartOffset);
+    const phHeader = `<div class="gantt-phase-row" style="--phase-color:${def.color};--phase-soft:${def.soft};--phase-deep:${def.deep}">
+      <div class="gantt-side-cell gantt-phase-name">
+        <span class="gantt-phase-dot"></span>
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <span class="gantt-phase-label">${escHtml(def.label)}</span>
+          <span class="gantt-phase-meta">${phBars.length} task${phBars.length===1?'':'s'} · ${fmtDate(phStart.toISOString().slice(0,10))} → ${fmtDate(phEnd.toISOString().slice(0,10))}</span>
+        </div>
+      </div>
+      <div class="gantt-assignee-cell"></div>
+      <div class="gantt-status-cell"></div>
+      <div class="gantt-track gantt-phase-track" style="width:${timelineWidth}px">
+        <div class="gantt-phase-band" style="left:${phStartOffset}px;width:${phWidth}px"></div>
+      </div>
+    </div>`;
+
+    const taskRows = phBars.map(b => {
+      const startOffset = Math.round((b.start - minDate) / 86400000) * dayPx;
+      const width = Math.max(dayPx, b.days * dayPx);
+      const st = b.task.status || 'todo';
+      const isOverdue = st !== 'done' && b.end < today;
+      const overdueCls = isOverdue ? ' gb-overdue' : '';
+      const phaseColor = b.task.phase ? phaseDef(b.task.phase)?.color : '#9aa39c';
+      rowIdx++;
+      const startStr = fmtDate(b.start.toISOString().slice(0,10));
+      const endStr = fmtDate(b.end.toISOString().slice(0,10));
+      const tooltip = `${escHtml(b.task.title)} · ${startStr} → ${endStr} · ${b.days} day${b.days===1?'':'s'}${b.task.estimate?` · ${b.task.estimate}h`:''}`;
+      return `<div class="gantt-row" data-row-idx="${rowIdx}">
+        <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
+          <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
+        </div>
+        ${renderAssigneeCell(b.task)}
+        ${renderStatusCell(b.task)}
+        <div class="gantt-track" style="width:${timelineWidth}px">
+          <div class="gantt-bar${overdueCls}" data-tid="${b.task.id}" style="left:${startOffset}px;width:${width}px;background:${phaseColor};" title="${escHtml(tooltip)}"></div>
+        </div>
+      </div>`;
+    }).join('');
+    return phHeader + taskRows;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="gantt-toolbar">
+      <div class="group-toggle" id="ganttZoom">
+        <button data-z="day" class="${zoom==='day'?'active':''}">Day</button>
+        <button data-z="week" class="${zoom==='week'?'active':''}">Week</button>
+        <button data-z="month" class="${zoom==='month'?'active':''}">Month</button>
+      </div>
+      ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a due date hidden</span>` : ''}
+    </div>
+    <div class="gantt-container" id="ganttContainer">
+      <div class="gantt-header">
+        <div class="gantt-side-cell gantt-side-head">Phase / Task</div>
+        <div class="gantt-assignee-cell gantt-side-head">Assignee</div>
+        <div class="gantt-status-cell gantt-side-head">Status</div>
+        <div class="gantt-timeline-head" style="width:${timelineWidth}px">
+          <div class="gantt-month-band">${monthBand.join('')}</div>
+          <div class="gantt-week-band">${weekTicks.join('')}</div>
+        </div>
+      </div>
+      <div class="gantt-body">
+        ${showTodayLine ? `<div class="gantt-today-line" style="left:calc(var(--gantt-side-w) + var(--gantt-assignee-w) + var(--gantt-status-w) + ${todayOffset}px)"></div>` : ''}
+        ${groupRows}
+      </div>
+    </div>`;
+
+  // Wire interactions
+  document.getElementById('ganttZoom').onclick = e => {
+    const b = e.target.closest('button'); if(!b) return;
+    ganttViewState.zoom = b.dataset.z;
+    renderGantt();
+  };
+  const cont = document.getElementById('ganttContainer');
+  cont.onclick = e => {
+    // Assignee popover
+    const aBtn = e.target.closest('[data-pop-assignee]');
+    if(aBtn){
+      e.stopPropagation();
+      openRowAssigneePopover(aBtn, Number(aBtn.dataset.popAssignee));
+      return;
+    }
+    // Status popover
+    const sBtn = e.target.closest('[data-pop-status]');
+    if(sBtn){
+      e.stopPropagation();
+      openRowStatusPopover(sBtn, Number(sBtn.dataset.popStatus));
+      return;
+    }
+    // Bar / task name click → open side panel
+    const cell = e.target.closest('[data-tid]');
+    if(cell){
+      openSidePanel(Number(cell.dataset.tid));
+    }
+  };
+}
+
+function snapToMonday(d){
+  const r = new Date(d);
+  const wd = r.getDay(); // 0 Sun .. 6 Sat
+  const back = wd === 0 ? 6 : wd - 1;
+  r.setDate(r.getDate() - back);
+  r.setHours(0,0,0,0);
+  return r;
+}
+function isoWeek(d){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return Math.ceil((((t - yearStart)/86400000) + 1)/7);
+}
+function monthLabel(m, y){
+  return new Date(y, m, 1).toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+}
+
+
+/* ════════════════════════════════════════════════════════
    KANBAN BOARD
    ════════════════════════════════════════════════════════ */
 function renderKanban(){
@@ -3388,18 +3975,26 @@ function renderKanban(){
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
     `<button class="btn btn-ghost btn-sm" onclick="setView('tasks')">List view</button>
+     <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Gantt view</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
 
-  const cols = [
-    {k:'todo',    label:'Todo',    dot:'var(--text-dim)'},
-    {k:'doing',   label:'In progress', dot:'var(--warn)'},
-    {k:'review',  label:'Review',  dot:'var(--info)'},
-    {k:'blocked', label:'Blocked', dot:'var(--danger)'},
-    {k:'done',    label:'Done',    dot:'var(--accent)'},
-  ];
+  const colBy = kanbanViewState.columnBy;
+  let cols;
+  if(colBy === 'phase'){
+    cols = PHASES.map(p => ({ k:p.k, label:p.label, dot:p.color, getter:t => t.phase === p.k }))
+      .concat([{ k:'_nophase', label:'No phase', dot:'var(--text-dim)', getter:t => !t.phase }]);
+  } else {
+    cols = [
+      {k:'todo',    label:'Todo',    dot:'var(--text-dim)', getter:t => (t.status||'todo') === 'todo'},
+      {k:'doing',   label:'In progress', dot:'var(--warn)', getter:t => t.status === 'doing'},
+      {k:'review',  label:'Review',  dot:'var(--info)',     getter:t => t.status === 'review'},
+      {k:'blocked', label:'Blocked', dot:'var(--danger)',   getter:t => t.status === 'blocked'},
+      {k:'done',    label:'Done',    dot:'var(--accent)',   getter:t => t.status === 'done'},
+    ];
+  }
 
   const colsHtml = cols.map(c => {
-    const items = tasks.filter(t => (t.status||'todo') === c.k);
+    const items = tasks.filter(c.getter);
     const cardsHtml = items.map(t => {
       const wi = workItems.find(w => w.id === t.workItemId);
       const prio = t.priority || 'medium';
@@ -3428,7 +4023,21 @@ function renderKanban(){
     </div>`;
   }).join('');
 
-  document.getElementById('content').innerHTML = `<div class="kanban">${colsHtml}</div>`;
+  document.getElementById('content').innerHTML = `
+    <div class="gantt-toolbar">
+      <span style="font-size:12.5px;color:var(--text-muted)">Columns:</span>
+      <div class="group-toggle" id="kanbanColumnBy">
+        <button data-cb="status" class="${colBy==='status'?'active':''}">By status</button>
+        <button data-cb="phase"  class="${colBy==='phase'?'active':''}">By phase</button>
+      </div>
+    </div>
+    <div class="kanban">${colsHtml}</div>`;
+
+  document.getElementById('kanbanColumnBy').onclick = e => {
+    const b = e.target.closest('button'); if(!b) return;
+    kanbanViewState.columnBy = b.dataset.cb;
+    renderKanban();
+  };
 
   // Wire click-to-open
   document.querySelectorAll('.kb-card').forEach(card => {
@@ -3459,12 +4068,22 @@ function renderKanban(){
       e.preventDefault();
       col.classList.remove('drop-target');
       if(!draggingId) return;
-      const newStatus = col.dataset.col;
+      const targetK = col.dataset.col;
       const t = state.tasks.find(x => x.id === draggingId);
-      if(!t || t.status === newStatus){ draggingId = null; return; }
-      const old = t.status || 'todo';
-      t.status = newStatus;
-      pushActivity(t, `moved ${old} → ${newStatus}`);
+      if(!t){ draggingId = null; return; }
+      if(kanbanViewState.columnBy === 'phase'){
+        const newPhase = targetK === '_nophase' ? null : targetK;
+        if((t.phase||null) === newPhase){ draggingId = null; return; }
+        const oldLabel = t.phase ? fmtPhase(t.phase) : 'No phase';
+        const newLabel = newPhase ? fmtPhase(newPhase) : 'No phase';
+        t.phase = newPhase;
+        pushActivity(t, `moved phase ${oldLabel} → ${newLabel}`);
+      } else {
+        if(t.status === targetK){ draggingId = null; return; }
+        const old = t.status || 'todo';
+        t.status = targetK;
+        pushActivity(t, `moved ${old} → ${targetK}`);
+      }
       saveState();
       draggingId = null;
       renderKanban();
