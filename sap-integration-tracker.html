@@ -560,8 +560,13 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 [data-theme="dark"] .task-row.selected{background:var(--accent-soft);}
 .task-row.subtask{padding-left:34px;background:var(--surface-2);}
 .task-row.subtask:hover{background:var(--surface-3);}
-.drag-handle{color:var(--text-dim);opacity:0;font-size:12px;line-height:1;text-align:center;cursor:grab;}
-.task-row:hover .drag-handle{opacity:1;}
+.drag-handle{color:var(--text-dim);opacity:0;font-size:12px;line-height:1;text-align:center;cursor:grab;transition:opacity .1s;}
+.task-row:hover .drag-handle{opacity:.6;}
+.task-row .drag-handle:hover{opacity:1;color:var(--text);}
+.task-row[draggable="true"]:active .drag-handle{cursor:grabbing;}
+.task-row.dragging{opacity:.35;}
+.task-row.drop-before{box-shadow:inset 0 2px 0 0 var(--accent);}
+.task-row.drop-after{box-shadow:inset 0 -2px 0 0 var(--accent);}
 .tc-check{
   width:18px;height:18px;border:1.5px solid var(--border-strong);border-radius:5px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;color:transparent;transition:.15s;background:var(--surface);
@@ -2228,7 +2233,7 @@ function renderTaskGroups(opts){
 function groupByWorkItem(workItems, parents, subs){
   const sorted = workItems.slice().sort((a,b) => (a.code||'').localeCompare(b.code||''));
   return sorted.map(wi => {
-    const wTasks = parents.filter(t => t.workItemId === wi.id);
+    const wTasks = sortByOrder(parents.filter(t => t.workItemId === wi.id));
     const isOpen = tasksViewState.openGroups.has('wi:'+wi.id) || (!tasksViewState.allCollapsed && wTasks.length > 0 && wTasks.length <= 8);
     return renderGroupHeader(wi, wTasks, subs, isOpen, 'wi:'+wi.id);
   }).join('') || `<div class="empty-screen" style="padding:40px"><p>No work items match your filters.</p></div>`;
@@ -2350,7 +2355,43 @@ function wiStatusChip(wi, tasks){
   return `<span class="chip chip-muted">Todo</span>`;
 }
 
+function sortByOrder(tasks){
+  return tasks.slice().sort((a,b) => {
+    const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+    const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+    if(ao !== bo) return ao - bo;
+    return (a.createdAt || '').localeCompare(b.createdAt || '');
+  });
+}
+
+function reorderTask(draggedId, targetId, placement){
+  // placement: 'before' or 'after' the target
+  const dragged = state.tasks.find(t => t.id === draggedId);
+  const target = state.tasks.find(t => t.id === targetId);
+  if(!dragged || !target) return;
+  // Scope: siblings share workItemId + parentTaskId (both null or both set)
+  if(dragged.workItemId !== target.workItemId) return;
+  if((dragged.parentTaskId||null) !== (target.parentTaskId||null)) return;
+  // Collect siblings in current order (sorted by order/createdAt)
+  const siblings = sortByOrder(state.tasks.filter(t =>
+    t.workItemId === dragged.workItemId &&
+    (t.parentTaskId||null) === (dragged.parentTaskId||null)
+  ));
+  // Remove dragged and splice it in at the target position
+  const without = siblings.filter(t => t.id !== draggedId);
+  const targetIdx = without.findIndex(t => t.id === targetId);
+  if(targetIdx < 0) return;
+  const insertAt = placement === 'before' ? targetIdx : targetIdx + 1;
+  without.splice(insertAt, 0, dragged);
+  // Reassign order: 10, 20, 30, ... so we have room for future inserts without reordering everything
+  without.forEach((t, i) => { t.order = (i + 1) * 10; });
+  pushActivity(dragged, `reordered`);
+  saveState();
+  renderTaskGroups({kindFilter: tasksViewState.kindFilter});
+}
+
 function renderTaskRow(t, workItems, subs){
+  subs = sortByOrder(subs);
   const done = t.status === 'done';
   const subOpen = subs.length > 0 && tasksViewState.openGroups.has('t:'+t.id);
   const prio = t.priority || 'medium';
@@ -2368,8 +2409,8 @@ function renderTaskRow(t, workItems, subs){
   const loggedH = logs.reduce((s,l) => s + (Number(l.hours)||0), 0);
   const hoursLabel = loggedH ? (t.estimate ? `<b>${loggedH.toFixed(1)}</b>/${t.estimate}h` : `<b>${loggedH.toFixed(1)}</b>h`) : (t.estimate ? `${t.estimate}h` : '—');
 
-  const mainRow = `<div class="task-row ${done?'done':''}" data-tid="${t.id}">
-    <span class="drag-handle">⋮⋮</span>
+  const mainRow = `<div class="task-row ${done?'done':''}" data-tid="${t.id}" data-parent-wi="${t.workItemId}" draggable="true">
+    <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
     <span class="tc-toggle ${subs.length?(subOpen?'open':''):'empty'}" data-toggle-subs="${t.id}">▸</span>
     <div class="tc-title">
       <div class="tc-title-main">${escHtml(t.title||'Untitled')}</div>
@@ -2397,8 +2438,8 @@ function renderTaskRow(t, workItems, subs){
       const sStChipHtml = `<button class="stat-btn" data-pop-status="${s.id}" title="Click to change status"><span class="${sStChipCls}">${fmtStatus(sSt)}</span></button>`;
       const sDueDays = s.due ? daysUntil(s.due) : null;
       const sDueClass = sDueDays !== null && sSt !== 'done' ? (sDueDays < 0 ? 'overdue' : sDueDays <= 3 ? 'soon' : '') : '';
-      return `<div class="task-row subtask ${sDone?'done':''}" data-tid="${s.id}">
-        <span class="drag-handle" style="opacity:0"></span>
+      return `<div class="task-row subtask ${sDone?'done':''}" data-tid="${s.id}" data-parent-task="${s.parentTaskId}" draggable="true">
+        <span class="drag-handle" title="Drag to reorder" style="opacity:.4">⋮⋮</span>
         <span class="tc-toggle empty"></span>
         <div class="tc-title"><div class="tc-title-main">${escHtml(s.title)}</div>${attCount(s)?`<div class="tc-title-sub">${attCount(s)}</div>`:''}</div>
         ${sStChipHtml}
@@ -2419,6 +2460,67 @@ function renderTaskRow(t, workItems, subs){
 function wireTaskGroupInteractions(workItems){
   const container = document.getElementById('taskGroups');
   if(!container) return;
+
+  // Drag-and-drop for reordering tasks within the same parent (only active in 'By parent' grouping)
+  if(tasksViewState.groupBy === 'workitem' && canWriteView('tasks')){
+    let draggedId = null;
+    let draggedIsSubtask = false;
+    let draggedScope = null; // work item id for parents, or parent task id for subtasks
+
+    container.querySelectorAll('.task-row[draggable="true"]').forEach(row => {
+      row.addEventListener('dragstart', e => {
+        draggedId = Number(row.dataset.tid);
+        draggedIsSubtask = row.classList.contains('subtask');
+        draggedScope = draggedIsSubtask ? row.dataset.parentTask : row.dataset.parentWi;
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        // Firefox needs some data to actually start the drag
+        try { e.dataTransfer.setData('text/plain', String(draggedId)); } catch(_) {}
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        container.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before','drop-after'));
+        draggedId = null; draggedIsSubtask = false; draggedScope = null;
+      });
+    });
+
+    container.addEventListener('dragover', e => {
+      if(draggedId === null) return;
+      const row = e.target.closest('.task-row[draggable="true"]');
+      if(!row) return;
+      // Must be in the same scope — same work item for parents, same parent task for subtasks
+      const targetIsSubtask = row.classList.contains('subtask');
+      if(targetIsSubtask !== draggedIsSubtask) return;
+      const targetScope = targetIsSubtask ? row.dataset.parentTask : row.dataset.parentWi;
+      if(targetScope !== draggedScope) return;
+      const tid = Number(row.dataset.tid);
+      if(tid === draggedId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      // Indicate whether drop will land before or after the target
+      const rect = row.getBoundingClientRect();
+      const above = (e.clientY - rect.top) < rect.height / 2;
+      container.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before','drop-after'));
+      row.classList.add(above ? 'drop-before' : 'drop-after');
+    });
+
+    container.addEventListener('drop', e => {
+      if(draggedId === null) return;
+      const row = e.target.closest('.task-row[draggable="true"]');
+      if(!row) return;
+      const targetIsSubtask = row.classList.contains('subtask');
+      if(targetIsSubtask !== draggedIsSubtask) return;
+      const targetScope = targetIsSubtask ? row.dataset.parentTask : row.dataset.parentWi;
+      if(targetScope !== draggedScope) return;
+      e.preventDefault();
+      const targetId = Number(row.dataset.tid);
+      if(targetId === draggedId) return;
+      const rect = row.getBoundingClientRect();
+      const above = (e.clientY - rect.top) < rect.height / 2;
+      reorderTask(draggedId, targetId, above ? 'before' : 'after');
+    });
+  }
+
   container.onclick = e => {
     const header = e.target.closest('.group-header');
     if(header && !e.target.closest('.gh-actions')){
