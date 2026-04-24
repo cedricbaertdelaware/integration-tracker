@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Integration Tracker</title>
+<title>SAP Project Management Tool</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;450;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════════════════════
    DESIGN TOKENS
@@ -49,7 +49,11 @@
 html,body{height:100%;}
 body{
   background:var(--page); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5;
-  -webkit-font-smoothing:antialiased; overflow:hidden;
+  font-weight:430;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+  font-feature-settings:"cv11", "ss03", "ss06";
+  overflow:hidden;
 }
 button{font-family:inherit;}
 input,select,textarea{font-family:inherit;}
@@ -141,7 +145,7 @@ input,select,textarea{font-family:inherit;}
 }
 .user-chip-info{flex:1;min-width:0;}
 .user-chip-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.user-chip-role{font-size:11px;color:var(--text-muted);text-transform:capitalize;}
+.user-chip-role{font-size:11.5px;color:var(--text-muted);text-transform:capitalize;}
 .user-chip-logout{
   background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px 6px;border-radius:6px;font-size:12px;
 }
@@ -314,7 +318,7 @@ input:focus,select:focus,textarea:focus{
   border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 textarea{resize:vertical;min-height:70px;}
-label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase;}
+label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase;}
 .req{color:var(--danger);font-weight:700;margin-left:2px;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
 .form-row{display:grid;gap:12px;margin-bottom:12px;}
@@ -425,7 +429,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .toast.out{animation:toastOut .2s ease forwards;}
 .toast .toast-action{
   margin-left:auto;background:currentColor;color:var(--surface);border:none;padding:3px 10px;
-  border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+  border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;
 }
 @keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
 @keyframes toastOut{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(40px);}}
@@ -517,7 +521,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 }
 .gh-kind.kind-iface{background:var(--accent-soft);color:var(--accent-deep);}
 [data-theme="dark"] .gh-kind.kind-iface{color:var(--accent);}
-.gh-id{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);flex-shrink:0;}
+.gh-id{font-family:var(--mono);font-size:12px;color:var(--text-muted);flex-shrink:0;}
 .gh-route{color:var(--text-muted);font-size:12px;display:flex;align-items:center;gap:5px;flex-shrink:0;font-family:var(--mono);}
 .gh-route .arrow{color:var(--accent);}
 .gh-tags{display:flex;gap:4px;flex-wrap:wrap;}
@@ -565,7 +569,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .tc-check:hover{border-color:var(--accent);}
 .tc-check.done{background:var(--accent);border-color:var(--accent);color:#fff;}
 [data-theme="dark"] .tc-check.done{color:#0a120d;}
-.tc-check.done::after{content:"✓";font-size:11px;font-weight:700;}
+.tc-check.done::after{content:"✓";font-size:11.5px;font-weight:700;}
 .stat-btn{
   background:none;border:none;padding:0;cursor:pointer;display:inline-flex;align-items:center;
   border-radius:999px;transition:.12s;
@@ -574,23 +578,28 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .stat-btn:hover .chip{box-shadow:0 0 0 1.5px currentColor;}
 .tc-toggle{
   width:20px;height:20px;display:flex;align-items:center;justify-content:center;
-  color:var(--text-dim);cursor:pointer;border-radius:4px;transition:.15s;font-size:11px;
+  color:var(--text-dim);cursor:pointer;border-radius:4px;transition:.15s;font-size:11.5px;
 }
 .tc-toggle:hover{background:var(--surface-3);color:var(--text);}
 .tc-toggle.open{transform:rotate(90deg);}
 .tc-toggle.empty{opacity:0;pointer-events:none;}
 .tc-title{display:flex;flex-direction:column;min-width:0;gap:2px;}
 .tc-title-main{font-weight:500;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tc-title-sub{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);display:flex;gap:6px;align-items:center;}
+.tc-title-sub{font-size:12px;color:var(--text-muted);font-family:var(--mono);display:flex;gap:6px;align-items:center;}
 .tc-title-sub .subtask-count{color:var(--text-dim);}
 .task-row.done .tc-title-main{text-decoration:line-through;color:var(--text-muted);text-decoration-color:var(--border-strong);}
 .tc-assignee{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);min-width:0;}
 .tc-assignee .avatar{flex-shrink:0;}
 .tc-assignee-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.tc-due{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
+.as-btn{
+  background:none;border:1px solid transparent;cursor:pointer;padding:3px 8px 3px 3px;
+  border-radius:999px;transition:.12s;text-align:left;
+}
+.as-btn:hover{background:var(--surface-2);border-color:var(--border);}
+.tc-due{font-family:var(--mono);font-size:12px;color:var(--text-muted);text-align:right;}
 .tc-due.overdue{color:var(--danger);font-weight:500;}
 .tc-due.soon{color:var(--warn);font-weight:500;}
-.tc-hours{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
+.tc-hours{font-family:var(--mono);font-size:12px;color:var(--text-muted);text-align:right;}
 .tc-hours b{color:var(--text);font-weight:500;}
 .tc-actions{opacity:.4;display:flex;gap:2px;justify-content:flex-end;transition:opacity .12s;}
 .task-row:hover .tc-actions{opacity:1;}
@@ -638,7 +647,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .kb-iface{font-family:var(--mono);font-size:10.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .kb-card-title{font-size:13px;font-weight:500;line-height:1.35;}
 .kb-card-bot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;}
-.kb-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);font-family:var(--mono);}
+.kb-meta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted);font-family:var(--mono);}
 .kb-card.hot{border-left:3px solid var(--warn);}
 .kb-card.blocked{border-left:3px solid var(--danger);}
 .kb-card.blocked .kb-meta{color:var(--danger);}
@@ -667,7 +676,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .sp-head{
   padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-shrink:0;
 }
-.sp-breadcrumb{flex:1;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;}
+.sp-breadcrumb{flex:1;font-family:var(--mono);font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;}
 .sp-breadcrumb .bc-sep{color:var(--text-dim);flex-shrink:0;}
 .sp-breadcrumb a{color:var(--text-muted);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
 .sp-breadcrumb a:hover{color:var(--accent);}
@@ -731,7 +740,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .sub-due{font-family:var(--mono);font-size:10.5px;color:var(--text-muted);}
 .sub-actions{display:flex;gap:2px;opacity:.5;transition:opacity .12s;}
 .sub-item:hover .sub-actions{opacity:1;}
-.sub-actions button{width:24px;height:24px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--danger);cursor:pointer;font-size:11px;transition:.12s;display:inline-flex;align-items:center;justify-content:center;}
+.sub-actions button{width:24px;height:24px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--danger);cursor:pointer;font-size:11.5px;transition:.12s;display:inline-flex;align-items:center;justify-content:center;}
 .sub-actions button:hover{background:var(--danger-soft);border-color:var(--danger);}
 .sub-add{
   display:flex;align-items:center;gap:8px;padding:7px 8px;color:var(--text-dim);
@@ -741,6 +750,32 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .sub-add-input{padding:5px 10px;border-radius:8px;font-size:13px;}
 
 .cmt{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+
+/* Attachments */
+.att{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);
+  border-radius:9px;margin-bottom:6px;background:var(--surface);transition:.12s;
+}
+.att:hover{border-color:var(--border-strong);background:var(--surface-2);}
+.att-ico{font-size:20px;flex-shrink:0;width:28px;text-align:center;}
+.att-body{flex:1;min-width:0;}
+.att-name{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.att-meta{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
+.att-action{
+  width:28px;height:28px;flex-shrink:0;background:none;border:1px solid transparent;color:var(--text-muted);
+  border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.12s;
+}
+.att-action:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
+.att-action.att-del:hover{background:var(--danger-soft);color:var(--danger);border-color:var(--danger);}
+.att-action svg{pointer-events:none;}
+.att-upload{margin-top:8px;}
+
+/* Attachment indicator on task rows */
+.tc-att-indicator{
+  display:inline-flex;align-items:center;gap:3px;font-size:11.5px;color:var(--text-muted);
+  margin-left:4px;
+}
+.tc-att-indicator svg{opacity:.7;}
 .cmt:last-of-type{border-bottom:none;}
 .cmt-body{flex:1;min-width:0;}
 .cmt-head{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;flex-wrap:wrap;}
@@ -749,7 +784,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .cmt-text{font-size:12.5px;line-height:1.55;color:var(--text);}
 .cmt-text .mention{background:var(--accent-soft);color:var(--accent-deep);padding:1px 5px;border-radius:3px;font-weight:500;}
 [data-theme="dark"] .cmt-text .mention{color:var(--accent);}
-.cmt-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;padding:2px 4px;opacity:0;}
+.cmt-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11.5px;padding:2px 4px;opacity:0;}
 .cmt:hover .cmt-del{opacity:1;}
 .cmt-del:hover{color:var(--danger);}
 .cmt-input{margin-top:10px;display:flex;gap:8px;align-items:flex-start;}
@@ -760,7 +795,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .cmt-input textarea:focus{border-color:var(--accent);background:var(--surface);}
 .cmt-submit{padding:7px 14px;font-size:12px;}
 
-.act{display:flex;gap:8px;padding:5px 0;font-size:11.5px;color:var(--text-muted);align-items:center;}
+.act{display:flex;gap:8px;padding:5px 0;font-size:12px;color:var(--text-muted);align-items:center;}
 .act-dot{width:5px;height:5px;border-radius:50%;background:var(--border-strong);flex-shrink:0;margin-left:4px;}
 .act b{color:var(--text);font-weight:500;}
 
@@ -771,11 +806,11 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   padding:6px 8px;border-radius:7px;font-size:12.5px;
 }
 .tlog-item:hover{background:var(--surface-2);}
-.tlog-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);}
+.tlog-date{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);}
 .tlog-person{color:var(--text);font-weight:500;}
-.tlog-note{color:var(--text-muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tlog-note{color:var(--text-muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tlog-hrs{font-family:var(--mono);font-weight:500;}
-.tlog-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;padding:2px 4px;opacity:0;}
+.tlog-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11.5px;padding:2px 4px;opacity:0;}
 .tlog-item:hover .tlog-del{opacity:1;}
 .tlog-del:hover{color:var(--danger);}
 .tlog-add{
@@ -815,11 +850,11 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 8px;border-radius:999px;
   background:var(--surface-3);border:1px solid var(--border);font:500 11px var(--mono);color:var(--text-muted);
 }
-.tag-chip button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;padding:0 4px;border-radius:50%;}
+.tag-chip button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11.5px;padding:0 4px;border-radius:50%;}
 .tag-chip button:hover{color:var(--danger);}
 .tag-add{
   padding:3px 10px;border-radius:999px;border:1px dashed var(--border-strong);background:transparent;
-  color:var(--text-dim);cursor:pointer;font-size:11px;font-family:var(--mono);
+  color:var(--text-dim);cursor:pointer;font-size:11.5px;font-family:var(--mono);
 }
 .tag-add:hover{border-color:var(--accent);color:var(--accent);}
 
@@ -884,9 +919,9 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .donut-fg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .8s;}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .donut-pct{font-family:var(--serif);font-size:40px;line-height:1;letter-spacing:-.02em;}
-.donut-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+.donut-lbl{font-size:11.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
 .legend{display:flex;gap:14px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted);}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);}
 .legend-dot{width:8px;height:8px;border-radius:50%;}
 
 /* Pipeline card */
@@ -902,7 +937,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .pl-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 .pl-count{margin-left:auto;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:999px;background:var(--surface-2);color:var(--text);}
 .pl-item{
-  font-size:11.5px;line-height:1.3;color:var(--text);padding:6px 7px;border-radius:6px;background:var(--surface-2);
+  font-size:12px;line-height:1.3;color:var(--text);padding:6px 7px;border-radius:6px;background:var(--surface-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:.12s;
 }
 .pl-item:hover{background:var(--surface-3);}
@@ -926,7 +961,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 }
 .list-item-info{flex:1;min-width:0;}
 .list-item-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .1s;}
-.list-item-meta{font-size:11px;color:var(--text-muted);font-family:var(--mono);margin-top:1px;}
+.list-item-meta{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);margin-top:1px;}
 
 .team-row{
   display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;
@@ -938,7 +973,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
 .team-person-name{font-weight:500;font-size:13.5px;}
 .team-person-task{font-size:12px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .team-person-task b{color:var(--text);font-weight:500;}
-.team-time{font-family:var(--mono);font-size:11px;color:var(--text-muted);}
+.team-time{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);}
 
 /* ════════════════════════════════════════════════════════
    FULL TASK VIEW
@@ -972,7 +1007,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   font:500 11px var(--mono);color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;
 }
 .ft-prop{display:grid;grid-template-columns:80px 1fr;gap:6px;padding:5px 0;font-size:13px;align-items:center;}
-.ft-prop-key{color:var(--text-muted);font-size:11.5px;font-family:var(--mono);}
+.ft-prop-key{color:var(--text-muted);font-size:12px;font-family:var(--mono);}
 .ft-prop-val{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .ft-side{border-left:1px solid var(--border);padding-left:28px;}
 
@@ -1093,7 +1128,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   /* View toolbar: wrap but stay horizontal */
   .view-toolbar{padding:8px 10px;gap:8px;flex-wrap:wrap;}
   .group-toggle{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;}
-  .group-toggle button{padding:6px 10px;font-size:11.5px;white-space:nowrap;}
+  .group-toggle button{padding:6px 10px;font-size:12px;white-space:nowrap;}
   .vt-divider{display:none;}
   .vt-search{max-width:none;flex:1 1 100%;}
 
@@ -1198,7 +1233,7 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   <div class="login-box">
     <div class="login-brand">
       <div class="login-mark">i</div>
-      <div><div class="login-title">Integration Tracker</div><div class="login-sub">delaware · Integration portal</div></div>
+      <div><div class="login-title">SAP PMT</div><div class="login-sub">SAP Project Management Tool</div></div>
     </div>
 
     <div id="loginForm">
@@ -1237,8 +1272,8 @@ label{font-size:11.5px;color:var(--text-muted);font-family:var(--mono);letter-sp
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <div class="logo-mark">i</div>
-      <div class="logo-text">Integration</div>
+      <div class="logo-mark">P</div>
+      <div class="logo-text">SAP PMT</div>
     </div>
 
     <div class="user-chip">
@@ -2337,10 +2372,10 @@ function renderTaskRow(t, workItems, subs){
     <span class="tc-toggle ${subs.length?(subOpen?'open':''):'empty'}" data-toggle-subs="${t.id}">▸</span>
     <div class="tc-title">
       <div class="tc-title-main">${escHtml(t.title||'Untitled')}</div>
-      <div class="tc-title-sub">${typeChip(type)}${subCount}</div>
+      <div class="tc-title-sub">${typeChip(type)}${subCount}${attCount(t)}</div>
     </div>
     ${stChipHtml}
-    <div class="tc-assignee">${t.assignee?avatarEl(t.assignee, 22)+`<span class="tc-assignee-name">${escHtml(t.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">—</span>'}</div>
+    <button class="tc-assignee as-btn" data-pop-assignee="${t.id}" title="Click to change assignee">${t.assignee?avatarEl(t.assignee, 22)+`<span class="tc-assignee-name">${escHtml(t.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">— assign</span>'}</button>
     ${prioChip}
     <span class="tc-due ${dueClass}">${dueLabel}</span>
     <span class="tc-hours">${hoursLabel}</span>
@@ -2364,9 +2399,9 @@ function renderTaskRow(t, workItems, subs){
       return `<div class="task-row subtask ${sDone?'done':''}" data-tid="${s.id}">
         <span class="drag-handle" style="opacity:0"></span>
         <span class="tc-toggle empty"></span>
-        <div class="tc-title"><div class="tc-title-main">${escHtml(s.title)}</div></div>
+        <div class="tc-title"><div class="tc-title-main">${escHtml(s.title)}</div>${attCount(s)?`<div class="tc-title-sub">${attCount(s)}</div>`:''}</div>
         ${sStChipHtml}
-        <div class="tc-assignee">${s.assignee?avatarEl(s.assignee, 22)+`<span class="tc-assignee-name">${escHtml(s.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">—</span>'}</div>
+        <button class="tc-assignee as-btn" data-pop-assignee="${s.id}" title="Click to change assignee">${s.assignee?avatarEl(s.assignee, 22)+`<span class="tc-assignee-name">${escHtml(s.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">— assign</span>'}</button>
         <span></span>
         <span class="tc-due ${sDueClass}">${s.due?fmtDate(s.due):'—'}</span>
         <span class="tc-hours">${sH?`<b>${sH.toFixed(1)}</b>h`:'—'}</span>
@@ -2415,6 +2450,13 @@ function wireTaskGroupInteractions(workItems){
       openRowStatusPopover(popStatus, tid);
       return;
     }
+    const popAssignee = e.target.closest('[data-pop-assignee]');
+    if(popAssignee){
+      e.stopPropagation();
+      const tid = Number(popAssignee.dataset.popAssignee);
+      openRowAssigneePopover(popAssignee, tid);
+      return;
+    }
     const toggleSubs = e.target.closest('[data-toggle-subs]');
     if(toggleSubs && !toggleSubs.classList.contains('empty')){
       e.stopPropagation();
@@ -2445,6 +2487,27 @@ function openRowStatusPopover(anchor, tid){
     pushActivity(t, `changed status ${cur} → ${v}`);
     saveState();
     // If the side panel is open on this task, re-render it too
+    if(openPanelTaskId === tid) renderSidePanel();
+    renderTaskGroups({kindFilter: tasksViewState.kindFilter});
+  });
+}
+
+function openRowAssigneePopover(anchor, tid){
+  const t = state.tasks.find(x => x.id === tid);
+  if(!t) return;
+  if(!canWriteView('tasks')){ toast('No permission to change assignee', 'warning'); return; }
+  const cur = t.assignee || null;
+  const activeUsers = state.users.filter(u => u.active !== false);
+  const options = [
+    { label: '— Unassigned', value: '', selected: !cur },
+    ...activeUsers.map(u => ({ label: u.name, value: u.name, selected: u.name === cur }))
+  ];
+  openPopover(anchor, options, v => {
+    const newVal = v || null;
+    if(newVal === cur) return;
+    t.assignee = newVal;
+    pushActivity(t, cur ? (newVal ? `reassigned from ${cur} to ${newVal}` : `unassigned from ${cur}`) : `assigned to ${newVal}`);
+    saveState();
     if(openPanelTaskId === tid) renderSidePanel();
     renderTaskGroups({kindFilter: tasksViewState.kindFilter});
   });
@@ -2577,6 +2640,20 @@ function renderSidePanel(){
       </div>
 
       <div class="sp-section">
+        <h4>Attachments <span>· ${(task.attachments||[]).length}</span></h4>
+        <div id="att-list">
+          ${(task.attachments||[]).map(a => renderAttachment(a, task.id)).join('') || '<div style="color:var(--text-dim);font-size:12px;padding:6px 0">No attachments yet.</div>'}
+        </div>
+        ${canWrite?`<div class="att-upload">
+          <input type="file" id="att-input" style="display:none" onchange="uploadAttachments(${task.id}, this.files)" multiple/>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('att-input').click()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.93 8.8l-8.58 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          <span>Attach file</span>
+        </button>
+        </div>`:''}
+      </div>
+
+      <div class="sp-section">
         <h4>Comments <span>· ${(task.comments||[]).length}</span></h4>
         <div id="cmt-list">
           ${(task.comments||[]).map(c => renderComment(c)).join('') || '<div style="color:var(--text-dim);font-size:12px;padding:6px 0">No comments yet.</div>'}
@@ -2634,6 +2711,115 @@ function renderSubItem(s){
     <div class="sub-actions">${currentUser.role==='admin'?`<button onclick="deleteTask(${s.id})" title="Delete">${ICONS.trash}</button>`:''}</div>
   </div>`;
 }
+function fmtBytes(b){
+  if(b < 1024) return b+' B';
+  if(b < 1024*1024) return (b/1024).toFixed(1)+' KB';
+  return (b/1024/1024).toFixed(1)+' MB';
+}
+function attIcon(type){
+  if(!type) return '📄';
+  if(type.startsWith('image/')) return '🖼';
+  if(type === 'application/pdf') return '📕';
+  if(type.includes('word') || type.includes('document')) return '📘';
+  if(type.includes('sheet') || type.includes('excel') || type.includes('csv')) return '📗';
+  if(type.includes('presentation') || type.includes('powerpoint')) return '📙';
+  if(type.includes('zip') || type.includes('archive') || type.includes('compressed')) return '🗄';
+  if(type.startsWith('video/')) return '🎬';
+  if(type.startsWith('audio/')) return '🎵';
+  if(type.includes('text')) return '📝';
+  return '📎';
+}
+function renderAttachment(a, taskId){
+  const canDel = currentUser.role === 'admin' || a.by === currentUser.name;
+  return `<div class="att" data-aid="${a.id}">
+    <span class="att-ico">${attIcon(a.type)}</span>
+    <div class="att-body">
+      <div class="att-name" title="${escHtml(a.name)}">${escHtml(a.name)}</div>
+      <div class="att-meta">${fmtBytes(a.size||0)} · ${escHtml(a.by||'Unknown')} · ${fmtRelTime(a.at)}</div>
+    </div>
+    <button class="att-action" onclick="downloadAttachment(${taskId},'${a.id}')" title="Download">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    ${canDel?`<button class="att-action att-del" onclick="deleteAttachment(${taskId},'${a.id}')" title="Delete">${ICONS.trash}</button>`:''}
+  </div>`;
+}
+function uploadAttachments(taskId, files){
+  if(!files || !files.length) return;
+  const t = state.tasks.find(x => x.id === taskId);
+  if(!t) return;
+  if(!canWriteView('tasks')){ toast('No permission', 'warning'); return; }
+  const MAX_BYTES = 5 * 1024 * 1024; // 5 MB soft cap per file
+  const MAX_TOTAL = 10 * 1024 * 1024; // 10 MB total per task
+  t.attachments = t.attachments || [];
+  const currentSize = t.attachments.reduce((s,a) => s + (a.size||0), 0);
+  let added = 0, skippedSize = 0, pending = 0;
+  const finish = () => {
+    if(added > 0){
+      pushActivity(t, `uploaded ${added} attachment${added===1?'':'s'}`);
+      saveState();
+      if(openPanelTaskId === taskId) renderSidePanel();
+      renderTaskGroups({kindFilter: tasksViewState.kindFilter});
+      toast(`Uploaded ${added} file${added===1?'':'s'}`, 'success');
+    }
+    if(skippedSize > 0) toast(`${skippedSize} file${skippedSize===1?'':'s'} skipped (too large)`, 'warning');
+  };
+  // Convert FileList → Array so iteration doesn't mutate mid-way
+  [...files].forEach(f => {
+    if(f.size > MAX_BYTES){ skippedSize++; return; }
+    pending++;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const after = currentSize + t.attachments.reduce((s,a) => s + (a.size||0), 0) + f.size;
+      if(after > MAX_TOTAL){ skippedSize++; pending--; if(pending===0) finish(); return; }
+      t.attachments.push({
+        id: 'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+        name: f.name,
+        type: f.type || 'application/octet-stream',
+        size: f.size,
+        dataUrl: reader.result,
+        by: currentUser.name,
+        at: new Date().toISOString()
+      });
+      added++;
+      pending--;
+      if(pending === 0) finish();
+    };
+    reader.onerror = () => { pending--; if(pending === 0) finish(); };
+    reader.readAsDataURL(f);
+  });
+  if(pending === 0 && skippedSize > 0) finish();
+  // Reset the input so re-selecting the same file works
+  const inp = document.getElementById('att-input');
+  if(inp) inp.value = '';
+}
+function downloadAttachment(taskId, aid){
+  const t = state.tasks.find(x => x.id === taskId);
+  const a = t && (t.attachments||[]).find(x => x.id === aid);
+  if(!a) return;
+  const link = document.createElement('a');
+  link.href = a.dataUrl;
+  link.download = a.name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+function deleteAttachment(taskId, aid){
+  const t = state.tasks.find(x => x.id === taskId);
+  if(!t || !t.attachments) return;
+  const a = t.attachments.find(x => x.id === aid);
+  if(!a) return;
+  if(currentUser.role !== 'admin' && a.by !== currentUser.name){ toast('No permission', 'warning'); return; }
+  confirmDialog(`Delete <b>${escHtml(a.name)}</b>?`).then(ok => {
+    if(!ok) return;
+    t.attachments = t.attachments.filter(x => x.id !== aid);
+    pushActivity(t, `removed attachment ${a.name}`);
+    saveState();
+    if(openPanelTaskId === taskId) renderSidePanel();
+    renderTaskGroups({kindFilter: tasksViewState.kindFilter});
+    toast('Attachment removed', 'success');
+  });
+}
+
 function renderComment(c){
   return `<div class="cmt" data-cid="${c.id}">
     ${avatarEl(c.by||'?', 26)}
@@ -2672,6 +2858,11 @@ function typeChipClass(type){
 }
 function typeChip(type){
   return `<span class="${typeChipClass(type)}">${fmtType(type)}</span>`;
+}
+function attCount(t){
+  const n = (t.attachments||[]).length;
+  if(!n) return '';
+  return `<span class="tc-att-indicator" title="${n} attachment${n===1?'':'s'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.93 8.8l-8.58 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${n}</span>`;
 }
 function fmtRelTime(iso){
   if(!iso) return '';
@@ -3130,7 +3321,7 @@ function renderKanban(){
         <span class="kb-title">${c.label}</span>
         <span class="kb-count">${items.length}</span>
       </div>
-      <div class="kb-body">${cardsHtml || '<div style="color:var(--text-dim);font-size:11px;padding:10px;text-align:center">Empty</div>'}</div>
+      <div class="kb-body">${cardsHtml || '<div style="color:var(--text-dim);font-size:11.5px;padding:10px;text-align:center">Empty</div>'}</div>
     </div>`;
   }).join('');
 
@@ -3331,7 +3522,7 @@ function renderTimeLog(){
       <span class="tlog-date">${fmtDate(l.date)}</span>
       <div>
         <div style="font-weight:500">${t?escHtml(t.title):'(deleted task)'}</div>
-        <div style="font-size:11.5px;color:var(--text-muted);font-family:var(--mono)">${wi?escHtml(wi.code):''} ${l.note?'· '+escHtml(l.note):''}</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:var(--mono)">${wi?escHtml(wi.code):''} ${l.note?'· '+escHtml(l.note):''}</div>
       </div>
       <span>${escHtml(l.person)}</span>
       <span>${t?fmtType(t.type):'—'}</span>
@@ -3482,7 +3673,7 @@ function renderUsersView(){
                 <div class="req-name">${escHtml(r.name)}</div>
                 <div class="req-email">${escHtml(r.email)}</div>
                 ${r.reason?`<div class="req-reason">"${escHtml(r.reason)}"</div>`:''}
-                <div style="font-size:11px;color:var(--text-dim);font-family:var(--mono);margin-top:4px">${fmtDate(r.created)}</div>
+                <div style="font-size:11.5px;color:var(--text-dim);font-family:var(--mono);margin-top:4px">${fmtDate(r.created)}</div>
               </div>
               <div class="req-actions">
                 <button class="btn btn-primary btn-sm" onclick="approveRequest(${r.id})">✓ Approve</button>
