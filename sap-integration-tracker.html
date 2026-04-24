@@ -880,6 +880,12 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .sp-prop-val .pill-btn.muted{color:var(--text-muted);}
 .sp-prop-val input[type=date]{padding:4px 8px;font-size:13px;width:auto;border-radius:7px;}
 .sp-prop-val input[type=number]{padding:4px 8px;font-size:13px;width:80px;border-radius:7px;}
+.sp-mini-action{
+  width:26px;height:26px;background:transparent;border:1px solid transparent;color:var(--text-muted);
+  border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.1s;flex-shrink:0;
+}
+.sp-mini-action:hover{background:var(--surface-2);border-color:var(--border);color:var(--accent);}
+.sp-mini-action svg{pointer-events:none;}
 
 .sp-section{margin-top:24px;}
 .sp-section h4{
@@ -3014,7 +3020,13 @@ function renderSidePanel(){
           <span style="color:var(--text-muted);font-size:12px">h · ${loggedH.toFixed(1)}h logged</span></div>
 
         ${wi ? `<span class="sp-prop-key">Parent</span>
-          <div class="sp-prop-val"><button class="pill-btn" data-open-wi="${wi.id}"><span style="color:var(--accent)">${escHtml(wi.code)} ${escHtml(wi.title)}</span></button></div>` : ''}
+          <div class="sp-prop-val">
+            ${task.parentTaskId
+              ? `<button class="pill-btn" data-open-wi="${wi.id}"><span style="color:var(--accent)">${escHtml(wi.code)} ${escHtml(wi.title)}</span></button>`
+              : `<button class="pill-btn" data-pop="parent" title="Click to change parent"><span style="color:var(--accent)">${escHtml(wi.code)} ${escHtml(wi.title)}</span></button>
+                 <button class="sp-mini-action" data-open-wi="${wi.id}" title="Open work item">${ICONS.open}</button>`
+            }
+          </div>` : ''}
       </div>
 
       <div class="sp-section">
@@ -3117,6 +3129,35 @@ function renderSidePanel(){
           t.phase = v;
           pushActivity(t, v ? `set phase to ${fmtPhase(v)}` : `cleared phase (was ${fmtPhase(old)})`);
         }));
+      }
+      else if(kind === 'parent'){
+        // Build options: all work items in the current project, with code + title as label
+        const wis = state.workItems
+          .filter(w => w.projectId === task.projectId)
+          .sort((a,b) => (a.code||'').localeCompare(b.code||''));
+        if(!wis.length){ toast('No work items to choose from', 'warning'); return; }
+        const opts = wis.map(w => ({
+          label: `${w.code} · ${w.title}`,
+          value: w.id,
+          selected: w.id === task.workItemId
+        }));
+        openPopover(btn, opts, v => {
+          const newWiId = Number(v);
+          if(newWiId === task.workItemId) return;
+          const oldWi = state.workItems.find(w => w.id === task.workItemId);
+          const newWi = state.workItems.find(w => w.id === newWiId);
+          if(!newWi) return;
+          mutateTask(task.id, t => {
+            t.workItemId = newWiId;
+            // Reset order so it lands at the end of the new parent's task list
+            t.order = undefined;
+            pushActivity(t, `moved from ${oldWi?oldWi.code:'—'} to ${newWi.code}`);
+          });
+          // Move all subtasks to the same new work item
+          const subs = state.tasks.filter(s => s.parentTaskId === task.id);
+          subs.forEach(s => { s.workItemId = newWiId; });
+          if(subs.length) saveState();
+        });
       }
     };
   });
@@ -3342,6 +3383,8 @@ function mutateTask(id, fn){
   renderSidePanel();
   if(state.activeView === 'tasks' || state.activeView === 'workitems' || state.activeView === 'interfaces') renderTaskGroups({kindFilter:tasksViewState.kindFilter});
   else if(state.activeView === 'kanban') renderKanban();
+  else if(state.activeView === 'gantt') renderGantt();
+  else if(state.activeView === 'dashboard') renderDashboard();
 }
 function pushActivity(t, text){
   t.activity = t.activity || [];
@@ -3738,9 +3781,18 @@ function renderGantt(){
     const end = new Date(t.due);
     if(isNaN(end)){ undated.push(t); return; }
     end.setHours(0,0,0,0);
-    const days = Math.max(1, Math.ceil((Number(t.estimate) || 0) / 8));
-    const start = new Date(end); start.setDate(start.getDate() - (days - 1));
-    bars.push({ task: t, start, end, days });
+    const workDays = Math.max(1, Math.ceil((Number(t.estimate) || 0) / 8));
+    // Walk back `workDays` working days (Mon–Fri) from the end date to find the start
+    const start = new Date(end);
+    let stepped = 1; // end date counts as day 1
+    while(stepped < workDays){
+      start.setDate(start.getDate() - 1);
+      const dow = start.getDay(); // 0 Sun .. 6 Sat
+      if(dow !== 0 && dow !== 6) stepped++;
+    }
+    // Render duration is calendar-day span from start → end (so the bar visually covers any weekends in between)
+    const calendarDays = Math.round((end - start) / 86400000) + 1;
+    bars.push({ task: t, start, end, days: calendarDays, workDays });
   });
 
   if(!bars.length){
@@ -3874,7 +3926,10 @@ function renderGantt(){
       rowIdx++;
       const startStr = fmtDate(b.start.toISOString().slice(0,10));
       const endStr = fmtDate(b.end.toISOString().slice(0,10));
-      const tooltip = `${escHtml(b.task.title)} · ${startStr} → ${endStr} · ${b.days} day${b.days===1?'':'s'}${b.task.estimate?` · ${b.task.estimate}h`:''}`;
+      const durationStr = b.workDays === b.days
+        ? `${b.days} day${b.days===1?'':'s'}`
+        : `${b.workDays} work day${b.workDays===1?'':'s'} (${b.days} calendar)`;
+      const tooltip = `${escHtml(b.task.title)} · ${startStr} → ${endStr} · ${durationStr}${b.task.estimate?` · ${b.task.estimate}h`:''}`;
       return `<div class="gantt-row" data-row-idx="${rowIdx}">
         <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
           <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
