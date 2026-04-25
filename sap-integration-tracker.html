@@ -531,6 +531,15 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .phase-plan-clear:hover{color:var(--danger);background:var(--danger-soft);border-color:var(--danger);}
 
+/* Info icon next to phase labels — uses native title for tooltip */
+.phase-info-ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--text-muted);cursor:help;
+  margin-left:4px;flex-shrink:0;opacity:.7;transition:opacity .12s, color .12s;
+  user-select:none;
+}
+.phase-info-ico:hover{opacity:1;color:var(--accent);}
+
 /* ════════════════════════════════════════════════════════
    VIEW TOOLBAR (group/filter/search bar used by Tasks + others)
    ════════════════════════════════════════════════════════ */
@@ -767,6 +776,9 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .gantt-phase-label{
   font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.005em;
+  display:flex;align-items:center;gap:2px;min-width:0;
+}
+.gantt-phase-label > :first-child{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .gantt-phase-meta{
@@ -828,6 +840,37 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   background:color-mix(in srgb, var(--phase-color) 18%, transparent);
   border-style:solid;
   box-shadow:0 1px 4px color-mix(in srgb, var(--phase-color) 25%, transparent);
+}
+
+/* WI code pill in task row (only shown in phase grouping) */
+.gantt-wi-pill{
+  display:inline-flex;align-items:center;flex-shrink:0;
+  font-family:var(--mono);font-size:10.5px;font-weight:500;
+  padding:1px 6px;border-radius:4px;letter-spacing:.02em;
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);
+  white-space:nowrap;
+}
+.gantt-wi-pill.kind-interface{
+  background:var(--accent-soft);color:var(--accent-deep);border-color:transparent;
+}
+[data-theme="dark"] .gantt-wi-pill.kind-interface{color:var(--accent);}
+
+/* WI grouping mode: header band + icon */
+.gantt-wi-row{
+  background:var(--surface-2);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border-strong);
+}
+.gantt-wi-icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:6px;flex-shrink:0;
+  font-size:13px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);
+}
+.gantt-wi-icon.kind-interface{color:var(--accent);background:var(--accent-soft);border-color:transparent;}
+.gantt-wi-band{
+  position:absolute;top:8px;height:26px;border-radius:8px;
+  background:color-mix(in srgb, var(--text-muted) 12%, transparent);
+  border:1.5px solid var(--text-muted);
+  opacity:.6;
 }
 
 /* Task row left columns */
@@ -1744,12 +1787,12 @@ function confirmResolve(val){
    SAP ACTIVATE METHODOLOGY — phase definitions
    ════════════════════════════════════════════════════════ */
 const PHASES = [
-  { k:'discover', label:'Discover', short:'Disc', color:'#7F77DD', soft:'#EEEDFE', deep:'#3C3489', desc:'Solution exploration & business value' },
-  { k:'prepare',  label:'Prepare',  short:'Prep', color:'#378ADD', soft:'#E6F1FB', deep:'#0C447C', desc:'Project planning & team mobilization' },
-  { k:'explore',  label:'Explore',  short:'Expl', color:'#1D9E75', soft:'#E1F5EE', deep:'#085041', desc:'Fit-to-standard analysis & design' },
-  { k:'realize',  label:'Realize',  short:'Real', color:'#BA7517', soft:'#FAEEDA', deep:'#633806', desc:'Build, test & integrate the solution' },
-  { k:'deploy',   label:'Deploy',   short:'Depl', color:'#D85A30', soft:'#FAECE7', deep:'#712B13', desc:'Cutover, go-live & user readiness' },
-  { k:'run',      label:'Run',      short:'Run',  color:'#5F5E5A', soft:'#F1EFE8', deep:'#2C2C2A', desc:'Hypercare & continuous improvement' },
+  { k:'discover', label:'Discover', short:'Disc', color:'#7F77DD', soft:'#EEEDFE', deep:'#3C3489', desc:'Solution exploration & business value', longDesc:'Formulate the business case, understand what value SAP solution capabilities provide, and determine project scope.' },
+  { k:'prepare',  label:'Prepare',  short:'Prep', color:'#378ADD', soft:'#E6F1FB', deep:'#0C447C', desc:'Project planning & team mobilization', longDesc:'Start project planning, onboard the team, and provision the initial environment and application lifecycle management tools.' },
+  { k:'explore',  label:'Explore',  short:'Expl', color:'#1D9E75', soft:'#E1F5EE', deep:'#085041', desc:'Fit-to-standard analysis & design', longDesc:'Perform fit-to-standard analysis of preconfigured processes, identify delta requirements, and determine required extensions.' },
+  { k:'realize',  label:'Realize',  short:'Real', color:'#BA7517', soft:'#FAEEDA', deep:'#633806', desc:'Build, test & integrate the solution', longDesc:'Perform a series of agile iterations, enrich the data, and implement and test the solution to quickly realize value.' },
+  { k:'deploy',   label:'Deploy',   short:'Depl', color:'#D85A30', soft:'#FAECE7', deep:'#712B13', desc:'Cutover, go-live & user readiness', longDesc:'Finalize setup, identify risk factors, execute final testing, and go live with the new solution.' },
+  { k:'run',      label:'Run',      short:'Run',  color:'#5F5E5A', soft:'#F1EFE8', deep:'#2C2C2A', desc:'Hypercare & continuous improvement', longDesc:'Maximize the solution value, continue adoption across the organization, and detect opportunities for continuous innovation.' },
 ];
 const PHASE_KEYS = PHASES.map(p => p.k);
 function phaseDef(k){ return PHASES.find(p => p.k === k) || null; }
@@ -2377,9 +2420,9 @@ function renderDashboard(){
         <div class="stat-sub">hours logged · ${logs.length} ${logs.length===1?'entry':'entries'}</div>
       </div>
       <div class="card" style="grid-column:span 3">
-        <div class="stat-label">Work items <span class="chip chip-accent">${ifaces.length} iface</span></div>
+        <div class="stat-label">Work items ${ifaces.length?`<span class="chip chip-accent">${ifaces.length} process${ifaces.length===1?'':'es'}</span>`:''}</div>
         <div class="stat-value">${workItems.length}</div>
-        <div class="stat-sub">${workItems.filter(w=>w.kind==='work').length} generic · ${ifaces.length} interfaces</div>
+        <div class="stat-sub">${workItems.filter(w=>w.kind==='work').length} generic · ${ifaces.length} process${ifaces.length===1?'':'es'}</div>
       </div>
       <div class="card" style="grid-column:span 3">
         <div class="stat-label">Open tasks ${blockedTasks?`<span class="chip chip-danger">${blockedTasks} blocked</span>`:''}</div>
@@ -2486,7 +2529,7 @@ function renderDashboard(){
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
 let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:false };
-let ganttViewState = { zoom:'week', sideW:200 };  // 'day' | 'week' | 'month' + side column width in px
+let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase' };  // groupBy: 'phase' | 'workitem'
 let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 
 function renderTasks(){ renderWorkView({kindFilter: null}); }
@@ -3175,9 +3218,12 @@ function renderSidePanel(){
         </button></div>
 
         <span class="sp-prop-key">Phase</span>
-        <div class="sp-prop-val"><button class="pill-btn" data-pop="phase">
-          ${task.phase ? phaseChip(task.phase) : '<span class="muted">Not set</span>'}
-        </button></div>
+        <div class="sp-prop-val">
+          <button class="pill-btn" data-pop="phase">
+            ${task.phase ? phaseChip(task.phase) : '<span class="muted">Not set</span>'}
+          </button>
+          ${task.phase ? `<span class="phase-info-ico" title="${escHtml(phaseDef(task.phase)?.longDesc || '')}">ⓘ</span>` : ''}
+        </div>
 
         <span class="sp-prop-key">Assignee</span>
         <div class="sp-prop-val"><button class="pill-btn" data-pop="assignee">
@@ -3916,20 +3962,23 @@ function openNewTaskModal(prefilledWorkItemId){
   const updatePhaseHint = () => {
     const k = phaseSel.value;
     if(!k){ phaseHint.style.display = 'none'; return; }
+    const def = phaseDef(k);
     const range = getProjectPhase(state.activeProject, k);
-    if(!range || (!range.start && !range.end)){
-      phaseHint.style.display = 'none';
-      return;
-    }
     const label = fmtPhase(k);
-    const startStr = range.start ? fmtDate(range.start) : '…';
-    const endStr = range.end ? fmtDate(range.end) : '…';
-    // Check if currently entered due date is outside the range
-    const due = dueInput?.value;
-    let warn = '';
-    if(due && range.start && due < range.start) warn = ` <span style="color:var(--danger)">⚠ due date is before phase starts</span>`;
-    else if(due && range.end && due > range.end) warn = ` <span style="color:var(--danger)">⚠ due date is after phase ends</span>`;
-    phaseHint.innerHTML = `${escHtml(label)} phase: <b>${startStr} → ${endStr}</b>${warn}`;
+    const infoIcon = `<span class="phase-info-ico" title="${escHtml(def?.longDesc || '')}">ⓘ</span>`;
+
+    if(range && (range.start || range.end)){
+      const startStr = range.start ? fmtDate(range.start) : '…';
+      const endStr = range.end ? fmtDate(range.end) : '…';
+      const due = dueInput?.value;
+      let warn = '';
+      if(due && range.start && due < range.start) warn = ` <span style="color:var(--danger)">⚠ due date is before phase starts</span>`;
+      else if(due && range.end && due > range.end) warn = ` <span style="color:var(--danger)">⚠ due date is after phase ends</span>`;
+      phaseHint.innerHTML = `${escHtml(label)} phase ${infoIcon}: <b>${startStr} → ${endStr}</b>${warn}`;
+    } else {
+      // No config — still show the phase description so the user knows what the phase covers
+      phaseHint.innerHTML = `${escHtml(label)} ${infoIcon}: ${escHtml(def?.desc || '')}`;
+    }
     phaseHint.style.display = '';
   };
   if(phaseSel){
@@ -4081,23 +4130,37 @@ function renderGantt(){
   const todayOffset = Math.round((today - minDate) / 86400000) * dayPx;
   const showTodayLine = todayOffset >= 0 && todayOffset <= timelineWidth;
 
-  // Group bars by SAP Activate phase
-  const byPhase = new Map();
-  PHASES.forEach(p => byPhase.set(p.k, []));
-  byPhase.set(null, []);
-  bars.forEach(b => {
-    const ph = b.task.phase || null;
-    if(!byPhase.has(ph)) byPhase.set(ph, []);
-    byPhase.get(ph).push(b);
-  });
-  // Sort tasks within each phase: manual order first (if set), then by start date as fallback
-  byPhase.forEach(arr => arr.sort((a, b) => {
+  // Group bars: by phase (default) OR by work item
+  const groupKey = ganttViewState.groupBy === 'workitem' ? 'workitem' : 'phase';
+  const byGroup = new Map();
+  if(groupKey === 'phase'){
+    PHASES.forEach(p => byGroup.set(p.k, []));
+    byGroup.set(null, []);
+    bars.forEach(b => {
+      const ph = b.task.phase || null;
+      if(!byGroup.has(ph)) byGroup.set(ph, []);
+      byGroup.get(ph).push(b);
+    });
+  } else {
+    // By work item — keep WI order from state, then a "no parent" bucket if any
+    workItems.forEach(w => byGroup.set(w.id, []));
+    byGroup.set('_orphan', []);
+    bars.forEach(b => {
+      const wi = workItems.find(w => w.id === b.task.workItemId);
+      if(wi) byGroup.get(wi.id).push(b);
+      else byGroup.get('_orphan').push(b);
+    });
+  }
+  // Sort tasks within each group: manual order first (if set), then by start date as fallback
+  byGroup.forEach(arr => arr.sort((a, b) => {
     const ao = typeof a.task.order === 'number' ? a.task.order : Number.MAX_SAFE_INTEGER;
     const bo = typeof b.task.order === 'number' ? b.task.order : Number.MAX_SAFE_INTEGER;
     if(ao !== bo) return ao - bo;
     return a.start - b.start;
   }));
-  const phaseOrder = PHASES.map(p => p.k).concat([null]);
+  const groupOrder = groupKey === 'phase'
+    ? PHASES.map(p => p.k).concat([null])
+    : workItems.map(w => w.id).concat(['_orphan']);
 
   // Helper to render an assignee cell: shows avatar+name as a button (popover trigger)
   const renderAssigneeCell = (task) => {
@@ -4129,118 +4192,179 @@ function renderGantt(){
     </div>`;
   };
 
-  let rowIdx = 0;
-  const groupRows = phaseOrder.map(phk => {
-    const phBars = byPhase.get(phk) || [];
-    const projPhase = phk ? getProjectPhase(state.activeProject, phk) : null;
-    // Skip a phase if it has no tasks AND no project-level config — and it's not the "no phase" bucket
-    if(!phBars.length && !projPhase) return '';
-    // The "no phase" bucket only shows if it has tasks
-    if(phk === null && !phBars.length) return '';
-    const def = phk ? phaseDef(phk) : { label:'No phase set', color:'#9aa39c', soft:'#F1EFE8', deep:'#5F5E5A', desc:'' };
+  // Helper to render a single task row (used by both phase and workitem grouping)
+  const renderGanttTaskRow = (b, groupId, idx, workItems, canWrite, dayPx, minDate, today, timelineWidth) => {
+    const startOffset = Math.round((b.start - minDate) / 86400000) * dayPx;
+    const width = Math.max(dayPx, b.days * dayPx);
+    const st = b.task.status || 'todo';
+    const isOverdue = st !== 'done' && b.end < today;
+    const overdueCls = isOverdue ? ' gb-overdue' : '';
+    const phaseColor = b.task.phase ? phaseDef(b.task.phase)?.color : '#9aa39c';
+    const dueCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.task.due) : 'unset';
+    const startCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.start.toISOString().slice(0,10)) : 'unset';
+    const isOutOfPhase = (dueCheck === 'before' || dueCheck === 'after' || startCheck === 'before' || startCheck === 'after');
+    const outOfPhaseCls = isOutOfPhase ? ' gb-out-of-phase' : '';
+    let phaseWarning = null;
+    if(isOutOfPhase){
+      const range = getProjectPhase(b.task.projectId, b.task.phase);
+      const rangeStr = range ? `${range.start?fmtDate(range.start):'…'} → ${range.end?fmtDate(range.end):'…'}` : '';
+      phaseWarning = `Outside ${fmtPhase(b.task.phase)} phase (${rangeStr})`;
+    }
+    const startStr = fmtDate(b.start.toISOString().slice(0,10));
+    const endStr = fmtDate(b.end.toISOString().slice(0,10));
+    const durationStr = b.workDays === b.days
+      ? `${b.days} day${b.days===1?'':'s'}`
+      : `${b.workDays} work day${b.workDays===1?'':'s'} (${b.days} calendar)`;
+    const tooltipData = JSON.stringify({
+      title: b.task.title || 'Untitled',
+      range: `${startStr} → ${endStr}`,
+      duration: durationStr,
+      estimate: b.task.estimate ? `${b.task.estimate}h estimate` : null,
+      phase: b.task.phase ? fmtPhase(b.task.phase) : null,
+      warning: phaseWarning,
+    });
+    const wi = workItems.find(w => w.id === b.task.workItemId);
+    // WI pill only shown in phase grouping (in workitem grouping the WI is the parent group)
+    const wiPill = (ganttViewState.groupBy === 'phase' && wi)
+      ? `<span class="gantt-wi-pill kind-${wi.kind}" title="${escHtml(wi.title || '')}">${escHtml(wi.code || '')}</span>`
+      : '';
+    // Group attribute changes meaning per mode
+    const groupAttr = ganttViewState.groupBy === 'phase'
+      ? `data-phase="${groupId||'_none'}"`
+      : `data-wi="${groupId}"`;
+    return `<div class="gantt-row" ${groupAttr} data-row-idx="${idx}">
+      <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
+        ${canWrite?`<span class="gantt-row-handle" data-drag-tid="${b.task.id}" draggable="true" title="Drag">⋮⋮</span>`:''}
+        ${wiPill}
+        <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
+        ${isOutOfPhase?`<span class="gantt-warn-ico" title="${escHtml(phaseWarning||'')}">⚠</span>`:''}
+      </div>
+      ${renderAssigneeCell(b.task)}
+      ${renderStatusCell(b.task)}
+      <div class="gantt-track" style="width:${timelineWidth}px">
+        <div class="gantt-bar${overdueCls}${outOfPhaseCls}" data-tid="${b.task.id}" ${canWrite?'draggable="true"':''} style="left:${startOffset}px;width:${width}px;background:${phaseColor};" data-tooltip='${escHtml(tooltipData)}'></div>
+      </div>
+    </div>`;
+  };
 
-    // Determine phase boundaries: project config takes priority, fallback to derived from tasks
-    let phStart, phEnd, isConfigured = false;
-    if(projPhase && projPhase.start && projPhase.end){
-      phStart = new Date(projPhase.start); phStart.setHours(0,0,0,0);
-      phEnd = new Date(projPhase.end); phEnd.setHours(0,0,0,0);
-      isConfigured = true;
-    } else if(phBars.length){
-      phStart = new Date(Math.min(...phBars.map(b => b.start.getTime())));
-      phEnd = new Date(Math.max(...phBars.map(b => b.end.getTime())));
-    } else {
-      // Has partial config (only start or only end) but no tasks — skip rendering band
-      phStart = phEnd = null;
+  let rowIdx = 0;
+  const groupRows = groupOrder.map(gk => {
+    const grBars = byGroup.get(gk) || [];
+
+    // ============== PHASE GROUPING ==============
+    if(groupKey === 'phase'){
+      const phk = gk;
+      const projPhase = phk ? getProjectPhase(state.activeProject, phk) : null;
+      // Skip a phase if it has no tasks AND no project-level config — and it's not the "no phase" bucket
+      if(!grBars.length && !projPhase) return '';
+      // The "no phase" bucket only shows if it has tasks
+      if(phk === null && !grBars.length) return '';
+      const def = phk ? phaseDef(phk) : { label:'No phase set', color:'#9aa39c', soft:'#F1EFE8', deep:'#5F5E5A', desc:'' };
+
+      // Determine phase boundaries: project config takes priority, fallback to derived from tasks
+      let phStart, phEnd, isConfigured = false;
+      if(projPhase && projPhase.start && projPhase.end){
+        phStart = new Date(projPhase.start); phStart.setHours(0,0,0,0);
+        phEnd = new Date(projPhase.end); phEnd.setHours(0,0,0,0);
+        isConfigured = true;
+      } else if(grBars.length){
+        phStart = new Date(Math.min(...grBars.map(b => b.start.getTime())));
+        phEnd = new Date(Math.max(...grBars.map(b => b.end.getTime())));
+      } else {
+        phStart = phEnd = null;
+      }
+
+      const phStartOffset = phStart ? Math.round((phStart - minDate) / 86400000) * dayPx : 0;
+      const phEndOffset = phEnd ? Math.round((phEnd - minDate) / 86400000) * dayPx + dayPx : 0;
+      const phWidth = Math.max(dayPx, phEndOffset - phStartOffset);
+      const taskCountStr = `${grBars.length} task${grBars.length===1?'':'s'}`;
+      const dateStr = phStart && phEnd
+        ? `${fmtDate(phStart.toISOString().slice(0,10))} → ${fmtDate(phEnd.toISOString().slice(0,10))}`
+        : '';
+      const metaStr = `${taskCountStr}${dateStr?' · ':''}${dateStr}${isConfigured?' · planned':''}`;
+      const bandHtml = phStart && phEnd
+        ? `<div class="gantt-phase-band${isConfigured?' configured':''}" style="left:${phStartOffset}px;width:${phWidth}px"></div>`
+        : '';
+      const phHeader = `<div class="gantt-phase-row" data-phase="${phk||'_none'}" style="--phase-color:${def.color};--phase-soft:${def.soft};--phase-deep:${def.deep}">
+        <div class="gantt-side-cell gantt-phase-name">
+          <span class="gantt-phase-dot"></span>
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <span class="gantt-phase-label">
+              <span>${escHtml(def.label)}</span>
+              ${phk ? `<span class="phase-info-ico" title="${escHtml(def.longDesc || '')}">ⓘ</span>` : ''}
+            </span>
+            <span class="gantt-phase-meta">${escHtml(metaStr)}</span>
+          </div>
+        </div>
+        <div class="gantt-assignee-cell"></div>
+        <div class="gantt-status-cell"></div>
+        <div class="gantt-track gantt-phase-track" style="width:${timelineWidth}px">
+          ${bandHtml}
+        </div>
+      </div>`;
+
+      const taskRows = grBars.map(b => renderGanttTaskRow(b, phk, ++rowIdx, workItems, canWrite, dayPx, minDate, today, timelineWidth)).join('');
+      return phHeader + taskRows;
     }
 
-    const phStartOffset = phStart ? Math.round((phStart - minDate) / 86400000) * dayPx : 0;
-    const phEndOffset = phEnd ? Math.round((phEnd - minDate) / 86400000) * dayPx + dayPx : 0;
-    const phWidth = Math.max(dayPx, phEndOffset - phStartOffset);
-    const taskCountStr = `${phBars.length} task${phBars.length===1?'':'s'}`;
-    const dateStr = phStart && phEnd
-      ? `${fmtDate(phStart.toISOString().slice(0,10))} → ${fmtDate(phEnd.toISOString().slice(0,10))}`
-      : '';
-    const metaStr = `${taskCountStr}${dateStr?' · ':''}${dateStr}${isConfigured?' · planned':''}`;
-    const bandHtml = phStart && phEnd
-      ? `<div class="gantt-phase-band${isConfigured?' configured':''}" style="left:${phStartOffset}px;width:${phWidth}px"></div>`
-      : '';
-    const phHeader = `<div class="gantt-phase-row" data-phase="${phk||'_none'}" style="--phase-color:${def.color};--phase-soft:${def.soft};--phase-deep:${def.deep}">
+    // ============== WORK ITEM GROUPING ==============
+    let wi = null;
+    if(gk === '_orphan'){
+      if(!grBars.length) return '';
+    } else {
+      wi = workItems.find(w => w.id === gk);
+      if(!wi) return '';
+    }
+    const wiTitle = wi ? wi.title : 'No work item';
+    const wiCode = wi ? wi.code : '';
+    const wiKind = wi ? wi.kind : '';
+    if(!grBars.length) return ''; // hide empty WI groups
+
+    // Compute the WI's overall span
+    const wiStart = new Date(Math.min(...grBars.map(b => b.start.getTime())));
+    const wiEnd = new Date(Math.max(...grBars.map(b => b.end.getTime())));
+    const wiStartOffset = Math.round((wiStart - minDate) / 86400000) * dayPx;
+    const wiEndOffset = Math.round((wiEnd - minDate) / 86400000) * dayPx + dayPx;
+    const wiWidth = Math.max(dayPx, wiEndOffset - wiStartOffset);
+    const wiMeta = `${grBars.length} task${grBars.length===1?'':'s'} · ${fmtDate(wiStart.toISOString().slice(0,10))} → ${fmtDate(wiEnd.toISOString().slice(0,10))}`;
+    const wiHeader = `<div class="gantt-phase-row gantt-wi-row" data-wi="${gk}" style="--phase-color:#5F5E5A">
       <div class="gantt-side-cell gantt-phase-name">
-        <span class="gantt-phase-dot"></span>
+        <span class="gantt-wi-icon kind-${wiKind}">${wiKind==='interface'?'⟷':'◫'}</span>
         <div style="display:flex;flex-direction:column;min-width:0">
-          <span class="gantt-phase-label">${escHtml(def.label)}</span>
-          <span class="gantt-phase-meta">${escHtml(metaStr)}</span>
+          <span class="gantt-phase-label">
+            <span>${escHtml(wiCode ? `${wiCode} · ${wiTitle}` : wiTitle)}</span>
+          </span>
+          <span class="gantt-phase-meta">${escHtml(wiMeta)}</span>
         </div>
       </div>
       <div class="gantt-assignee-cell"></div>
       <div class="gantt-status-cell"></div>
       <div class="gantt-track gantt-phase-track" style="width:${timelineWidth}px">
-        ${bandHtml}
+        <div class="gantt-wi-band" style="left:${wiStartOffset}px;width:${wiWidth}px"></div>
       </div>
     </div>`;
-
-    const taskRows = phBars.map(b => {
-      const startOffset = Math.round((b.start - minDate) / 86400000) * dayPx;
-      const width = Math.max(dayPx, b.days * dayPx);
-      const st = b.task.status || 'todo';
-      const isOverdue = st !== 'done' && b.end < today;
-      const overdueCls = isOverdue ? ' gb-overdue' : '';
-      const phaseColor = b.task.phase ? phaseDef(b.task.phase)?.color : '#9aa39c';
-      // Check if task dates fall outside its configured phase range
-      const dueCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.task.due) : 'unset';
-      const startCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.start.toISOString().slice(0,10)) : 'unset';
-      const isOutOfPhase = (dueCheck === 'before' || dueCheck === 'after' || startCheck === 'before' || startCheck === 'after');
-      const outOfPhaseCls = isOutOfPhase ? ' gb-out-of-phase' : '';
-      let phaseWarning = null;
-      if(isOutOfPhase){
-        const range = getProjectPhase(b.task.projectId, b.task.phase);
-        const rangeStr = range ? `${range.start?fmtDate(range.start):'…'} → ${range.end?fmtDate(range.end):'…'}` : '';
-        phaseWarning = `Outside ${fmtPhase(b.task.phase)} phase (${rangeStr})`;
-      }
-      rowIdx++;
-      const startStr = fmtDate(b.start.toISOString().slice(0,10));
-      const endStr = fmtDate(b.end.toISOString().slice(0,10));
-      const durationStr = b.workDays === b.days
-        ? `${b.days} day${b.days===1?'':'s'}`
-        : `${b.workDays} work day${b.workDays===1?'':'s'} (${b.days} calendar)`;
-      const tooltipData = JSON.stringify({
-        title: b.task.title || 'Untitled',
-        range: `${startStr} → ${endStr}`,
-        duration: durationStr,
-        estimate: b.task.estimate ? `${b.task.estimate}h estimate` : null,
-        phase: b.task.phase ? fmtPhase(b.task.phase) : null,
-        warning: phaseWarning,
-      });
-      return `<div class="gantt-row" data-phase="${phk||'_none'}" data-row-idx="${rowIdx}">
-        <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
-          ${canWrite?`<span class="gantt-row-handle" data-drag-tid="${b.task.id}" draggable="true" title="Drag to change phase">⋮⋮</span>`:''}
-          <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
-          ${isOutOfPhase?`<span class="gantt-warn-ico" title="${escHtml(phaseWarning||'')}">⚠</span>`:''}
-        </div>
-        ${renderAssigneeCell(b.task)}
-        ${renderStatusCell(b.task)}
-        <div class="gantt-track" style="width:${timelineWidth}px">
-          <div class="gantt-bar${overdueCls}${outOfPhaseCls}" data-tid="${b.task.id}" ${canWrite?'draggable="true"':''} style="left:${startOffset}px;width:${width}px;background:${phaseColor};" data-tooltip='${escHtml(tooltipData)}'></div>
-        </div>
-      </div>`;
-    }).join('');
-    return phHeader + taskRows;
+    const taskRows = grBars.map(b => renderGanttTaskRow(b, gk, ++rowIdx, workItems, canWrite, dayPx, minDate, today, timelineWidth)).join('');
+    return wiHeader + taskRows;
   }).join('');
 
   content.innerHTML = `
     <div class="gantt-toolbar">
+      <div class="group-toggle" id="ganttGroupBy">
+        <button data-g="phase" class="${ganttViewState.groupBy==='phase'?'active':''}">By phase</button>
+        <button data-g="workitem" class="${ganttViewState.groupBy==='workitem'?'active':''}">By work item</button>
+      </div>
       <div class="group-toggle" id="ganttZoom">
         <button data-z="day" class="${zoom==='day'?'active':''}">Day</button>
         <button data-z="week" class="${zoom==='week'?'active':''}">Week</button>
         <button data-z="month" class="${zoom==='month'?'active':''}">Month</button>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="openPhasePlanningModal()" ${canWrite?'':'disabled style="opacity:.4"'}>⚙ Configure phases</button>
+      ${ganttViewState.groupBy==='phase' ? `<button class="btn btn-ghost btn-sm" onclick="openPhasePlanningModal()" ${canWrite?'':'disabled style="opacity:.4"'}>⚙ Configure phases</button>` : ''}
       ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a due date hidden</span>` : ''}
     </div>
     <div class="gantt-container" id="ganttContainer" style="--gantt-side-w:${ganttViewState.sideW}px">
       <div class="gantt-header">
         <div class="gantt-side-cell gantt-side-head">
-          <span>Phase / Task</span>
+          <span>${ganttViewState.groupBy==='phase'?'Phase / Task':'Work item / Task'}</span>
           <span class="gantt-col-resizer" data-resize="side" title="Drag to resize"></span>
         </div>
         <div class="gantt-assignee-cell gantt-side-head">Assignee</div>
@@ -4262,6 +4386,14 @@ function renderGantt(){
     ganttViewState.zoom = b.dataset.z;
     renderGantt();
   };
+  const ganttGroupBy = document.getElementById('ganttGroupBy');
+  if(ganttGroupBy){
+    ganttGroupBy.onclick = e => {
+      const b = e.target.closest('button'); if(!b) return;
+      ganttViewState.groupBy = b.dataset.g;
+      renderGantt();
+    };
+  }
   const cont = document.getElementById('ganttContainer');
 
   // Column resizer for Phase/Task column
@@ -4344,20 +4476,19 @@ function renderGantt(){
 
     cont.addEventListener('dragover', e => {
       if(draggedTid === null) return;
-      // Prefer a task-row (.gantt-row) for reorder; fall back to phase-row
-      const taskRow = e.target.closest('.gantt-row[data-phase]');
-      const phaseRow = e.target.closest('.gantt-phase-row[data-phase]');
-      const row = taskRow || phaseRow;
+      // Group attribute differs per mode
+      const groupAttr = ganttViewState.groupBy === 'workitem' ? 'data-wi' : 'data-phase';
+      const taskRow = e.target.closest(`.gantt-row[${groupAttr}]`);
+      const groupRow = e.target.closest(`.gantt-phase-row[${groupAttr}]`);
+      const row = taskRow || groupRow;
       if(!row) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      // Always highlight the target phase
       cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
       cont.querySelectorAll('.gantt-row.drop-before, .gantt-row.drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
-      const targetPhase = row.dataset.phase;
-      const phaseHeader = cont.querySelector(`.gantt-phase-row[data-phase="${targetPhase}"]`);
-      if(phaseHeader) phaseHeader.classList.add('drop-target');
-      // If hovering over a task-row, show before/after indicator (skip if it's the dragged row itself)
+      const targetGroup = row.getAttribute(groupAttr);
+      const groupHeader = cont.querySelector(`.gantt-phase-row[${groupAttr}="${targetGroup}"]`);
+      if(groupHeader) groupHeader.classList.add('drop-target');
       if(taskRow){
         const targetId = Number(taskRow.querySelector('[data-tid]')?.dataset.tid);
         if(targetId !== draggedTid){
@@ -4377,66 +4508,105 @@ function renderGantt(){
 
     cont.addEventListener('drop', e => {
       if(draggedTid === null) return;
-      const taskRow = e.target.closest('.gantt-row[data-phase]');
-      const phaseRow = e.target.closest('.gantt-phase-row[data-phase]');
-      const row = taskRow || phaseRow;
+      const groupAttr = ganttViewState.groupBy === 'workitem' ? 'data-wi' : 'data-phase';
+      const taskRow = e.target.closest(`.gantt-row[${groupAttr}]`);
+      const groupRow = e.target.closest(`.gantt-phase-row[${groupAttr}]`);
+      const row = taskRow || groupRow;
       if(!row) return;
       e.preventDefault();
-      const newPhase = row.dataset.phase === '_none' ? null : row.dataset.phase;
       const t = state.tasks.find(x => x.id === draggedTid);
       if(!t) return;
-      const oldPhase = t.phase || null;
-      const phaseChanged = oldPhase !== newPhase;
 
       // Determine drop position relative to a target task-row
       let targetId = null, placeBefore = true;
       if(taskRow){
         targetId = Number(taskRow.querySelector('[data-tid]')?.dataset.tid);
-        if(targetId === draggedTid) targetId = null; // dropped on self
+        if(targetId === draggedTid) targetId = null;
         if(targetId){
           const rect = taskRow.getBoundingClientRect();
           placeBefore = (e.clientY - rect.top) < rect.height / 2;
         }
       }
 
-      // Apply phase change first (if any) — so siblings list is correct when reordering
-      if(phaseChanged){
-        t.phase = newPhase;
-        pushActivity(t, newPhase
-          ? `moved to ${fmtPhase(newPhase)} phase`
-          : `cleared phase (was ${fmtPhase(oldPhase)})`);
-        const subs = state.tasks.filter(s => s.parentTaskId === t.id);
-        subs.forEach(s => { s.phase = newPhase; });
-        // Reset order so it lands at the end of new phase by default
-        t.order = undefined;
-      }
-
-      // Apply reorder if there's a target task in the same (now updated) phase
-      if(targetId){
-        const targetTask = state.tasks.find(x => x.id === targetId);
-        if(targetTask && (targetTask.phase || null) === newPhase){
-          // Renumber all siblings in this phase
-          const siblings = state.tasks
-            .filter(s => s.projectId === t.projectId && (s.phase || null) === newPhase && !s.parentTaskId)
-            .sort((a, b) => {
-              const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
-              const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
-              if(ao !== bo) return ao - bo;
-              return (a.due || '').localeCompare(b.due || '');
-            });
-          // Remove dragged from siblings list, then re-insert at target position
-          const without = siblings.filter(s => s.id !== draggedTid);
-          const targetIdx = without.findIndex(s => s.id === targetId);
-          if(targetIdx >= 0){
-            const insertAt = placeBefore ? targetIdx : targetIdx + 1;
-            without.splice(insertAt, 0, t);
-            without.forEach((s, i) => { s.order = (i + 1) * 10; });
-            if(!phaseChanged) pushActivity(t, 'reordered');
-          }
+      if(ganttViewState.groupBy === 'phase'){
+        // PHASE MODE: drop in another phase row → change task.phase
+        const newPhase = row.dataset.phase === '_none' ? null : row.dataset.phase;
+        const oldPhase = t.phase || null;
+        const phaseChanged = oldPhase !== newPhase;
+        if(phaseChanged){
+          t.phase = newPhase;
+          pushActivity(t, newPhase
+            ? `moved to ${fmtPhase(newPhase)} phase`
+            : `cleared phase (was ${fmtPhase(oldPhase)})`);
+          const subs = state.tasks.filter(s => s.parentTaskId === t.id);
+          subs.forEach(s => { s.phase = newPhase; });
+          t.order = undefined;
         }
-      } else if(!phaseChanged){
-        // Dropped on phase header without a specific target row → no-op (no phase change, no position change)
-        return;
+        // Reorder within same phase
+        if(targetId){
+          const targetTask = state.tasks.find(x => x.id === targetId);
+          if(targetTask && (targetTask.phase || null) === newPhase){
+            const siblings = state.tasks
+              .filter(s => s.projectId === t.projectId && (s.phase || null) === newPhase && !s.parentTaskId)
+              .sort((a, b) => {
+                const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+                const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+                if(ao !== bo) return ao - bo;
+                return (a.due || '').localeCompare(b.due || '');
+              });
+            const without = siblings.filter(s => s.id !== draggedTid);
+            const targetIdx = without.findIndex(s => s.id === targetId);
+            if(targetIdx >= 0){
+              const insertAt = placeBefore ? targetIdx : targetIdx + 1;
+              without.splice(insertAt, 0, t);
+              without.forEach((s, i) => { s.order = (i + 1) * 10; });
+              if(!phaseChanged) pushActivity(t, 'reordered');
+            }
+          }
+        } else if(!phaseChanged){
+          return;
+        }
+      } else {
+        // WORKITEM MODE: drop in another WI row → change task.workItemId (and cascade subtasks)
+        const newWi = row.getAttribute('data-wi');
+        if(newWi === '_orphan') return; // can't drop into orphan
+        const newWiId = Number(newWi);
+        const oldWiId = t.workItemId;
+        const wiChanged = newWiId !== oldWiId;
+        if(wiChanged){
+          const oldWiObj = workItems.find(w => w.id === oldWiId);
+          const newWiObj = workItems.find(w => w.id === newWiId);
+          if(!newWiObj) return;
+          t.workItemId = newWiId;
+          pushActivity(t, `moved from ${oldWiObj?oldWiObj.code:'—'} to ${newWiObj.code}`);
+          const subs = state.tasks.filter(s => s.parentTaskId === t.id);
+          subs.forEach(s => { s.workItemId = newWiId; });
+          t.order = undefined;
+        }
+        // Reorder within same WI
+        if(targetId){
+          const targetTask = state.tasks.find(x => x.id === targetId);
+          if(targetTask && targetTask.workItemId === newWiId){
+            const siblings = state.tasks
+              .filter(s => s.projectId === t.projectId && s.workItemId === newWiId && !s.parentTaskId)
+              .sort((a, b) => {
+                const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+                const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+                if(ao !== bo) return ao - bo;
+                return (a.due || '').localeCompare(b.due || '');
+              });
+            const without = siblings.filter(s => s.id !== draggedTid);
+            const targetIdx = without.findIndex(s => s.id === targetId);
+            if(targetIdx >= 0){
+              const insertAt = placeBefore ? targetIdx : targetIdx + 1;
+              without.splice(insertAt, 0, t);
+              without.forEach((s, i) => { s.order = (i + 1) * 10; });
+              if(!wiChanged) pushActivity(t, 'reordered');
+            }
+          }
+        } else if(!wiChanged){
+          return;
+        }
       }
 
       saveState();
@@ -4506,8 +4676,11 @@ function openPhasePlanningModal(){
             return `<div class="phase-plan-row" style="--phase-color:${p.color}">
               <div class="phase-plan-label">
                 <span class="phase-plan-dot"></span>
-                <div>
-                  <div class="phase-plan-name">${p.label}</div>
+                <div style="min-width:0">
+                  <div class="phase-plan-name">
+                    ${p.label}
+                    <span class="phase-info-ico" data-phase-info="${p.k}" title="${escHtml(p.longDesc)}">ⓘ</span>
+                  </div>
                   <div class="phase-plan-desc">${p.desc}</div>
                 </div>
               </div>
