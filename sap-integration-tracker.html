@@ -997,6 +997,48 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .gantt-undated-row:hover{border-color:var(--accent);background:var(--surface-2);}
 
+/* ════════════════════════════════════════════════════════
+   TIMELINE
+   ════════════════════════════════════════════════════════ */
+.timeline-container{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;
+}
+.timeline-scroll{
+  overflow-x:auto;overflow-y:hidden;max-width:100%;
+}
+.timeline-svg{display:block;}
+.timeline-svg text{font-family:var(--sans);}
+.tl-month-label{
+  font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  fill:var(--text-muted);
+}
+.tl-week-label{
+  font-family:var(--mono);font-size:9.5px;fill:var(--text-muted);
+}
+.tl-phase-band-label{
+  font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;
+  opacity:.85;
+}
+.tl-today-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.06em;fill:#fff;}
+[data-theme="dark"] .tl-today-label{fill:#0a120d;}
+
+.tl-card-rect{
+  fill:var(--surface);stroke:var(--border);stroke-width:0.5;
+  transition:filter .12s, stroke .12s;
+}
+.tl-card-group:hover .tl-card-rect{
+  stroke:var(--accent);stroke-width:1;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
+}
+.tl-card{transition:transform .15s;}
+.tl-card-group:hover .tl-card{transform:translate(0,-1px);}
+
+.tl-card-title{font-size:11.5px;font-weight:500;fill:var(--text);}
+.tl-card-status{font-size:9.5px;font-weight:500;}
+.tl-card-date{font-family:var(--mono);font-size:10px;fill:var(--text-muted);}
+.tl-card-avatar{font-size:9px;font-weight:600;}
+
 .kanban{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;}
 .kb-col{
   background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);
@@ -1716,19 +1758,19 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
       </nav>
     </div>
 
-    <div class="projects-card">
-      <h4>Projects <button id="btnAddProject" onclick="openNewProjectModal()" title="New project"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button></h4>
-      <div id="projectList"></div>
+    <div>
+      <div class="nav-label">Admin</div>
+      <nav class="nav" id="navAdmin">
+        <a data-view="templates" title="dIF templates"><span class="ico">⊞</span><span>dIF templates</span></a>
+        <a data-view="users" title="Team"><span class="ico">⊙</span><span>Team</span> <span class="nav-count" id="navReqCount" style="display:none"></span></a>
+      </nav>
     </div>
 
     <div class="sidebar-spacer"></div>
 
-    <div>
-      <div class="nav-label">Admin</div>
-      <nav class="nav" id="navAdmin">
-        <a data-view="templates" title="Templates"><span class="ico">⊞</span><span>Templates</span></a>
-        <a data-view="users" title="Users"><span class="ico">⊙</span><span>Users</span> <span class="nav-count" id="navReqCount" style="display:none"></span></a>
-      </nav>
+    <div class="projects-card">
+      <h4>Projects <button id="btnAddProject" onclick="openNewProjectModal()" title="New project"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button></h4>
+      <div id="projectList"></div>
     </div>
 
     <div class="sidebar-footer">
@@ -2266,8 +2308,8 @@ function selectProject(id){
    VIEWS — placeholder dispatcher (fleshed out below)
    ════════════════════════════════════════════════════════ */
 function setView(v){
-  // Kanban and fulltask borrow permissions from 'tasks' since they're alternative task views
-  const permKey = (v === 'kanban' || v === 'fulltask' || v === 'gantt') ? 'tasks' : v;
+  // Kanban, gantt, timeline, and fulltask borrow permissions from 'tasks' since they're alternative task views
+  const permKey = (v === 'kanban' || v === 'fulltask' || v === 'gantt' || v === 'timeline') ? 'tasks' : v;
   if(!canReadView(permKey)) v = 'dashboard';
   if(!canReadView('dashboard') && !canReadView(v)) v = ALL_VIEWS.find(canReadView);
   state.activeView = v;
@@ -2291,6 +2333,7 @@ function renderAll(){
     else if(v === 'tasks') renderTasks();
     else if(v === 'kanban') renderKanban();
     else if(v === 'gantt')  renderGantt();
+    else if(v === 'timeline') renderTimeline();
     else if(v === 'workitems') renderWorkItemsView();
     else if(v === 'interfaces') renderInterfacesView();
     else if(v === 'timelog') renderTimeLog();
@@ -2313,9 +2356,10 @@ function setTopbar(title, sub, actions){
 // Renders a segmented "List · Board · Gantt" switcher with the active view highlighted
 function viewSwitcher(active){
   const opts = [
-    { k: 'tasks',  label: 'List',  icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6"  r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>' },
-    { k: 'kanban', label: 'Board', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="3" width="6" height="14" rx="1"/><rect x="11" y="3" width="6" height="9"  rx="1"/><rect x="19" y="3" width="2" height="6"  rx="1"/></svg>' },
-    { k: 'gantt',  label: 'Gantt', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="5"  width="9" height="3" rx="1"/><rect x="7"  y="11" width="11" height="3" rx="1"/><rect x="5"  y="17" width="8"  height="3" rx="1"/></svg>' },
+    { k: 'tasks',    label: 'List',     icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6"  r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>' },
+    { k: 'kanban',   label: 'Board',    icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="3" width="6" height="14" rx="1"/><rect x="11" y="3" width="6" height="9"  rx="1"/><rect x="19" y="3" width="2" height="6"  rx="1"/></svg>' },
+    { k: 'gantt',    label: 'Gantt',    icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="5"  width="9" height="3" rx="1"/><rect x="7"  y="11" width="11" height="3" rx="1"/><rect x="5"  y="17" width="8"  height="3" rx="1"/></svg>' },
+    { k: 'timeline', label: 'Timeline', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18"/><circle cx="6"  cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg>' },
   ];
   return `<div class="view-switcher">
     ${opts.map(o => `<button class="vs-btn ${active===o.k?'active':''}" onclick="setView('${o.k}')" title="${o.label} view">
@@ -2612,10 +2656,10 @@ function renderWorkView(opts){
 
   const canWrite = canWriteView(opts.kindFilter === 'interface' ? 'interfaces' : opts.kindFilter === 'work' ? 'workitems' : 'tasks');
   const actions = `
-    ${viewSwitcher('tasks')}
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
-    <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`;
+    <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
+    ${viewSwitcher('tasks')}`;
   setTopbar(title, sub, actions);
 
   const groupByLabel = opts.kindFilter === 'interface' ? 'By interface'
@@ -3167,6 +3211,7 @@ function openRowStatusPopover(anchor, tid){
     // If the side panel is open on this task, re-render it too
     if(openPanelTaskId === tid) renderSidePanel();
     if(state.activeView === 'gantt') renderGantt();
+    else if(state.activeView === 'timeline') renderTimeline();
     else renderTaskGroups({kindFilter: tasksViewState.kindFilter});
   });
 }
@@ -3189,6 +3234,7 @@ function openRowAssigneePopover(anchor, tid){
     saveState();
     if(openPanelTaskId === tid) renderSidePanel();
     if(state.activeView === 'gantt') renderGantt();
+    else if(state.activeView === 'timeline') renderTimeline();
     else renderTaskGroups({kindFilter: tasksViewState.kindFilter});
   });
 }
@@ -3665,6 +3711,7 @@ function mutateTask(id, fn){
   if(state.activeView === 'tasks' || state.activeView === 'workitems' || state.activeView === 'interfaces') renderTaskGroups({kindFilter:tasksViewState.kindFilter});
   else if(state.activeView === 'kanban') renderKanban();
   else if(state.activeView === 'gantt') renderGantt();
+    else if(state.activeView === 'timeline') renderTimeline();
   else if(state.activeView === 'dashboard') renderDashboard();
 }
 // Variant for inline inputs (date, estimate, title) where re-rendering the side panel
@@ -3678,6 +3725,7 @@ function mutateTaskQuiet(id, fn){
   if(state.activeView === 'tasks' || state.activeView === 'workitems' || state.activeView === 'interfaces') renderTaskGroups({kindFilter:tasksViewState.kindFilter});
   else if(state.activeView === 'kanban') renderKanban();
   else if(state.activeView === 'gantt') renderGantt();
+    else if(state.activeView === 'timeline') renderTimeline();
   else if(state.activeView === 'dashboard') renderDashboard();
 }
 function pushActivity(t, text){
@@ -4092,8 +4140,8 @@ function renderGantt(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Gantt', `${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `${viewSwitcher('gantt')}
-     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
+     ${viewSwitcher('gantt')}`);
 
   const content = document.getElementById('content');
   if(!allTasks.length){
@@ -4290,12 +4338,12 @@ function renderGantt(){
     let wiPill = '';
     if(ganttViewState.groupBy === 'phase' && wi){
       const fullTitle = wi.title || '';
-      const tipText = wi.code && fullTitle ? `${wi.code} · ${fullTitle}` : (wi.code || fullTitle);
-      wiPill = `<span class="gantt-wi-pill kind-${wi.kind}" title="${escHtml(tipText)}">`
-        + (wi.code ? `<span class="wi-pill-code">${escHtml(wi.code)}</span>` : '')
-        + (wi.code && fullTitle ? `<span class="wi-pill-sep">·</span>` : '')
-        + (fullTitle ? `<span class="wi-pill-title">${escHtml(fullTitle)}</span>` : '')
-        + `</span>`;
+      if(fullTitle){
+        const truncTitle = fullTitle.length > 20 ? fullTitle.slice(0, 20) + '…' : fullTitle;
+        // Tooltip shows full title (and code, if any) so nothing is lost
+        const tipText = wi.code ? `${wi.code} · ${fullTitle}` : fullTitle;
+        wiPill = `<span class="gantt-wi-pill kind-${wi.kind}" title="${escHtml(tipText)}"><span class="wi-pill-title">${escHtml(truncTitle)}</span></span>`;
+      }
     }
     // Group attribute changes meaning per mode
     const groupAttr = ganttViewState.groupBy === 'phase'
@@ -4876,6 +4924,230 @@ function savePhasePlanning(){
     ? 'Phase planning saved (note: phases overlap)'
     : 'Phase planning saved', 'success');
   if(state.activeView === 'gantt') renderGantt();
+    else if(state.activeView === 'timeline') renderTimeline();
+}
+
+/* ════════════════════════════════════════════════════════
+   TIMELINE VIEW — chronological cards along a horizontal spine
+   ════════════════════════════════════════════════════════ */
+let timelineViewState = { zoom: 'week' };
+
+function renderTimeline(){
+  const pid = state.activeProject;
+  const allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
+  const canWrite = canWriteView('tasks');
+
+  setTopbar('Timeline', `${allTasks.length} task${allTasks.length===1?'':'s'} along the project timeline`,
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
+     ${viewSwitcher('timeline')}`);
+
+  const content = document.getElementById('content');
+  if(!allTasks.length){
+    content.innerHTML = `<div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▭</div><h3>No tasks yet</h3><p>Create a task to see it on the timeline.</p></div>`;
+    return;
+  }
+
+  // Items with due dates only (same rule as Gantt)
+  const today = new Date(); today.setHours(0,0,0,0);
+  const items = [];
+  const undated = [];
+  allTasks.forEach(t => {
+    if(!t.due){ undated.push(t); return; }
+    const d = new Date(t.due);
+    if(isNaN(d)){ undated.push(t); return; }
+    d.setHours(0,0,0,0);
+    items.push({ task: t, date: d });
+  });
+  if(!items.length){
+    content.innerHTML = `<div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▭</div><h3>No dated tasks</h3><p>Add a due date to your tasks to see them on the timeline.</p></div>`;
+    return;
+  }
+  // Sort chronologically
+  items.sort((a, b) => a.date - b.date);
+
+  // Compute span — include configured phase boundaries so empty phases still appear
+  let minDate = new Date(Math.min(...items.map(i => i.date.getTime())));
+  let maxDate = new Date(Math.max(...items.map(i => i.date.getTime())));
+  PHASES.forEach(p => {
+    const r = getProjectPhase(pid, p.k);
+    if(r){
+      if(r.start){ const s = new Date(r.start); if(!isNaN(s) && s < minDate) minDate = s; }
+      if(r.end)  { const e = new Date(r.end);   if(!isNaN(e) && e > maxDate) maxDate = e; }
+    }
+  });
+  if(today < minDate) minDate = new Date(today);
+  if(today > maxDate) maxDate = new Date(today);
+  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 7);
+  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 14);
+
+  const zoom = timelineViewState.zoom;
+  const dayPx = zoom === 'day' ? 36 : zoom === 'week' ? 18 : 6;
+  const totalDays = Math.round((maxDate - minDate) / 86400000);
+  const timelineWidth = Math.max(800, totalDays * dayPx);
+  const dayToX = d => Math.round((d - minDate) / 86400000) * dayPx;
+
+  // Smart placement: try ABOVE first; if it overlaps a previous above-card, drop to BELOW.
+  // If below also overlaps, increase row index for stacking.
+  const CARD_W = 180;
+  const CARD_H = 78;
+  const CARD_GAP_X = 8;     // min horizontal gap between cards on same side+row
+  const SPINE_Y = 180;
+  const ABOVE_BASE = SPINE_Y - 16 - CARD_H; // first row above spine
+  const BELOW_BASE = SPINE_Y + 16;          // first row below spine
+  const ROW_STEP = CARD_H + 12;             // add another row when crowded
+  const placed = []; // {item, x, y, side}
+  // For each item: find a slot starting above row 0, then below row 0, then above row 1, etc.
+  items.forEach(it => {
+    const px = dayToX(it.date) - CARD_W / 2; // try centering card on the spine point
+    const xLeft = Math.max(8, Math.min(timelineWidth - CARD_W - 8, px));
+    const xRight = xLeft + CARD_W;
+    let placedAt = null;
+    for(let row = 0; row < 6 && !placedAt; row++){
+      for(const side of ['above', 'below']){
+        const y = side === 'above' ? ABOVE_BASE - row * ROW_STEP : BELOW_BASE + row * ROW_STEP;
+        // Check collision with already-placed cards on the same side+row
+        const collides = placed.some(p => {
+          if(p.side !== side || p.row !== row) return false;
+          return !(xRight + CARD_GAP_X <= p.x || p.x + CARD_W + CARD_GAP_X <= xLeft);
+        });
+        if(!collides){ placedAt = { side, row, y }; break; }
+      }
+    }
+    if(!placedAt){ placedAt = { side: 'below', row: 5, y: BELOW_BASE + 5 * ROW_STEP }; }
+    placed.push({ item: it, x: xLeft, y: placedAt.y, side: placedAt.side, row: placedAt.row });
+  });
+  // Compute SVG height based on actual content
+  const maxRowAbove = Math.max(0, ...placed.filter(p => p.side === 'above').map(p => p.row));
+  const maxRowBelow = Math.max(0, ...placed.filter(p => p.side === 'below').map(p => p.row));
+  const topPadding = (maxRowAbove + 1) * ROW_STEP + 50;
+  const bottomPadding = (maxRowBelow + 1) * ROW_STEP + 60;
+  const totalHeight = topPadding + bottomPadding;
+  // Shift everything down by (topPadding - (SPINE_Y - ABOVE_BASE))? Actually keep SPINE_Y=220 and just ensure svgHeight is enough.
+  const svgHeight = Math.max(420, SPINE_Y + bottomPadding);
+
+  // Week ticks for x-axis
+  const weekTicks = [];
+  const monthBand = [];
+  let cursor = new Date(minDate);
+  let curMonth = -1, monthStart = 0;
+  for(let i = 0; i < totalDays; i++){
+    if(cursor.getDay() === 1 || i === 0){
+      weekTicks.push({ x: i * dayPx, label: `Wk ${isoWeek(cursor)}` });
+    }
+    if(cursor.getMonth() !== curMonth){
+      if(curMonth !== -1){
+        monthBand.push({ x: monthStart * dayPx, w: (i - monthStart) * dayPx, label: monthLabel(curMonth, cursor.getFullYear()) });
+      }
+      curMonth = cursor.getMonth();
+      monthStart = i;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  monthBand.push({ x: monthStart * dayPx, w: (totalDays - monthStart) * dayPx, label: monthLabel(curMonth, cursor.getFullYear()) });
+
+  const todayX = dayToX(today);
+  const showTodayLine = todayX >= 0 && todayX <= timelineWidth;
+
+  // Build SVG
+
+  const monthSvg = monthBand.map(m =>
+    `<text x="${m.x + m.w/2}" y="30" text-anchor="middle" class="tl-month-label">${escHtml(m.label)}</text>`
+  ).join('');
+
+  const weekSvg = weekTicks.map(t =>
+    `<text x="${t.x}" y="${svgHeight - 14}" class="tl-week-label">${escHtml(t.label)}</text>`
+  ).join('');
+
+  const todaySvg = showTodayLine
+    ? `<g>
+        <line x1="${todayX}" y1="50" x2="${todayX}" y2="${svgHeight - 30}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7"/>
+        <rect x="${todayX - 26}" y="48" width="52" height="14" rx="3" fill="var(--accent)"/>
+        <text x="${todayX}" y="58" text-anchor="middle" class="tl-today-label">TODAY</text>
+       </g>`
+    : '';
+
+  const cardsSvg = placed.map(p => {
+    const t = p.item.task;
+    const date = p.item.date;
+    const px = dayToX(date);
+    const phase = t.phase ? phaseDef(t.phase) : null;
+    const phaseColor = phase ? phase.color : '#9aa39c';
+    // Connector line from spine to card
+    const connY1 = SPINE_Y;
+    const connY2 = p.side === 'above' ? p.y + CARD_H : p.y;
+    const cardCenterX = p.x + CARD_W / 2;
+    // Status chip
+    const st = t.status || 'todo';
+    const stLabel = fmtStatus(st);
+    const stColors = {
+      todo:    { bg: '#F1EFE8', fg: '#5F5E5A' },
+      doing:   { bg: '#FAEEDA', fg: '#854F0B' },
+      review:  { bg: '#E6F1FB', fg: '#0C447C' },
+      blocked: { bg: '#FCEBEB', fg: '#A32D2D' },
+      done:    { bg: '#E1F5EE', fg: '#0F6E56' },
+    };
+    const stClr = stColors[st] || stColors.todo;
+    // Avatar
+    const initials = t.assignee ? avatarInitials(t.assignee) : '';
+    const avBg = t.assignee ? avatarColor(t.assignee) : '#E5E2D8';
+    const avFg = t.assignee ? '#fff' : '#888780';
+    const dueStr = fmtDate(t.due);
+    // Truncate title to fit
+    const fullTitle = t.task && t.task.title ? t.task.title : t.title;
+    const title = (t.title || 'Untitled');
+    const maxChars = 26;
+    const trunc = title.length > maxChars ? title.slice(0, maxChars) + '…' : title;
+    // Card shape
+    return `<g class="tl-card-group" data-tid="${t.id}">
+      <line x1="${px}" y1="${connY1}" x2="${cardCenterX}" y2="${connY2}" stroke="var(--border-strong)" stroke-width="0.75" opacity="0.65"/>
+      <circle cx="${px}" cy="${SPINE_Y}" r="5" fill="${phaseColor}"/>
+      <circle cx="${px}" cy="${SPINE_Y}" r="2" fill="#fff"/>
+      <g class="tl-card" transform="translate(${p.x}, ${p.y})" cursor="pointer">
+        <rect width="${CARD_W}" height="${CARD_H}" rx="10" class="tl-card-rect"/>
+        <rect x="0" y="0" width="3" height="${CARD_H}" rx="0" fill="${phaseColor}"/>
+        <text x="14" y="22" class="tl-card-title">${escHtml(trunc)}</text>
+        <rect x="14" y="32" width="${Math.min(96, stLabel.length * 7 + 16)}" height="16" rx="8" fill="${stClr.bg}"/>
+        <text x="${14 + Math.min(96, stLabel.length * 7 + 16)/2}" y="43" text-anchor="middle" class="tl-card-status" fill="${stClr.fg}">${escHtml(stLabel)}</text>
+        <text x="14" y="${CARD_H - 12}" class="tl-card-date">${escHtml(dueStr)}</text>
+        <circle cx="${CARD_W - 18}" cy="18" r="11" fill="${avBg}"/>
+        <text x="${CARD_W - 18}" y="${initials ? 22 : 21}" text-anchor="middle" class="tl-card-avatar" fill="${avFg}">${escHtml(initials || '—')}</text>
+      </g>
+    </g>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="gantt-toolbar">
+      <div class="group-toggle" id="timelineZoom">
+        <button data-z="day" class="${zoom==='day'?'active':''}">Day</button>
+        <button data-z="week" class="${zoom==='week'?'active':''}">Week</button>
+        <button data-z="month" class="${zoom==='month'?'active':''}">Month</button>
+      </div>
+      ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a due date hidden</span>` : ''}
+    </div>
+    <div class="timeline-container">
+      <div class="timeline-scroll">
+        <svg width="${timelineWidth}" height="${svgHeight}" viewBox="0 0 ${timelineWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg" class="timeline-svg">
+          ${monthSvg}
+          <line x1="0" y1="${SPINE_Y}" x2="${timelineWidth}" y2="${SPINE_Y}" stroke="var(--border-strong)" stroke-width="1.5"/>
+          ${todaySvg}
+          ${cardsSvg}
+          ${weekSvg}
+        </svg>
+      </div>
+    </div>`;
+
+  // Wire interactions
+  document.getElementById('timelineZoom').onclick = e => {
+    const b = e.target.closest('button'); if(!b) return;
+    timelineViewState.zoom = b.dataset.z;
+    renderTimeline();
+  };
+  document.querySelectorAll('.tl-card-group').forEach(g => {
+    g.addEventListener('click', () => {
+      const tid = Number(g.dataset.tid);
+      if(tid) openSidePanel(tid);
+    });
+  });
 }
 
 function snapToMonday(d){
@@ -4908,8 +5180,8 @@ function renderKanban(){
 
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `${viewSwitcher('kanban')}
-     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
+     ${viewSwitcher('kanban')}`);
 
   const colBy = kanbanViewState.columnBy;
   let cols;
@@ -5222,7 +5494,7 @@ function exportTimeLog(){
    TEMPLATES
    ════════════════════════════════════════════════════════ */
 function renderTemplatesView(){
-  setTopbar('dIF Templates', `${state.difTemplates.length} templates for interface patterns`,
+  setTopbar('dIF templates', `${state.difTemplates.length} templates for interface patterns`,
     canWriteView('templates') ? `<button class="btn btn-primary btn-sm" onclick="openTemplateModal()">＋ Template</button>` : '');
   const content = document.getElementById('content');
   content.style.display = 'grid';
@@ -5315,7 +5587,7 @@ function deleteTemplateFromModal(id){
    USERS + ACCESS REQUESTS
    ════════════════════════════════════════════════════════ */
 function renderUsersView(){
-  setTopbar('Users', 'Access management',
+  setTopbar('Team', 'Access management',
     canWriteView('users') ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">＋ Add user</button>` : '');
   const pending = state.accessRequests.filter(r => r.status === 'pending');
   const users = state.users;
