@@ -581,11 +581,15 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 [data-theme="dark"] .task-row.selected{background:var(--accent-soft);}
 .task-row.subtask{padding-left:34px;background:var(--surface-2);}
 .task-row.subtask:hover{background:var(--surface-3);}
-.drag-handle{color:var(--text-dim);opacity:0;font-size:12px;line-height:1;text-align:center;cursor:grab;transition:opacity .1s;}
-.task-row:hover .drag-handle{opacity:.6;}
-.task-row .drag-handle:hover{opacity:1;color:var(--text);}
-.task-row[draggable="true"]:active .drag-handle{cursor:grabbing;}
-.task-row.dragging{opacity:.35;}
+.drag-handle{
+  color:var(--text-muted);opacity:.45;font-size:13px;line-height:1;text-align:center;
+  cursor:grab;transition:opacity .12s, color .12s;user-select:none;
+  padding:2px 0;border-radius:3px;
+}
+.task-row:hover .drag-handle{opacity:.85;color:var(--text);}
+.task-row .drag-handle:hover{opacity:1;color:var(--accent);background:var(--surface-2);}
+.drag-handle:active,.task-row.dragging .drag-handle{cursor:grabbing;}
+.task-row.dragging{opacity:.4;}
 .task-row.drop-before{box-shadow:inset 0 2px 0 0 var(--accent);}
 .task-row.drop-after{box-shadow:inset 0 -2px 0 0 var(--accent);}
 .tc-check{
@@ -2789,22 +2793,59 @@ function wireTaskGroupInteractions(workItems){
   const container = document.getElementById('taskGroups');
   if(!container) return;
 
-  // Drag-and-drop for reordering tasks within the same parent (only active in 'By parent' grouping)
-  if(tasksViewState.groupBy === 'workitem' && canWriteView('tasks')){
+  // Drag-and-drop for reordering tasks. Active in 'By parent' (scope = work item)
+  // and 'By phase' (scope = phase). Drag handle is the ⋮⋮ grip icon only —
+  // grabbing the whole row would conflict with click-to-pop on chips and buttons.
+  const groupBy = tasksViewState.groupBy;
+  const dragEnabled = (groupBy === 'workitem' || groupBy === 'phase') && canWriteView('tasks');
+
+  if(dragEnabled){
     let draggedId = null;
     let draggedIsSubtask = false;
-    let draggedScope = null; // work item id for parents, or parent task id for subtasks
+    let draggedScope = null;
+
+    const getRowScope = (row) => {
+      if(row.classList.contains('subtask')) return row.dataset.parentTask;
+      if(groupBy === 'workitem') return row.dataset.parentWi;
+      if(groupBy === 'phase'){
+        const t = state.tasks.find(x => x.id === Number(row.dataset.tid));
+        return t ? (t.phase || '_none') : null;
+      }
+      return null;
+    };
 
     container.querySelectorAll('.task-row[draggable="true"]').forEach(row => {
-      row.addEventListener('dragstart', e => {
-        draggedId = Number(row.dataset.tid);
-        draggedIsSubtask = row.classList.contains('subtask');
-        draggedScope = draggedIsSubtask ? row.dataset.parentTask : row.dataset.parentWi;
-        row.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        // Firefox needs some data to actually start the drag
-        try { e.dataTransfer.setData('text/plain', String(draggedId)); } catch(_) {}
-      });
+      // Only start drag if the user grabbed the drag-handle specifically
+      const handle = row.querySelector('.drag-handle');
+      if(handle){
+        // mousedown sets a temporary flag; if dragstart fires without it, abort
+        let armed = false;
+        handle.addEventListener('mousedown', () => { armed = true; });
+        document.addEventListener('mouseup', () => { armed = false; });
+        row.addEventListener('dragstart', e => {
+          if(!armed){
+            e.preventDefault();
+            return;
+          }
+          armed = false;
+          draggedId = Number(row.dataset.tid);
+          draggedIsSubtask = row.classList.contains('subtask');
+          draggedScope = getRowScope(row);
+          row.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          try { e.dataTransfer.setData('text/plain', String(draggedId)); } catch(_) {}
+        });
+      } else {
+        // Subtask rows have a placeholder (low opacity) drag-handle — same logic
+        row.addEventListener('dragstart', e => {
+          draggedId = Number(row.dataset.tid);
+          draggedIsSubtask = row.classList.contains('subtask');
+          draggedScope = getRowScope(row);
+          row.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          try { e.dataTransfer.setData('text/plain', String(draggedId)); } catch(_) {}
+        });
+      }
       row.addEventListener('dragend', () => {
         row.classList.remove('dragging');
         container.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before','drop-after'));
@@ -2816,16 +2857,14 @@ function wireTaskGroupInteractions(workItems){
       if(draggedId === null) return;
       const row = e.target.closest('.task-row[draggable="true"]');
       if(!row) return;
-      // Must be in the same scope — same work item for parents, same parent task for subtasks
       const targetIsSubtask = row.classList.contains('subtask');
       if(targetIsSubtask !== draggedIsSubtask) return;
-      const targetScope = targetIsSubtask ? row.dataset.parentTask : row.dataset.parentWi;
+      const targetScope = getRowScope(row);
       if(targetScope !== draggedScope) return;
       const tid = Number(row.dataset.tid);
       if(tid === draggedId) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      // Indicate whether drop will land before or after the target
       const rect = row.getBoundingClientRect();
       const above = (e.clientY - rect.top) < rect.height / 2;
       container.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before','drop-after'));
@@ -2838,7 +2877,7 @@ function wireTaskGroupInteractions(workItems){
       if(!row) return;
       const targetIsSubtask = row.classList.contains('subtask');
       if(targetIsSubtask !== draggedIsSubtask) return;
-      const targetScope = targetIsSubtask ? row.dataset.parentTask : row.dataset.parentWi;
+      const targetScope = getRowScope(row);
       if(targetScope !== draggedScope) return;
       e.preventDefault();
       const targetId = Number(row.dataset.tid);
@@ -3930,7 +3969,6 @@ function renderGantt(){
     return `<div class="gantt-status-cell">
       <button class="gantt-st-btn" data-pop-status="${task.id}" ${canWrite?'':'disabled'}>
         <span class="${stChipCls} gantt-st-chip">${fmtStatus(st)}</span>
-        ${canWrite?'<span class="gantt-pop-caret">▾</span>':''}
       </button>
     </div>`;
   };
