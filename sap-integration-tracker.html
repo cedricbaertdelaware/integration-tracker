@@ -221,14 +221,30 @@ input,select,textarea{font-family:inherit;}
 }
 .projects-card h4 button:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
 .proj-item{
-  display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text);
-  transition:.12s;
+  display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text-muted);
+  transition:.12s;border-left:3px solid transparent;
 }
-.proj-item:hover{background:var(--surface-3);}
-.proj-item.active{background:var(--surface);box-shadow:var(--shadow-sm);font-weight:500;}
+.proj-item:hover{background:var(--surface-3);color:var(--text);}
+.proj-item.active{
+  background:var(--surface);box-shadow:var(--shadow-sm);font-weight:600;color:var(--text);
+  border-left-color:var(--accent);
+}
+.proj-item.active .proj-dot{box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);}
 .proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .proj-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .proj-meta{font-family:var(--mono);font-size:10px;color:var(--text-dim);}
+
+/* Topbar breadcrumb */
+.topbar-breadcrumb{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted);
+  margin-bottom:4px;font-family:var(--sans);
+}
+.topbar-breadcrumb .bc-proj{
+  display:inline-flex;align-items:center;gap:6px;font-weight:500;color:var(--text);
+}
+.topbar-breadcrumb .bc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.topbar-breadcrumb .bc-sep{color:var(--text-dim);font-size:12px;}
+.topbar-breadcrumb .bc-view{color:var(--text-muted);}
 
 .sidebar-spacer{flex:1;}
 .sidebar-footer{display:flex;gap:6px;padding:4px 2px 0;margin-top:auto;}
@@ -267,6 +283,59 @@ input,select,textarea{font-family:inherit;}
 .greeting em{font-style:normal;color:var(--accent);font-weight:600;}
 .greeting-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+
+/* Notification bell + panel */
+.notif-bell{
+  position:relative;width:36px;height:36px;flex-shrink:0;
+  border:1px solid var(--border);background:var(--surface);color:var(--text-muted);
+  border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  transition:.12s;margin-left:6px;
+}
+.notif-bell:hover{color:var(--text);border-color:var(--border-strong);background:var(--surface-2);}
+.notif-bell svg{pointer-events:none;}
+.notif-badge{
+  position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;
+  background:var(--danger);color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;
+  border-radius:9px;display:inline-flex;align-items:center;justify-content:center;
+  border:2px solid var(--surface);
+}
+.notif-panel{
+  position:fixed;width:360px;max-height:480px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);
+  z-index:200;display:flex;flex-direction:column;overflow:hidden;
+}
+.notif-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--text);
+}
+.notif-link{
+  background:none;border:none;color:var(--accent);font-size:11.5px;cursor:pointer;padding:2px 6px;
+  border-radius:4px;
+}
+.notif-link:hover:not(:disabled){background:var(--accent-soft);}
+.notif-link:disabled{color:var(--text-dim);cursor:default;}
+.notif-list{overflow-y:auto;flex:1;}
+.notif-item{
+  display:flex;align-items:flex-start;gap:10px;padding:10px 14px;cursor:pointer;
+  border-bottom:1px solid var(--border);transition:background .1s;
+}
+.notif-item:hover{background:var(--surface-2);}
+.notif-item.is-read{opacity:.55;}
+.notif-item:last-child{border-bottom:none;}
+.notif-ico{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.notif-overdue .notif-ico{background:color-mix(in srgb, var(--danger) 18%, transparent);color:var(--danger);}
+.notif-duesoon .notif-ico{background:color-mix(in srgb, var(--warn) 22%, transparent);color:var(--warn);}
+.notif-blocked .notif-ico{background:color-mix(in srgb, var(--danger) 14%, transparent);color:var(--danger);}
+.notif-mention .notif-ico{background:var(--accent-soft);color:var(--accent);}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:12.5px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.notif-msg{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
+.notif-time{font-family:var(--mono);font-size:10.5px;color:var(--text-dim);flex-shrink:0;}
+.notif-empty{padding:30px 14px;text-align:center;color:var(--text-muted);font-size:12.5px;}
 
 /* Content area */
 .content{
@@ -1341,6 +1410,47 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .card-progress{grid-column:span 3;display:flex;flex-direction:column;align-items:center;text-align:center;}
 .card-pipeline{grid-column:span 12;display:flex;flex-direction:column;}
 .card-phases{grid-column:span 12;display:flex;flex-direction:column;}
+
+/* Project health card */
+.card-health{
+  --health-color:var(--accent);
+  border-left:3px solid var(--health-color);
+}
+.card-health.health-healthy{--health-color:var(--success, #2d8e60);}
+.card-health.health-at-risk{--health-color:var(--warn);}
+.card-health.health-critical{--health-color:var(--danger);}
+.health-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.health-status{display:flex;align-items:center;gap:9px;}
+.health-dot{
+  width:10px;height:10px;border-radius:50%;background:var(--health-color);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--health-color) 18%, transparent);
+}
+.health-label{font-size:13px;font-weight:500;color:var(--text);}
+.health-pill{
+  padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em;
+  background:color-mix(in srgb, var(--health-color) 15%, transparent);
+  color:var(--health-color);
+}
+.health-row{
+  display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;
+}
+.health-score{
+  font-family:var(--sans);font-size:36px;font-weight:500;line-height:1;
+  color:var(--health-color);font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+}
+.health-score-max{font-size:14px;font-weight:400;color:var(--text-muted);margin-left:2px;}
+.health-reasons{
+  display:flex;flex-wrap:wrap;gap:6px;flex:1;align-self:flex-end;padding-bottom:4px;
+}
+.health-reason{
+  background:color-mix(in srgb, var(--health-color) 9%, transparent);
+  border:1px solid color-mix(in srgb, var(--health-color) 22%, transparent);
+  color:var(--text);
+  padding:3px 9px;border-radius:6px;font-size:11.5px;
+}
 .phase-grid{
   display:grid;grid-template-columns:repeat(6, 1fr);gap:10px;
 }
@@ -1807,10 +1917,15 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
       </button>
       <div class="topbar-left">
+        <div class="topbar-breadcrumb" id="topbarBreadcrumb"></div>
         <div class="greeting" id="topbarTitle">—</div>
         <div class="greeting-sub" id="topbarSub">—</div>
       </div>
       <div class="topbar-right" id="topbarActions"></div>
+      <button id="notifBellBtn" class="notif-bell" onclick="openNotifPanel()" title="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span id="notifBadge" class="notif-badge" style="display:none">0</span>
+      </button>
     </div>
 
     <div class="content" id="content">
@@ -2021,6 +2136,7 @@ let state = {
   difTemplates: [],
   users: [],
   accessRequests: [],
+  notifReadIds: [], // notification IDs marked as read
   activeProject: null,
   activeView: 'tasks',
 };
@@ -2078,6 +2194,7 @@ function ensureDefaults(){
   state.difTemplates    = state.difTemplates    && state.difTemplates.length ? state.difTemplates : DEFAULT_DIF_TEMPLATES.slice();
   state.users           = state.users           || [];
   state.accessRequests  = state.accessRequests  || [];
+  state.notifReadIds    = state.notifReadIds    || [];
   // Ensure Cédric admin exists
   if(!state.users.find(u => u.email && u.email.toLowerCase() === 'cedric.baert@delaware.pro')){
     sha256('Tie2eiha3759').then(h => {
@@ -2342,11 +2459,17 @@ function renderAll(){
   if(!currentUser) return;
   renderProjectList();
   renderNav();
+  refreshNotifBadge();
   const content = document.getElementById('content');
   const v = state.activeView;
   if(!state.activeProject && v !== 'users' && v !== 'templates'){
     setTopbar('Welcome', 'Create or pick a project from the sidebar.');
-    content.innerHTML = `<div class="empty-screen"><div class="empty-screen-icon">◈</div><h3>No project yet</h3><p>${currentUser.role==='admin' ? 'Click ＋ next to Projects to create one.' : 'Ask an admin to add you to a project.'}</p></div>`;
+    const isAdmin = currentUser.role === 'admin';
+    content.innerHTML = `<div class="empty-screen"><div class="empty-screen-icon">◈</div>
+      <h3>No project yet</h3>
+      <p>${isAdmin ? 'Get started by creating your first project.' : 'Ask an admin to add you to a project.'}</p>
+      ${isAdmin ? `<button class="btn btn-primary" style="margin-top:14px" onclick="openNewProjectModal()">＋ Create project</button>` : ''}
+    </div>`;
     return;
   }
   try{
@@ -2373,8 +2496,230 @@ function setTopbar(title, sub, actions){
   document.getElementById('topbarTitle').innerHTML = title;
   document.getElementById('topbarSub').textContent = sub || '';
   document.getElementById('topbarActions').innerHTML = actions || '';
+  // Breadcrumb: only show when a project is active and we're in a project-scoped view
+  const bc = document.getElementById('topbarBreadcrumb');
+  if(!bc) return;
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  const adminViews = ['users','templates'];
+  if(proj && !adminViews.includes(state.activeView)){
+    const projColor = proj.color || '#0f7a4b';
+    // Strip HTML from title for the breadcrumb (titles can contain inline HTML)
+    const tmp = document.createElement('div'); tmp.innerHTML = title;
+    const cleanTitle = tmp.textContent || tmp.innerText || '';
+    bc.innerHTML = `<span class="bc-proj"><span class="bc-dot" style="background:${projColor}"></span>${escHtml(proj.name)}</span><span class="bc-sep">›</span><span class="bc-view">${escHtml(cleanTitle)}</span>`;
+    bc.style.display = '';
+  } else {
+    bc.style.display = 'none';
+  }
 }
 // Renders a segmented "List · Board · Gantt" switcher with the active view highlighted
+// View descriptions — used in tooltips and as subtitles to clarify each view's purpose
+const VIEW_DESCRIPTIONS = {
+  tasks:    'Detailed task editing and ownership',
+  kanban:   'Workflow status overview',
+  gantt:    'Planning, deadlines and dependencies',
+  timeline: 'Chronological project milestones',
+};
+
+/* ════════════════════════════════════════════════════════
+   NOTIFICATIONS — derived live from state, no separate storage.
+   IDs are deterministic (e.g. "overdue:42") so "read" persists across sessions.
+   ════════════════════════════════════════════════════════ */
+function computeNotifications(){
+  if(!currentUser) return [];
+  const notifs = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const me = currentUser.name;
+  // Tasks assigned to me OR I'm an admin → check all
+  const isAdmin = currentUser.role === 'admin';
+  const myTasks = state.tasks.filter(t => !t.parentTaskId && (isAdmin || t.assignee === me));
+  myTasks.forEach(t => {
+    if(t.status === 'done') return;
+    if(t.due){
+      const due = new Date(t.due); due.setHours(0,0,0,0);
+      const daysUntil = Math.round((due - today) / 86400000);
+      if(daysUntil < 0){
+        notifs.push({
+          id: `overdue:${t.id}`,
+          kind: 'overdue',
+          taskId: t.id,
+          projectId: t.projectId,
+          title: t.title || 'Untitled',
+          msg: `Overdue by ${Math.abs(daysUntil)} day${Math.abs(daysUntil)===1?'':'s'}`,
+          ts: due.getTime(),
+        });
+      } else if(daysUntil <= 3){
+        notifs.push({
+          id: `duesoon:${t.id}`,
+          kind: 'duesoon',
+          taskId: t.id,
+          projectId: t.projectId,
+          title: t.title || 'Untitled',
+          msg: daysUntil === 0 ? 'Due today' : `Due in ${daysUntil} day${daysUntil===1?'':'s'}`,
+          ts: due.getTime(),
+        });
+      }
+    }
+    // Blocked-by-dependencies (uses the dependencies field added in Batch 2; safe if undefined)
+    if(Array.isArray(t.dependencies) && t.dependencies.length){
+      const blockingOpen = t.dependencies
+        .map(did => state.tasks.find(x => x.id === did))
+        .filter(d => d && d.status !== 'done');
+      if(blockingOpen.length && t.status !== 'done'){
+        notifs.push({
+          id: `blocked:${t.id}`,
+          kind: 'blocked',
+          taskId: t.id,
+          projectId: t.projectId,
+          title: t.title || 'Untitled',
+          msg: `Blocked by ${blockingOpen.length} task${blockingOpen.length===1?'':'s'}`,
+          ts: Date.now(),
+        });
+      }
+    }
+  });
+  // Mentions in comments — match @firstname or @"Full Name"
+  const myFirst = (me.split(' ')[0] || '').toLowerCase();
+  state.tasks.forEach(t => {
+    (t.comments || []).forEach(c => {
+      if(!c.text || c.by === me) return;
+      const text = c.text.toLowerCase();
+      if(text.includes('@' + myFirst) || text.includes('@' + me.toLowerCase())){
+        notifs.push({
+          id: `mention:${c.id || c.at}:${t.id}`,
+          kind: 'mention',
+          taskId: t.id,
+          projectId: t.projectId,
+          title: t.title || 'Untitled',
+          msg: `${c.by || 'Someone'} mentioned you`,
+          ts: c.at ? new Date(c.at).getTime() : Date.now(),
+        });
+      }
+    });
+  });
+  notifs.sort((a, b) => b.ts - a.ts);
+  return notifs;
+}
+function notifIcon(kind){
+  return ({
+    overdue: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    duesoon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3 11h18"/></svg>',
+    blocked: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>',
+    mention: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>',
+  })[kind] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>';
+}
+function fmtRelativeTime(ts){
+  const diff = Date.now() - ts;
+  const m = Math.round(diff / 60000);
+  if(m < 1) return 'just now';
+  if(m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if(h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  if(d < 7) return `${d}d ago`;
+  return new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+}
+function unreadNotifCount(){
+  const all = computeNotifications();
+  const read = new Set(state.notifReadIds || []);
+  return all.filter(n => !read.has(n.id)).length;
+}
+function refreshNotifBadge(){
+  const badge = document.getElementById('notifBadge');
+  if(!badge) return;
+  const c = unreadNotifCount();
+  if(c > 0){
+    badge.textContent = c > 99 ? '99+' : String(c);
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+function openNotifPanel(){
+  const existing = document.getElementById('notifPanel');
+  if(existing){ closeNotifPanel(); return; }
+  const all = computeNotifications();
+  const read = new Set(state.notifReadIds || []);
+  const html = `<div class="notif-panel" id="notifPanel">
+    <div class="notif-head">
+      <span>Notifications</span>
+      <div style="display:flex;gap:6px">
+        <button class="notif-link" onclick="markAllNotifsRead()" ${all.length?'':'disabled'}>Mark all read</button>
+        <button class="notif-link" onclick="clearAllNotifs()" ${all.length?'':'disabled'}>Clear all</button>
+      </div>
+    </div>
+    <div class="notif-list">
+      ${all.length ? all.map(n => {
+        const isRead = read.has(n.id);
+        return `<div class="notif-item notif-${n.kind} ${isRead?'is-read':''}" data-nid="${escHtml(n.id)}" data-tid="${n.taskId}" data-pid="${n.projectId}">
+          <span class="notif-ico">${notifIcon(n.kind)}</span>
+          <div class="notif-body">
+            <div class="notif-title">${escHtml(n.title)}</div>
+            <div class="notif-msg">${escHtml(n.msg)}</div>
+          </div>
+          <span class="notif-time">${escHtml(fmtRelativeTime(n.ts))}</span>
+        </div>`;
+      }).join('') : '<div class="notif-empty">No notifications</div>'}
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  // Position panel below the bell button
+  const bell = document.getElementById('notifBellBtn');
+  const panel = document.getElementById('notifPanel');
+  if(bell && panel){
+    const r = bell.getBoundingClientRect();
+    panel.style.top = (r.bottom + 6) + 'px';
+    panel.style.right = (window.innerWidth - r.right) + 'px';
+  }
+  // Wire item clicks
+  panel.querySelectorAll('.notif-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const nid = el.dataset.nid;
+      const tid = Number(el.dataset.tid);
+      const pid = Number(el.dataset.pid);
+      // Switch to the right project if needed
+      if(pid && pid !== state.activeProject) selectProject(pid);
+      if(tid) openSidePanel(tid);
+      // Mark read
+      if(!state.notifReadIds.includes(nid)){
+        state.notifReadIds.push(nid);
+        saveState();
+      }
+      closeNotifPanel();
+    });
+  });
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', notifOutsideClick, true);
+  }, 0);
+}
+function notifOutsideClick(e){
+  const panel = document.getElementById('notifPanel');
+  const bell = document.getElementById('notifBellBtn');
+  if(!panel) return;
+  if(panel.contains(e.target) || (bell && bell.contains(e.target))) return;
+  closeNotifPanel();
+}
+function closeNotifPanel(){
+  const panel = document.getElementById('notifPanel');
+  if(panel) panel.remove();
+  document.removeEventListener('click', notifOutsideClick, true);
+}
+function markAllNotifsRead(){
+  const all = computeNotifications();
+  const ids = new Set(state.notifReadIds || []);
+  all.forEach(n => ids.add(n.id));
+  state.notifReadIds = [...ids];
+  saveState();
+  refreshNotifBadge();
+  closeNotifPanel();
+  toast('All notifications marked as read', 'success');
+}
+function clearAllNotifs(){
+  // "Clear" semantically = mark all read; we don't delete derived notifications
+  markAllNotifsRead();
+}
+
 function viewSwitcher(active){
   const opts = [
     { k: 'tasks',    label: 'List',     icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6"  r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>' },
@@ -2383,7 +2728,7 @@ function viewSwitcher(active){
     { k: 'timeline', label: 'Timeline', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18"/><circle cx="6"  cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg>' },
   ];
   return `<div class="view-switcher">
-    ${opts.map(o => `<button class="vs-btn ${active===o.k?'active':''}" onclick="setView('${o.k}')" title="${o.label} view">
+    ${opts.map(o => `<button class="vs-btn ${active===o.k?'active':''}" onclick="setView('${o.k}')" title="${o.label} \u2014 ${VIEW_DESCRIPTIONS[o.k]||''}">
       ${o.icon}<span>${o.label}</span>
     </button>`).join('')}
   </div>`;
@@ -2409,6 +2754,43 @@ function renderDashboard(){
   const doing   = parents.filter(t => t.status === 'doing').length;
   const todo    = parents.filter(t => t.status === 'todo' || !t.status).length;
   const pct     = parents.length ? Math.round(doneTasks / parents.length * 100) : 0;
+
+  // Project health score — derived from overdue, blocked, completion, overruns
+  const today = new Date(); today.setHours(0,0,0,0);
+  const overdueTasks = parents.filter(t => {
+    if(t.status === 'done' || !t.due) return false;
+    const d = new Date(t.due); d.setHours(0,0,0,0);
+    return d < today;
+  });
+  const overrunTasks = parents.filter(t => {
+    const est = Number(t.estimate) || 0;
+    if(!est) return false;
+    const logged = logs.filter(l => l.taskId === t.id).reduce((s,l) => s + (Number(l.hours)||0), 0);
+    return logged > est * 1.2; // 20% overrun threshold
+  });
+  const dueSoon = parents.filter(t => {
+    if(t.status === 'done' || !t.due) return false;
+    const d = new Date(t.due); d.setHours(0,0,0,0);
+    const days = Math.round((d - today) / 86400000);
+    return days >= 0 && days <= 7;
+  });
+  // Score: start at 100, deduct for issues
+  let healthScore = 100;
+  healthScore -= overdueTasks.length * 8;
+  healthScore -= blockedTasks * 6;
+  healthScore -= overrunTasks.length * 4;
+  if(parents.length > 0 && pct < 20 && parents.length > 5) healthScore -= 10; // very early stage with many tasks → some risk
+  healthScore = Math.max(0, Math.min(100, healthScore));
+  const healthStatus = healthScore >= 75 ? 'healthy' : healthScore >= 50 ? 'at-risk' : 'critical';
+  const healthLabel = healthStatus === 'healthy' ? 'Healthy' : healthStatus === 'at-risk' ? 'At risk' : 'Critical';
+  const healthReasons = [];
+  if(overdueTasks.length) healthReasons.push(`${overdueTasks.length} overdue task${overdueTasks.length===1?'':'s'}`);
+  if(blockedTasks) healthReasons.push(`${blockedTasks} blocked task${blockedTasks===1?'':'s'}`);
+  if(overrunTasks.length) healthReasons.push(`${overrunTasks.length} estimate overrun${overrunTasks.length===1?'':'s'}`);
+  if(dueSoon.length && healthReasons.length < 2) healthReasons.push(`${dueSoon.length} due this week`);
+  if(!healthReasons.length){
+    healthReasons.push(parents.length ? 'On track' : 'No tasks yet');
+  }
 
   setTopbar(
     `Welcome back, <em>${escHtml(currentUser.name.split(' ')[0])}.</em>`,
@@ -2564,6 +2946,20 @@ function renderDashboard(){
         <div class="stat-sub">${doneTasks} of ${parents.length} tasks done</div>
       </div>
 
+      <div class="card card-health health-${healthStatus}" style="grid-column:span 12">
+        <div class="health-head">
+          <div class="health-status">
+            <span class="health-dot"></span>
+            <span class="health-label">Project health</span>
+          </div>
+          <span class="health-pill">${healthLabel}</span>
+        </div>
+        <div class="health-row">
+          <div class="health-score">${healthScore}<span class="health-score-max">/100</span></div>
+          <div class="health-reasons">${healthReasons.map(r => `<span class="health-reason">${escHtml(r)}</span>`).join('')}</div>
+        </div>
+      </div>
+
       <div class="card card-chart">
         <div class="chart-head">
           <div><h3>Hours by teammate</h3><p>Across this project · ${totalH.toFixed(1)}h total</p></div>
@@ -2673,7 +3069,9 @@ function renderWorkView(opts){
   const parents = tasks.filter(t => !t.parentTaskId);
 
   const title = opts.title || 'Tasks';
-  const sub = opts.sub || `${parents.length} task${parents.length===1?'':'s'} across ${workItems.length} parent${workItems.length===1?'':'s'}`;
+  const baseSub = opts.sub || `${parents.length} task${parents.length===1?'':'s'} across ${workItems.length} parent${workItems.length===1?'':'s'}`;
+  // Prefix with view description only on the generic Tasks view (not when filtered to interfaces/workitems)
+  const sub = opts.kindFilter ? baseSub : `${VIEW_DESCRIPTIONS.tasks} · ${baseSub}`;
 
   const canWrite = canWriteView(opts.kindFilter === 'interface' ? 'interfaces' : opts.kindFilter === 'work' ? 'workitems' : 'tasks');
   const actions = `
@@ -4160,7 +4558,7 @@ function renderGantt(){
   const allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
   const canWrite = canWriteView('tasks');
 
-  setTopbar('Gantt', `${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
+  setTopbar('Gantt', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
     `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
      ${viewSwitcher('gantt')}`);
 
@@ -4958,7 +5356,7 @@ function renderTimeline(){
   const allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
   const canWrite = canWriteView('tasks');
 
-  setTopbar('Timeline', `${allTasks.length} task${allTasks.length===1?'':'s'} along the project timeline`,
+  setTopbar('Timeline', `${VIEW_DESCRIPTIONS.timeline} · ${allTasks.length} task${allTasks.length===1?'':'s'}`,
     `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
      ${viewSwitcher('timeline')}`);
 
@@ -5200,7 +5598,7 @@ function renderKanban(){
   const tasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
 
   const canWrite = canWriteView('tasks');
-  setTopbar('Board', `${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
+  setTopbar('Board', `${VIEW_DESCRIPTIONS.kanban} · ${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
     `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
      ${viewSwitcher('kanban')}`);
 
