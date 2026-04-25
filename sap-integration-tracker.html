@@ -765,9 +765,22 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 /* Task row left columns */
 .gantt-task-cell{
   font-size:12.5px;cursor:pointer;background:var(--surface);transition:.1s;color:var(--text);
+  display:flex;align-items:center;gap:8px;
 }
 .gantt-task-cell:hover{background:var(--surface-2);}
-.gantt-task-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gantt-task-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+
+/* Drag handle in Gantt task cell */
+.gantt-row-handle{
+  color:var(--text-muted);opacity:.45;font-size:13px;line-height:1;
+  cursor:grab;transition:opacity .12s, color .12s, background .12s;user-select:none;
+  padding:2px 3px;border-radius:3px;flex-shrink:0;
+}
+.gantt-row:hover .gantt-row-handle{opacity:.85;color:var(--text);}
+.gantt-row-handle:hover{opacity:1;color:var(--accent);background:var(--surface-2);}
+.gantt-row-handle:active{cursor:grabbing;}
+.gantt-row-handle.dragging{opacity:.4;}
+.gantt-row.row-dragging{opacity:.5;}
 
 /* Assignee button */
 .gantt-as-btn{
@@ -4020,6 +4033,7 @@ function renderGantt(){
       });
       return `<div class="gantt-row" data-phase="${phk||'_none'}" data-row-idx="${rowIdx}">
         <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
+          ${canWrite?`<span class="gantt-row-handle" data-drag-tid="${b.task.id}" draggable="true" title="Drag to change phase">⋮⋮</span>`:''}
           <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
         </div>
         ${renderAssigneeCell(b.task)}
@@ -4081,32 +4095,41 @@ function renderGantt(){
     }
     // Bar / task name click → open side panel (but only if it wasn't a drag)
     const cell = e.target.closest('[data-tid]');
-    if(cell && !cell.dataset.dragJustEnded){
+    if(cell && !cell.dataset.dragJustEnded && !e.target.closest('[data-drag-just-ended],[data-drag-tid].dragging')){
+      // Also check if the actual element clicked has dragJustEnded (could be a handle)
+      const justDragged = e.target.closest('[data-drag-tid]');
+      if(justDragged && justDragged.dataset.dragJustEnded) return;
       openSidePanel(Number(cell.dataset.tid));
     }
   };
 
-  // Drag-and-drop: bars can be moved between phase rows to change phase
+  // Drag-and-drop: bars OR row handles can be moved between phase rows to change phase
   if(canWrite){
     let draggedTid = null;
-    let dragJustEnded = false;
-    cont.querySelectorAll('.gantt-bar[draggable="true"]').forEach(bar => {
-      bar.addEventListener('dragstart', e => {
-        draggedTid = Number(bar.dataset.tid);
-        bar.classList.add('dragging');
+    const wireDrag = (el) => {
+      el.addEventListener('dragstart', e => {
+        draggedTid = Number(el.dataset.tid || el.dataset.dragTid);
+        el.classList.add('dragging');
+        // Also dim the entire row for visual feedback when dragging from the handle
+        const row = el.closest('.gantt-row');
+        if(row) row.classList.add('row-dragging');
         hideGanttTooltip();
         try { e.dataTransfer.setData('text/plain', String(draggedTid)); } catch(_) {}
         e.dataTransfer.effectAllowed = 'move';
       });
-      bar.addEventListener('dragend', () => {
-        bar.classList.remove('dragging');
-        cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
+      el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+        const row = el.closest('.gantt-row');
+        if(row) row.classList.remove('row-dragging');
+        cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(p => p.classList.remove('drop-target'));
         // Suppress the click that fires after dragend so we don't open the side panel
-        bar.dataset.dragJustEnded = '1';
-        setTimeout(() => { delete bar.dataset.dragJustEnded; }, 50);
+        el.dataset.dragJustEnded = '1';
+        setTimeout(() => { delete el.dataset.dragJustEnded; }, 50);
         draggedTid = null;
       });
-    });
+    };
+    cont.querySelectorAll('.gantt-bar[draggable="true"]').forEach(wireDrag);
+    cont.querySelectorAll('.gantt-row-handle[draggable="true"]').forEach(wireDrag);
 
     cont.addEventListener('dragover', e => {
       if(draggedTid === null) return;
