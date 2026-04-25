@@ -284,12 +284,16 @@ input,select,textarea{font-family:inherit;}
 .greeting-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
+/* Fixed view-switcher slot in topbar — sits between actions and the bell */
+.topbar-viewswitcher{display:flex;align-items:center;flex-shrink:0;}
+.topbar-viewswitcher:empty{display:none;}
+
 /* Notification bell + panel */
 .notif-bell{
   position:relative;width:36px;height:36px;flex-shrink:0;
   border:1px solid var(--border);background:var(--surface);color:var(--text-muted);
   border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
-  transition:.12s;margin-left:6px;
+  transition:.12s;
 }
 .notif-bell:hover{color:var(--text);border-color:var(--border-strong);background:var(--surface-2);}
 .notif-bell svg{pointer-events:none;}
@@ -1922,6 +1926,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
         <div class="greeting-sub" id="topbarSub">—</div>
       </div>
       <div class="topbar-right" id="topbarActions"></div>
+      <div class="topbar-viewswitcher" id="topbarViewSwitcher"></div>
       <button id="notifBellBtn" class="notif-bell" onclick="openNotifPanel()" title="Notifications">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span id="notifBadge" class="notif-badge" style="display:none">0</span>
@@ -2460,6 +2465,7 @@ function renderAll(){
   renderProjectList();
   renderNav();
   refreshNotifBadge();
+  refreshTopbarViewSwitcher();
   const content = document.getElementById('content');
   const v = state.activeView;
   if(!state.activeProject && v !== 'users' && v !== 'templates'){
@@ -2734,7 +2740,22 @@ function viewSwitcher(active){
   </div>`;
 }
 
-/* Real implementations below */
+// Refresh the fixed view-switcher slot in the topbar. Shown only for project-scoped task views
+// (tasks/kanban/gantt/timeline). Stays in a fixed position (right of actions, left of the bell)
+// regardless of the active view, so the buttons don't visually shift when switching views.
+function refreshTopbarViewSwitcher(){
+  const slot = document.getElementById('topbarViewSwitcher');
+  if(!slot) return;
+  const v = state.activeView;
+  const taskViews = ['tasks', 'kanban', 'gantt', 'timeline'];
+  if(state.activeProject && taskViews.includes(v)){
+    slot.innerHTML = viewSwitcher(v);
+    slot.style.display = '';
+  } else {
+    slot.innerHTML = '';
+    slot.style.display = 'none';
+  }
+}
 
 /* ════════════════════════════════════════════════════════
    DASHBOARD
@@ -3077,8 +3098,7 @@ function renderWorkView(opts){
   const actions = `
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
-    <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
-    ${viewSwitcher('tasks')}`;
+    <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`;
   setTopbar(title, sub, actions);
 
   const groupByLabel = opts.kindFilter === 'interface' ? 'By interface'
@@ -4559,8 +4579,7 @@ function renderGantt(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Gantt', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
-     ${viewSwitcher('gantt')}`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
 
   const content = document.getElementById('content');
   if(!allTasks.length){
@@ -5357,8 +5376,7 @@ function renderTimeline(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Timeline', `${VIEW_DESCRIPTIONS.timeline} · ${allTasks.length} task${allTasks.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
-     ${viewSwitcher('timeline')}`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
 
   const content = document.getElementById('content');
   if(!allTasks.length){
@@ -5599,8 +5617,7 @@ function renderKanban(){
 
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${VIEW_DESCRIPTIONS.kanban} · ${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>
-     ${viewSwitcher('kanban')}`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
 
   const colBy = kanbanViewState.columnBy;
   let cols;
