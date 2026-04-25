@@ -725,7 +725,38 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   position:absolute;top:8px;height:26px;border-radius:8px;
   background:color-mix(in srgb, var(--phase-color) 15%, transparent);
   border:1.5px solid var(--phase-color);
+  transition:background .15s, box-shadow .15s;
 }
+/* Drop target highlight when dragging a bar over a phase */
+.gantt-phase-row.drop-target .gantt-phase-band{
+  background:color-mix(in srgb, var(--phase-color) 28%, transparent);
+  box-shadow:0 0 0 2px var(--phase-color), 0 4px 14px color-mix(in srgb, var(--phase-color) 35%, transparent);
+}
+.gantt-phase-row.drop-target{
+  background:color-mix(in srgb, var(--phase-color) 8%, var(--surface-2));
+}
+/* Bar in dragging state */
+.gantt-bar.dragging{
+  opacity:.45;cursor:grabbing;
+}
+.gantt-bar[draggable="true"]{cursor:grab;}
+.gantt-bar[draggable="true"]:active{cursor:grabbing;}
+
+/* Custom Gantt tooltip — appears instantly on hover */
+.gantt-tooltip{
+  position:fixed;z-index:1000;pointer-events:none;
+  transform:translate(-50%, -100%);
+  background:var(--text);color:var(--surface);
+  padding:8px 12px;border-radius:8px;
+  font-size:12px;line-height:1.45;
+  box-shadow:0 6px 24px rgba(0,0,0,.18);
+  opacity:0;transition:opacity .08s;
+  max-width:280px;white-space:normal;
+}
+.gantt-tooltip.gtt-visible{opacity:1;}
+.gantt-tooltip .gtt-title{font-weight:600;margin-bottom:3px;font-size:12.5px;}
+.gantt-tooltip .gtt-row{font-family:var(--mono);font-size:11px;}
+.gantt-tooltip .gtt-muted{opacity:.65;}
 
 /* Task row left columns */
 .gantt-task-cell{
@@ -3914,7 +3945,7 @@ function renderGantt(){
     const phStartOffset = Math.round((phStart - minDate) / 86400000) * dayPx;
     const phEndOffset = Math.round((phEnd - minDate) / 86400000) * dayPx + dayPx;
     const phWidth = Math.max(dayPx, phEndOffset - phStartOffset);
-    const phHeader = `<div class="gantt-phase-row" style="--phase-color:${def.color};--phase-soft:${def.soft};--phase-deep:${def.deep}">
+    const phHeader = `<div class="gantt-phase-row" data-phase="${phk||'_none'}" style="--phase-color:${def.color};--phase-soft:${def.soft};--phase-deep:${def.deep}">
       <div class="gantt-side-cell gantt-phase-name">
         <span class="gantt-phase-dot"></span>
         <div style="display:flex;flex-direction:column;min-width:0">
@@ -3942,15 +3973,21 @@ function renderGantt(){
       const durationStr = b.workDays === b.days
         ? `${b.days} day${b.days===1?'':'s'}`
         : `${b.workDays} work day${b.workDays===1?'':'s'} (${b.days} calendar)`;
-      const tooltip = `${escHtml(b.task.title)} · ${startStr} → ${endStr} · ${durationStr}${b.task.estimate?` · ${b.task.estimate}h`:''}`;
-      return `<div class="gantt-row" data-row-idx="${rowIdx}">
+      const tooltipData = JSON.stringify({
+        title: b.task.title || 'Untitled',
+        range: `${startStr} → ${endStr}`,
+        duration: durationStr,
+        estimate: b.task.estimate ? `${b.task.estimate}h estimate` : null,
+        phase: b.task.phase ? fmtPhase(b.task.phase) : null,
+      });
+      return `<div class="gantt-row" data-phase="${phk||'_none'}" data-row-idx="${rowIdx}">
         <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
           <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
         </div>
         ${renderAssigneeCell(b.task)}
         ${renderStatusCell(b.task)}
         <div class="gantt-track" style="width:${timelineWidth}px">
-          <div class="gantt-bar${overdueCls}" data-tid="${b.task.id}" style="left:${startOffset}px;width:${width}px;background:${phaseColor};" title="${escHtml(tooltip)}"></div>
+          <div class="gantt-bar${overdueCls}" data-tid="${b.task.id}" ${canWrite?'draggable="true"':''} style="left:${startOffset}px;width:${width}px;background:${phaseColor};" data-tooltip='${escHtml(tooltipData)}'></div>
         </div>
       </div>`;
     }).join('');
@@ -4004,12 +4041,120 @@ function renderGantt(){
       openRowStatusPopover(sBtn, Number(sBtn.dataset.popStatus));
       return;
     }
-    // Bar / task name click → open side panel
+    // Bar / task name click → open side panel (but only if it wasn't a drag)
     const cell = e.target.closest('[data-tid]');
-    if(cell){
+    if(cell && !cell.dataset.dragJustEnded){
       openSidePanel(Number(cell.dataset.tid));
     }
   };
+
+  // Drag-and-drop: bars can be moved between phase rows to change phase
+  if(canWrite){
+    let draggedTid = null;
+    let dragJustEnded = false;
+    cont.querySelectorAll('.gantt-bar[draggable="true"]').forEach(bar => {
+      bar.addEventListener('dragstart', e => {
+        draggedTid = Number(bar.dataset.tid);
+        bar.classList.add('dragging');
+        hideGanttTooltip();
+        try { e.dataTransfer.setData('text/plain', String(draggedTid)); } catch(_) {}
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      bar.addEventListener('dragend', () => {
+        bar.classList.remove('dragging');
+        cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
+        // Suppress the click that fires after dragend so we don't open the side panel
+        bar.dataset.dragJustEnded = '1';
+        setTimeout(() => { delete bar.dataset.dragJustEnded; }, 50);
+        draggedTid = null;
+      });
+    });
+
+    cont.addEventListener('dragover', e => {
+      if(draggedTid === null) return;
+      // Find target phase from either a phase-row or a task-row
+      const row = e.target.closest('[data-phase]');
+      if(!row) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      // Highlight the phase-row of that phase
+      cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
+      const targetPhase = row.dataset.phase;
+      const phaseHeader = cont.querySelector(`.gantt-phase-row[data-phase="${targetPhase}"]`);
+      if(phaseHeader) phaseHeader.classList.add('drop-target');
+    });
+
+    cont.addEventListener('dragleave', e => {
+      // Only clear when leaving the container entirely
+      if(e.target === cont || !cont.contains(e.relatedTarget)){
+        cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
+      }
+    });
+
+    cont.addEventListener('drop', e => {
+      if(draggedTid === null) return;
+      const row = e.target.closest('[data-phase]');
+      if(!row) return;
+      e.preventDefault();
+      const newPhase = row.dataset.phase === '_none' ? null : row.dataset.phase;
+      const t = state.tasks.find(x => x.id === draggedTid);
+      if(!t) return;
+      const oldPhase = t.phase || null;
+      if(oldPhase === newPhase) return;
+      // Update parent task + cascade to subtasks
+      t.phase = newPhase;
+      pushActivity(t, newPhase
+        ? `moved to ${fmtPhase(newPhase)} phase`
+        : `cleared phase (was ${fmtPhase(oldPhase)})`);
+      const subs = state.tasks.filter(s => s.parentTaskId === t.id);
+      subs.forEach(s => { s.phase = newPhase; });
+      saveState();
+      // If the side panel is open on this task, refresh it
+      if(typeof openPanelTaskId !== 'undefined' && openPanelTaskId === t.id) renderSidePanel();
+      renderGantt();
+    });
+  }
+
+  // Fast custom tooltip on bar hover (replaces native title which has ~700ms delay)
+  cont.querySelectorAll('.gantt-bar[data-tooltip]').forEach(bar => {
+    bar.addEventListener('mouseenter', e => showGanttTooltip(bar));
+    bar.addEventListener('mouseleave', e => hideGanttTooltip());
+    bar.addEventListener('mousemove', e => positionGanttTooltip(e));
+  });
+}
+
+let ganttTooltipEl = null;
+function showGanttTooltip(bar){
+  hideGanttTooltip();
+  let data;
+  try { data = JSON.parse(bar.dataset.tooltip); } catch(_) { return; }
+  const tt = document.createElement('div');
+  tt.className = 'gantt-tooltip';
+  tt.innerHTML = `
+    <div class="gtt-title">${escHtml(data.title)}</div>
+    <div class="gtt-row">${escHtml(data.range)}</div>
+    <div class="gtt-row gtt-muted">${escHtml(data.duration)}${data.estimate?` · ${escHtml(data.estimate)}`:''}</div>
+    ${data.phase?`<div class="gtt-row gtt-muted">Phase: ${escHtml(data.phase)}</div>`:''}
+  `;
+  document.body.appendChild(tt);
+  ganttTooltipEl = tt;
+  // Position near bar
+  const r = bar.getBoundingClientRect();
+  tt.style.left = (r.left + r.width / 2) + 'px';
+  tt.style.top  = (r.top - 8) + 'px';
+  // Adjust if off-screen
+  const tr = tt.getBoundingClientRect();
+  if(tr.left < 8) tt.style.left = '8px';
+  if(tr.right > window.innerWidth - 8) tt.style.left = (window.innerWidth - tr.width - 8) + 'px';
+  if(tr.top < 8) tt.style.top = (r.bottom + 8) + 'px';
+  // Re-set transform-origin for "above" vs "below" positioning
+  tt.classList.add('gtt-visible');
+}
+function positionGanttTooltip(e){
+  // Tooltip stays anchored to the bar; we don't need to follow the mouse here
+}
+function hideGanttTooltip(){
+  if(ganttTooltipEl){ ganttTooltipEl.remove(); ganttTooltipEl = null; }
 }
 
 function snapToMonday(d){
