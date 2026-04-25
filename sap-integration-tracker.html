@@ -282,14 +282,20 @@ input,select,textarea{font-family:inherit;}
 }
 .greeting em{font-style:normal;color:var(--accent);font-weight:600;}
 .greeting-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
-/* Per-view action buttons sit just after the left content; do NOT push the right cluster around */
-.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+/* Per-view action buttons sit immediately to the left of the view switcher, with a 5px gap.
+   justify-content:flex-end means all buttons cluster to the right of the slot, so the
+   primary "+ New task" button (always last) sits at the same x-position across views,
+   regardless of how many secondary buttons are present. */
+.topbar-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-shrink:0;margin-left:auto;margin-right:5px;}
 
 /* Fixed switcher + bell cluster, anchored to the right edge.
-   margin-left:auto on the switcher pushes the entire cluster (switcher + bell) to the right,
-   regardless of how wide the per-view actions to its left are. The 5px gap is set explicitly. */
-.topbar-viewswitcher{display:flex;align-items:center;flex-shrink:0;margin-left:auto;margin-right:5px;}
+   When the actions slot is empty, margin-left:auto on the switcher takes over so the cluster
+   still sits at the right. The 5px gap between switcher and bell is set explicitly. */
+.topbar-viewswitcher{display:flex;align-items:center;flex-shrink:0;margin-right:5px;}
 .topbar-viewswitcher:empty{display:none;}
+/* When actions are empty (rare), the switcher takes the auto-margin */
+.topbar-right:empty{margin-right:0;}
+.topbar-right:empty + .topbar-viewswitcher{margin-left:auto;}
 /* When switcher is hidden, the bell takes the auto-margin so it still sits at the right */
 .topbar-viewswitcher:empty + .notif-bell{margin-left:auto;}
 
@@ -3103,7 +3109,7 @@ function renderWorkView(opts){
   const actions = `
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
-    <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`;
+    <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`;
   setTopbar(title, sub, actions);
 
   const groupByLabel = opts.kindFilter === 'interface' ? 'By interface'
@@ -4584,7 +4590,7 @@ function renderGantt(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Gantt', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
   const content = document.getElementById('content');
   if(!allTasks.length){
@@ -5381,7 +5387,7 @@ function renderTimeline(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Timeline', `${VIEW_DESCRIPTIONS.timeline} · ${allTasks.length} task${allTasks.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
   const content = document.getElementById('content');
   if(!allTasks.length){
@@ -5622,7 +5628,7 @@ function renderKanban(){
 
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${VIEW_DESCRIPTIONS.kanban} · ${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
+    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
   const colBy = kanbanViewState.columnBy;
   let cols;
