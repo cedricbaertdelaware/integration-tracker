@@ -499,6 +499,38 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .color-opt{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.12s;}
 .color-opt:hover,.color-opt.selected{border-color:var(--text);transform:scale(1.1);}
 
+/* Phase planning modal */
+.phase-plan-grid{
+  display:flex;flex-direction:column;gap:6px;margin-bottom:8px;
+}
+.phase-plan-row{
+  display:flex;align-items:center;gap:14px;padding:10px 12px;
+  border:1px solid var(--border);border-radius:10px;background:var(--surface);
+}
+.phase-plan-row:hover{background:var(--surface-2);}
+.phase-plan-label{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.phase-plan-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  background:var(--phase-color);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--phase-color) 18%, transparent);
+}
+.phase-plan-name{font-size:13.5px;font-weight:600;color:var(--text);}
+.phase-plan-desc{font-size:11.5px;color:var(--text-muted);margin-top:1px;}
+.phase-plan-dates{display:flex;gap:10px;flex-shrink:0;}
+.phase-plan-dates label{
+  display:block;font:500 10px var(--mono);color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;
+}
+.phase-plan-dates input[type=date]{
+  padding:5px 8px;font-size:12.5px;border-radius:6px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+}
+.phase-plan-clear{
+  width:28px;height:28px;padding:0;flex-shrink:0;color:var(--text-muted);
+  border:1px solid transparent;
+}
+.phase-plan-clear:hover{color:var(--danger);background:var(--danger-soft);border-color:var(--danger);}
+
 /* ════════════════════════════════════════════════════════
    VIEW TOOLBAR (group/filter/search bar used by Tasks + others)
    ════════════════════════════════════════════════════════ */
@@ -778,6 +810,25 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .gantt-tooltip .gtt-title{font-weight:600;margin-bottom:3px;font-size:12.5px;}
 .gantt-tooltip .gtt-row{font-family:var(--mono);font-size:11px;}
 .gantt-tooltip .gtt-muted{opacity:.65;}
+.gantt-tooltip .gtt-warn{
+  margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.2);
+  color:#FFB97D;font-family:var(--sans);font-size:11px;
+}
+/* Out-of-phase task styling */
+.gantt-bar.gb-out-of-phase{
+  outline:2px dashed var(--warn);outline-offset:-2px;
+}
+.gantt-bar.gb-overdue.gb-out-of-phase{
+  outline:2px dashed var(--danger);
+}
+.gantt-warn-ico{
+  font-size:13px;color:var(--warn);flex-shrink:0;line-height:1;cursor:help;
+}
+.gantt-phase-band.configured{
+  background:color-mix(in srgb, var(--phase-color) 18%, transparent);
+  border-style:solid;
+  box-shadow:0 1px 4px color-mix(in srgb, var(--phase-color) 25%, transparent);
+}
 
 /* Task row left columns */
 .gantt-task-cell{
@@ -1703,6 +1754,25 @@ const PHASES = [
 const PHASE_KEYS = PHASES.map(p => p.k);
 function phaseDef(k){ return PHASES.find(p => p.k === k) || null; }
 function fmtPhase(k){ return phaseDef(k)?.label || '—'; }
+
+// Project phase planning — get configured start/end for a phase, or null if not set
+function getProjectPhase(projectId, phaseKey){
+  if(!phaseKey) return null;
+  const proj = state.projects.find(p => p.id === projectId);
+  if(!proj || !proj.phases || !proj.phases[phaseKey]) return null;
+  const p = proj.phases[phaseKey];
+  if(!p.start && !p.end) return null;
+  return { start: p.start || null, end: p.end || null };
+}
+// Check if a date falls within a phase's configured range. Returns 'in' | 'before' | 'after' | 'unset'.
+function checkDateInPhase(projectId, phaseKey, dateStr){
+  const range = getProjectPhase(projectId, phaseKey);
+  if(!range) return 'unset';
+  if(!dateStr) return 'unset';
+  if(range.start && dateStr < range.start) return 'before';
+  if(range.end && dateStr > range.end) return 'after';
+  return 'in';
+}
 
 /* ════════════════════════════════════════════════════════
    SVG ICONS — unified icon set, inherits color via currentColor
@@ -3817,10 +3887,14 @@ function openNewTaskModal(prefilledWorkItemId){
           </select></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>SAP Activate phase</label><select id="t-phase">
-            <option value="">— Not set —</option>
-            ${PHASES.map(p => `<option value="${p.k}">${p.label} — ${p.desc}</option>`).join('')}
-          </select></div>
+          <div class="form-group">
+            <label>SAP Activate phase</label>
+            <select id="t-phase">
+              <option value="">— Not set —</option>
+              ${PHASES.map(p => `<option value="${p.k}">${p.label} — ${p.desc}</option>`).join('')}
+            </select>
+            <div id="t-phase-hint" style="font-size:11.5px;color:var(--text-muted);margin-top:6px;display:none"></div>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Description</label><textarea id="t-desc" rows="3"></textarea></div>
@@ -3834,6 +3908,36 @@ function openNewTaskModal(prefilledWorkItemId){
   const o = document.getElementById('taskOverlay');
   requestAnimationFrame(() => o.classList.add('visible'));
   o.addEventListener('click', e => { if(e.target === o) closeTaskModal(); });
+
+  // Live phase hint: when a phase is selected, show its configured date range
+  const phaseSel = document.getElementById('t-phase');
+  const phaseHint = document.getElementById('t-phase-hint');
+  const dueInput = document.getElementById('t-due');
+  const updatePhaseHint = () => {
+    const k = phaseSel.value;
+    if(!k){ phaseHint.style.display = 'none'; return; }
+    const range = getProjectPhase(state.activeProject, k);
+    if(!range || (!range.start && !range.end)){
+      phaseHint.style.display = 'none';
+      return;
+    }
+    const label = fmtPhase(k);
+    const startStr = range.start ? fmtDate(range.start) : '…';
+    const endStr = range.end ? fmtDate(range.end) : '…';
+    // Check if currently entered due date is outside the range
+    const due = dueInput?.value;
+    let warn = '';
+    if(due && range.start && due < range.start) warn = ` <span style="color:var(--danger)">⚠ due date is before phase starts</span>`;
+    else if(due && range.end && due > range.end) warn = ` <span style="color:var(--danger)">⚠ due date is after phase ends</span>`;
+    phaseHint.innerHTML = `${escHtml(label)} phase: <b>${startStr} → ${endStr}</b>${warn}`;
+    phaseHint.style.display = '';
+  };
+  if(phaseSel){
+    phaseSel.addEventListener('change', updatePhaseHint);
+    updatePhaseHint();
+  }
+  if(dueInput) dueInput.addEventListener('change', updatePhaseHint);
+
   setTimeout(() => { const el = document.getElementById('t-title'); if(el) el.focus(); }, 50);
 }
 function closeTaskModal(){
@@ -3924,6 +4028,20 @@ function renderGantt(){
   // Span: pad before/after for breathing room, snap to Mondays
   let minDate = new Date(Math.min(...bars.map(b => b.start.getTime())));
   let maxDate = new Date(Math.max(...bars.map(b => b.end.getTime())));
+  // Include any configured project phase boundaries so they're visible even without tasks
+  PHASES.forEach(p => {
+    const range = getProjectPhase(state.activeProject, p.k);
+    if(range){
+      if(range.start){
+        const s = new Date(range.start);
+        if(!isNaN(s) && s < minDate) minDate = s;
+      }
+      if(range.end){
+        const e = new Date(range.end);
+        if(!isNaN(e) && e > maxDate) maxDate = e;
+      }
+    }
+  });
   if(today < minDate) minDate = new Date(today);
   if(today > maxDate) maxDate = new Date(today);
   minDate = snapToMonday(minDate);
@@ -4014,25 +4132,50 @@ function renderGantt(){
   let rowIdx = 0;
   const groupRows = phaseOrder.map(phk => {
     const phBars = byPhase.get(phk) || [];
-    if(!phBars.length) return '';
+    const projPhase = phk ? getProjectPhase(state.activeProject, phk) : null;
+    // Skip a phase if it has no tasks AND no project-level config — and it's not the "no phase" bucket
+    if(!phBars.length && !projPhase) return '';
+    // The "no phase" bucket only shows if it has tasks
+    if(phk === null && !phBars.length) return '';
     const def = phk ? phaseDef(phk) : { label:'No phase set', color:'#9aa39c', soft:'#F1EFE8', deep:'#5F5E5A', desc:'' };
-    const phStart = new Date(Math.min(...phBars.map(b => b.start.getTime())));
-    const phEnd = new Date(Math.max(...phBars.map(b => b.end.getTime())));
-    const phStartOffset = Math.round((phStart - minDate) / 86400000) * dayPx;
-    const phEndOffset = Math.round((phEnd - minDate) / 86400000) * dayPx + dayPx;
+
+    // Determine phase boundaries: project config takes priority, fallback to derived from tasks
+    let phStart, phEnd, isConfigured = false;
+    if(projPhase && projPhase.start && projPhase.end){
+      phStart = new Date(projPhase.start); phStart.setHours(0,0,0,0);
+      phEnd = new Date(projPhase.end); phEnd.setHours(0,0,0,0);
+      isConfigured = true;
+    } else if(phBars.length){
+      phStart = new Date(Math.min(...phBars.map(b => b.start.getTime())));
+      phEnd = new Date(Math.max(...phBars.map(b => b.end.getTime())));
+    } else {
+      // Has partial config (only start or only end) but no tasks — skip rendering band
+      phStart = phEnd = null;
+    }
+
+    const phStartOffset = phStart ? Math.round((phStart - minDate) / 86400000) * dayPx : 0;
+    const phEndOffset = phEnd ? Math.round((phEnd - minDate) / 86400000) * dayPx + dayPx : 0;
     const phWidth = Math.max(dayPx, phEndOffset - phStartOffset);
+    const taskCountStr = `${phBars.length} task${phBars.length===1?'':'s'}`;
+    const dateStr = phStart && phEnd
+      ? `${fmtDate(phStart.toISOString().slice(0,10))} → ${fmtDate(phEnd.toISOString().slice(0,10))}`
+      : '';
+    const metaStr = `${taskCountStr}${dateStr?' · ':''}${dateStr}${isConfigured?' · planned':''}`;
+    const bandHtml = phStart && phEnd
+      ? `<div class="gantt-phase-band${isConfigured?' configured':''}" style="left:${phStartOffset}px;width:${phWidth}px"></div>`
+      : '';
     const phHeader = `<div class="gantt-phase-row" data-phase="${phk||'_none'}" style="--phase-color:${def.color};--phase-soft:${def.soft};--phase-deep:${def.deep}">
       <div class="gantt-side-cell gantt-phase-name">
         <span class="gantt-phase-dot"></span>
         <div style="display:flex;flex-direction:column;min-width:0">
           <span class="gantt-phase-label">${escHtml(def.label)}</span>
-          <span class="gantt-phase-meta">${phBars.length} task${phBars.length===1?'':'s'} · ${fmtDate(phStart.toISOString().slice(0,10))} → ${fmtDate(phEnd.toISOString().slice(0,10))}</span>
+          <span class="gantt-phase-meta">${escHtml(metaStr)}</span>
         </div>
       </div>
       <div class="gantt-assignee-cell"></div>
       <div class="gantt-status-cell"></div>
       <div class="gantt-track gantt-phase-track" style="width:${timelineWidth}px">
-        <div class="gantt-phase-band" style="left:${phStartOffset}px;width:${phWidth}px"></div>
+        ${bandHtml}
       </div>
     </div>`;
 
@@ -4043,6 +4186,17 @@ function renderGantt(){
       const isOverdue = st !== 'done' && b.end < today;
       const overdueCls = isOverdue ? ' gb-overdue' : '';
       const phaseColor = b.task.phase ? phaseDef(b.task.phase)?.color : '#9aa39c';
+      // Check if task dates fall outside its configured phase range
+      const dueCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.task.due) : 'unset';
+      const startCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.start.toISOString().slice(0,10)) : 'unset';
+      const isOutOfPhase = (dueCheck === 'before' || dueCheck === 'after' || startCheck === 'before' || startCheck === 'after');
+      const outOfPhaseCls = isOutOfPhase ? ' gb-out-of-phase' : '';
+      let phaseWarning = null;
+      if(isOutOfPhase){
+        const range = getProjectPhase(b.task.projectId, b.task.phase);
+        const rangeStr = range ? `${range.start?fmtDate(range.start):'…'} → ${range.end?fmtDate(range.end):'…'}` : '';
+        phaseWarning = `Outside ${fmtPhase(b.task.phase)} phase (${rangeStr})`;
+      }
       rowIdx++;
       const startStr = fmtDate(b.start.toISOString().slice(0,10));
       const endStr = fmtDate(b.end.toISOString().slice(0,10));
@@ -4055,16 +4209,18 @@ function renderGantt(){
         duration: durationStr,
         estimate: b.task.estimate ? `${b.task.estimate}h estimate` : null,
         phase: b.task.phase ? fmtPhase(b.task.phase) : null,
+        warning: phaseWarning,
       });
       return `<div class="gantt-row" data-phase="${phk||'_none'}" data-row-idx="${rowIdx}">
         <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
           ${canWrite?`<span class="gantt-row-handle" data-drag-tid="${b.task.id}" draggable="true" title="Drag to change phase">⋮⋮</span>`:''}
           <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
+          ${isOutOfPhase?`<span class="gantt-warn-ico" title="${escHtml(phaseWarning||'')}">⚠</span>`:''}
         </div>
         ${renderAssigneeCell(b.task)}
         ${renderStatusCell(b.task)}
         <div class="gantt-track" style="width:${timelineWidth}px">
-          <div class="gantt-bar${overdueCls}" data-tid="${b.task.id}" ${canWrite?'draggable="true"':''} style="left:${startOffset}px;width:${width}px;background:${phaseColor};" data-tooltip='${escHtml(tooltipData)}'></div>
+          <div class="gantt-bar${overdueCls}${outOfPhaseCls}" data-tid="${b.task.id}" ${canWrite?'draggable="true"':''} style="left:${startOffset}px;width:${width}px;background:${phaseColor};" data-tooltip='${escHtml(tooltipData)}'></div>
         </div>
       </div>`;
     }).join('');
@@ -4078,6 +4234,7 @@ function renderGantt(){
         <button data-z="week" class="${zoom==='week'?'active':''}">Week</button>
         <button data-z="month" class="${zoom==='month'?'active':''}">Month</button>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="openPhasePlanningModal()" ${canWrite?'':'disabled style="opacity:.4"'}>⚙ Configure phases</button>
       ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a due date hidden</span>` : ''}
     </div>
     <div class="gantt-container" id="ganttContainer" style="--gantt-side-w:${ganttViewState.sideW}px">
@@ -4308,6 +4465,7 @@ function showGanttTooltip(bar){
     <div class="gtt-row">${escHtml(data.range)}</div>
     <div class="gtt-row gtt-muted">${escHtml(data.duration)}${data.estimate?` · ${escHtml(data.estimate)}`:''}</div>
     ${data.phase?`<div class="gtt-row gtt-muted">Phase: ${escHtml(data.phase)}</div>`:''}
+    ${data.warning?`<div class="gtt-row gtt-warn">⚠ ${escHtml(data.warning)}</div>`:''}
   `;
   document.body.appendChild(tt);
   ganttTooltipEl = tt;
@@ -4328,6 +4486,97 @@ function positionGanttTooltip(e){
 }
 function hideGanttTooltip(){
   if(ganttTooltipEl){ ganttTooltipEl.remove(); ganttTooltipEl = null; }
+}
+
+/* SAP Activate phase planning modal — sets project-level phase ranges */
+function openPhasePlanningModal(){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj){ toast('No active project', 'warning'); return; }
+  if(!canWriteView('tasks')){ toast('No permission', 'warning'); return; }
+  proj.phases = proj.phases || {};
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" id="phasePlanOverlay">
+      <div class="modal" style="max-width:680px">
+        <div class="modal-title">SAP Activate phase planning <button class="modal-close" onclick="closePhasePlanningModal()">×</button></div>
+        <p style="color:var(--text-muted);font-size:12.5px;margin:-6px 0 16px">Define the start and end date for each phase in <b>${escHtml(proj.name)}</b>. Tasks with due dates outside their phase will get a warning marker on the Gantt.</p>
+        <div class="phase-plan-grid">
+          ${PHASES.map(p => {
+            const cur = proj.phases[p.k] || {};
+            return `<div class="phase-plan-row" style="--phase-color:${p.color}">
+              <div class="phase-plan-label">
+                <span class="phase-plan-dot"></span>
+                <div>
+                  <div class="phase-plan-name">${p.label}</div>
+                  <div class="phase-plan-desc">${p.desc}</div>
+                </div>
+              </div>
+              <div class="phase-plan-dates">
+                <div>
+                  <label>Start</label>
+                  <input type="date" id="pp-${p.k}-start" value="${cur.start||''}"/>
+                </div>
+                <div>
+                  <label>End</label>
+                  <input type="date" id="pp-${p.k}-end" value="${cur.end||''}"/>
+                </div>
+              </div>
+              <button class="btn btn-ghost btn-sm phase-plan-clear" data-clear="${p.k}" title="Clear dates">${ICONS.close}</button>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="closePhasePlanningModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="savePhasePlanning()">Save</button>
+        </div>
+      </div>
+    </div>`;
+  const o = document.getElementById('phasePlanOverlay');
+  requestAnimationFrame(() => o.classList.add('visible'));
+  o.addEventListener('click', e => { if(e.target === o) closePhasePlanningModal(); });
+  // Wire clear buttons
+  o.querySelectorAll('[data-clear]').forEach(btn => {
+    btn.onclick = () => {
+      const k = btn.dataset.clear;
+      o.querySelector(`#pp-${k}-start`).value = '';
+      o.querySelector(`#pp-${k}-end`).value = '';
+    };
+  });
+}
+function closePhasePlanningModal(){
+  const o = document.getElementById('phasePlanOverlay');
+  if(!o) return;
+  o.classList.remove('visible');
+  setTimeout(() => document.getElementById('modalRoot').innerHTML = '', 180);
+}
+function savePhasePlanning(){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj) return;
+  proj.phases = proj.phases || {};
+  let chronologyWarning = false;
+  let lastEnd = null;
+  PHASES.forEach(p => {
+    const start = document.getElementById(`pp-${p.k}-start`)?.value || null;
+    const end = document.getElementById(`pp-${p.k}-end`)?.value || null;
+    if(start || end){
+      proj.phases[p.k] = { start, end };
+      // Check chronology: this phase's start should be >= previous phase's end
+      if(start && lastEnd && start < lastEnd) chronologyWarning = true;
+      if(end) lastEnd = end;
+    } else {
+      delete proj.phases[p.k];
+    }
+    // Validate: end >= start
+    if(start && end && end < start){
+      toast(`${p.label}: end date is before start date`, 'error');
+    }
+  });
+  saveState();
+  closePhasePlanningModal();
+  toast(chronologyWarning
+    ? 'Phase planning saved (note: phases overlap)'
+    : 'Phase planning saved', 'success');
+  if(state.activeView === 'gantt') renderGantt();
 }
 
 function snapToMonday(d){
