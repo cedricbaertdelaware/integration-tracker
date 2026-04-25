@@ -272,21 +272,26 @@ input,select,textarea{font-family:inherit;}
 
 /* Topbar */
 .topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  display:flex;align-items:center;gap:20px;
   padding:20px 28px 8px;flex-shrink:0;
 }
-.topbar-left{min-width:0;}
+.topbar-left{min-width:0;flex-shrink:0;}
 .greeting{
   font-family:var(--sans);font-size:24px;font-weight:600;line-height:1.2;letter-spacing:-.02em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .greeting em{font-style:normal;color:var(--accent);font-weight:600;}
 .greeting-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
+/* Per-view action buttons sit just after the left content; do NOT push the right cluster around */
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
-/* Fixed view-switcher slot in topbar — sits between actions and the bell */
-.topbar-viewswitcher{display:flex;align-items:center;flex-shrink:0;}
+/* Fixed switcher + bell cluster, anchored to the right edge.
+   margin-left:auto on the switcher pushes the entire cluster (switcher + bell) to the right,
+   regardless of how wide the per-view actions to its left are. The 5px gap is set explicitly. */
+.topbar-viewswitcher{display:flex;align-items:center;flex-shrink:0;margin-left:auto;margin-right:5px;}
 .topbar-viewswitcher:empty{display:none;}
+/* When switcher is hidden, the bell takes the auto-margin so it still sits at the right */
+.topbar-viewswitcher:empty + .notif-bell{margin-left:auto;}
 
 /* Notification bell + panel */
 .notif-bell{
