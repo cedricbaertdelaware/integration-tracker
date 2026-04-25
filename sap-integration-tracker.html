@@ -678,7 +678,24 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   flex-shrink:0;padding:8px 14px;border-right:1px solid var(--border);background:inherit;
   position:sticky;left:0;z-index:2;display:flex;align-items:center;
 }
-.gantt-side-head{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);}
+.gantt-side-head{
+  font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);
+  position:sticky;
+}
+.gantt-side-head{position:relative;}
+
+/* Column resizer — sits on the right border of the Phase/Task header */
+.gantt-col-resizer{
+  position:absolute;top:0;bottom:0;right:-4px;width:8px;
+  cursor:col-resize;z-index:6;
+  background:transparent;transition:background .12s;
+}
+.gantt-col-resizer:hover,.gantt-col-resizer.resizing{
+  background:color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.gantt-container.resizing-col,.gantt-container.resizing-col *{
+  cursor:col-resize !important;user-select:none;
+}
 .gantt-assignee-cell{
   width:var(--gantt-assignee-w);min-width:var(--gantt-assignee-w);max-width:var(--gantt-assignee-w);
   flex-shrink:0;padding:6px 10px;border-right:1px solid var(--border);background:inherit;
@@ -781,6 +798,8 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .gantt-row-handle:active{cursor:grabbing;}
 .gantt-row-handle.dragging{opacity:.4;}
 .gantt-row.row-dragging{opacity:.5;}
+.gantt-row.drop-before{box-shadow:inset 0 2px 0 0 var(--accent);}
+.gantt-row.drop-after{box-shadow:inset 0 -2px 0 0 var(--accent);}
 
 /* Assignee button */
 .gantt-as-btn{
@@ -2397,7 +2416,7 @@ function renderDashboard(){
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
 let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:false };
-let ganttViewState = { zoom:'week' };  // 'day' | 'week' | 'month'
+let ganttViewState = { zoom:'week', sideW:200 };  // 'day' | 'week' | 'month' + side column width in px
 let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 
 function renderTasks(){ renderWorkView({kindFilter: null}); }
@@ -3953,7 +3972,13 @@ function renderGantt(){
     if(!byPhase.has(ph)) byPhase.set(ph, []);
     byPhase.get(ph).push(b);
   });
-  byPhase.forEach(arr => arr.sort((a,b) => a.start - b.start));
+  // Sort tasks within each phase: manual order first (if set), then by start date as fallback
+  byPhase.forEach(arr => arr.sort((a, b) => {
+    const ao = typeof a.task.order === 'number' ? a.task.order : Number.MAX_SAFE_INTEGER;
+    const bo = typeof b.task.order === 'number' ? b.task.order : Number.MAX_SAFE_INTEGER;
+    if(ao !== bo) return ao - bo;
+    return a.start - b.start;
+  }));
   const phaseOrder = PHASES.map(p => p.k).concat([null]);
 
   // Helper to render an assignee cell: shows avatar+name as a button (popover trigger)
@@ -4055,9 +4080,12 @@ function renderGantt(){
       </div>
       ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a due date hidden</span>` : ''}
     </div>
-    <div class="gantt-container" id="ganttContainer">
+    <div class="gantt-container" id="ganttContainer" style="--gantt-side-w:${ganttViewState.sideW}px">
       <div class="gantt-header">
-        <div class="gantt-side-cell gantt-side-head">Phase / Task</div>
+        <div class="gantt-side-cell gantt-side-head">
+          <span>Phase / Task</span>
+          <span class="gantt-col-resizer" data-resize="side" title="Drag to resize"></span>
+        </div>
         <div class="gantt-assignee-cell gantt-side-head">Assignee</div>
         <div class="gantt-status-cell gantt-side-head">Status</div>
         <div class="gantt-timeline-head" style="width:${timelineWidth}px">
@@ -4078,6 +4106,32 @@ function renderGantt(){
     renderGantt();
   };
   const cont = document.getElementById('ganttContainer');
+
+  // Column resizer for Phase/Task column
+  const resizer = cont.querySelector('.gantt-col-resizer');
+  if(resizer){
+    resizer.addEventListener('mousedown', e => {
+      e.preventDefault();
+      resizer.classList.add('resizing');
+      cont.classList.add('resizing-col');
+      const startX = e.clientX;
+      const startW = ganttViewState.sideW;
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX;
+        const newW = Math.max(140, Math.min(500, startW + dx));
+        cont.style.setProperty('--gantt-side-w', newW + 'px');
+        ganttViewState.sideW = newW;
+      };
+      const onUp = () => {
+        resizer.classList.remove('resizing');
+        cont.classList.remove('resizing-col');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
   cont.onclick = e => {
     // Assignee popover
     const aBtn = e.target.closest('[data-pop-assignee]');
@@ -4133,44 +4187,102 @@ function renderGantt(){
 
     cont.addEventListener('dragover', e => {
       if(draggedTid === null) return;
-      // Find target phase from either a phase-row or a task-row
-      const row = e.target.closest('[data-phase]');
+      // Prefer a task-row (.gantt-row) for reorder; fall back to phase-row
+      const taskRow = e.target.closest('.gantt-row[data-phase]');
+      const phaseRow = e.target.closest('.gantt-phase-row[data-phase]');
+      const row = taskRow || phaseRow;
       if(!row) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      // Highlight the phase-row of that phase
+      // Always highlight the target phase
       cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
+      cont.querySelectorAll('.gantt-row.drop-before, .gantt-row.drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
       const targetPhase = row.dataset.phase;
       const phaseHeader = cont.querySelector(`.gantt-phase-row[data-phase="${targetPhase}"]`);
       if(phaseHeader) phaseHeader.classList.add('drop-target');
+      // If hovering over a task-row, show before/after indicator (skip if it's the dragged row itself)
+      if(taskRow){
+        const targetId = Number(taskRow.querySelector('[data-tid]')?.dataset.tid);
+        if(targetId !== draggedTid){
+          const rect = taskRow.getBoundingClientRect();
+          const above = (e.clientY - rect.top) < rect.height / 2;
+          taskRow.classList.add(above ? 'drop-before' : 'drop-after');
+        }
+      }
     });
 
     cont.addEventListener('dragleave', e => {
-      // Only clear when leaving the container entirely
       if(e.target === cont || !cont.contains(e.relatedTarget)){
         cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
+        cont.querySelectorAll('.gantt-row.drop-before, .gantt-row.drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
       }
     });
 
     cont.addEventListener('drop', e => {
       if(draggedTid === null) return;
-      const row = e.target.closest('[data-phase]');
+      const taskRow = e.target.closest('.gantt-row[data-phase]');
+      const phaseRow = e.target.closest('.gantt-phase-row[data-phase]');
+      const row = taskRow || phaseRow;
       if(!row) return;
       e.preventDefault();
       const newPhase = row.dataset.phase === '_none' ? null : row.dataset.phase;
       const t = state.tasks.find(x => x.id === draggedTid);
       if(!t) return;
       const oldPhase = t.phase || null;
-      if(oldPhase === newPhase) return;
-      // Update parent task + cascade to subtasks
-      t.phase = newPhase;
-      pushActivity(t, newPhase
-        ? `moved to ${fmtPhase(newPhase)} phase`
-        : `cleared phase (was ${fmtPhase(oldPhase)})`);
-      const subs = state.tasks.filter(s => s.parentTaskId === t.id);
-      subs.forEach(s => { s.phase = newPhase; });
+      const phaseChanged = oldPhase !== newPhase;
+
+      // Determine drop position relative to a target task-row
+      let targetId = null, placeBefore = true;
+      if(taskRow){
+        targetId = Number(taskRow.querySelector('[data-tid]')?.dataset.tid);
+        if(targetId === draggedTid) targetId = null; // dropped on self
+        if(targetId){
+          const rect = taskRow.getBoundingClientRect();
+          placeBefore = (e.clientY - rect.top) < rect.height / 2;
+        }
+      }
+
+      // Apply phase change first (if any) — so siblings list is correct when reordering
+      if(phaseChanged){
+        t.phase = newPhase;
+        pushActivity(t, newPhase
+          ? `moved to ${fmtPhase(newPhase)} phase`
+          : `cleared phase (was ${fmtPhase(oldPhase)})`);
+        const subs = state.tasks.filter(s => s.parentTaskId === t.id);
+        subs.forEach(s => { s.phase = newPhase; });
+        // Reset order so it lands at the end of new phase by default
+        t.order = undefined;
+      }
+
+      // Apply reorder if there's a target task in the same (now updated) phase
+      if(targetId){
+        const targetTask = state.tasks.find(x => x.id === targetId);
+        if(targetTask && (targetTask.phase || null) === newPhase){
+          // Renumber all siblings in this phase
+          const siblings = state.tasks
+            .filter(s => s.projectId === t.projectId && (s.phase || null) === newPhase && !s.parentTaskId)
+            .sort((a, b) => {
+              const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+              const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+              if(ao !== bo) return ao - bo;
+              return (a.due || '').localeCompare(b.due || '');
+            });
+          // Remove dragged from siblings list, then re-insert at target position
+          const without = siblings.filter(s => s.id !== draggedTid);
+          const targetIdx = without.findIndex(s => s.id === targetId);
+          if(targetIdx >= 0){
+            const insertAt = placeBefore ? targetIdx : targetIdx + 1;
+            without.splice(insertAt, 0, t);
+            without.forEach((s, i) => { s.order = (i + 1) * 10; });
+            if(!phaseChanged) pushActivity(t, 'reordered');
+          }
+        }
+      } else if(!phaseChanged){
+        // Dropped on phase header without a specific target row → no-op (no phase change, no position change)
+        return;
+      }
+
       saveState();
-      // If the side panel is open on this task, refresh it
       if(typeof openPanelTaskId !== 'undefined' && openPanelTaskId === t.id) renderSidePanel();
       renderGantt();
     });
