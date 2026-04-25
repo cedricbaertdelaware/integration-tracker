@@ -555,6 +555,26 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .group-toggle button.active{background:var(--accent);color:#fff;}
 [data-theme="dark"] .group-toggle button.active{color:#0a120d;}
+
+/* View switcher — segmented control for List · Board · Gantt */
+.view-switcher{
+  display:inline-flex;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:3px;gap:1px;
+}
+.vs-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border:none;background:transparent;
+  font:500 12.5px var(--sans);color:var(--text-muted);
+  border-radius:7px;cursor:pointer;transition:.12s;
+  white-space:nowrap;
+}
+.vs-btn:hover:not(.active){color:var(--text);background:var(--surface-2);}
+.vs-btn.active{
+  background:var(--accent);color:#fff;
+  box-shadow:0 1px 2px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+[data-theme="dark"] .vs-btn.active{color:#0a120d;}
+.vs-btn svg{flex-shrink:0;}
 .vt-expand-toggle{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
 .vt-expand-toggle svg{flex-shrink:0;}
 .vt-search{
@@ -826,6 +846,20 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.2);
   color:#FFB97D;font-family:var(--sans);font-size:11px;
 }
+
+/* Reusable info tooltip — for ⓘ icons across the app */
+.info-tooltip{
+  position:fixed;z-index:9999;pointer-events:none;
+  transform:translate(-50%, -100%);
+  background:var(--text);color:var(--surface);
+  padding:9px 13px;border-radius:8px;
+  font-size:12.5px;line-height:1.5;
+  box-shadow:0 8px 28px rgba(0,0,0,.22);
+  opacity:0;transition:opacity .08s;
+  max-width:320px;white-space:normal;
+}
+.info-tooltip.visible{opacity:1;}
+.info-tooltip.flip-below{transform:translate(-50%, 0);}
 /* Out-of-phase task styling */
 .gantt-bar.gb-out-of-phase{
   outline:2px dashed var(--warn);outline-offset:-2px;
@@ -844,11 +878,20 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 
 /* WI code pill in task row (only shown in phase grouping) */
 .gantt-wi-pill{
-  display:inline-flex;align-items:center;flex-shrink:0;
-  font-family:var(--mono);font-size:10.5px;font-weight:500;
-  padding:1px 6px;border-radius:4px;letter-spacing:.02em;
+  display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
+  font-family:var(--sans);font-size:10.5px;font-weight:500;
+  padding:1px 7px;border-radius:4px;letter-spacing:.005em;
   background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);
+  max-width:240px;overflow:hidden;
+  cursor:help;
+}
+.gantt-wi-pill .wi-pill-code{
+  font-family:var(--mono);font-size:10px;flex-shrink:0;
   white-space:nowrap;
+}
+.gantt-wi-pill .wi-pill-sep{opacity:.45;flex-shrink:0;}
+.gantt-wi-pill .wi-pill-title{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
 }
 .gantt-wi-pill.kind-interface{
   background:var(--accent-soft);color:var(--accent-deep);border-color:transparent;
@@ -972,7 +1015,15 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .kb-card:active{cursor:grabbing;}
 .kb-card.dragging{opacity:.4;}
 .kb-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.kb-iface{font-family:var(--mono);font-size:10.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kb-iface{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;color:var(--text-muted);min-width:0;flex:1;cursor:help;
+}
+.kb-iface-code{font-family:var(--mono);flex-shrink:0;white-space:nowrap;}
+.kb-iface-sep{opacity:.45;flex-shrink:0;}
+.kb-iface-title{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
 .kb-card-title{font-size:13px;font-weight:500;line-height:1.35;}
 .kb-card-bot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;}
 .kb-meta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted);font-family:var(--mono);}
@@ -2259,6 +2310,19 @@ function setTopbar(title, sub, actions){
   document.getElementById('topbarSub').textContent = sub || '';
   document.getElementById('topbarActions').innerHTML = actions || '';
 }
+// Renders a segmented "List · Board · Gantt" switcher with the active view highlighted
+function viewSwitcher(active){
+  const opts = [
+    { k: 'tasks',  label: 'List',  icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6"  r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>' },
+    { k: 'kanban', label: 'Board', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="3" width="6" height="14" rx="1"/><rect x="11" y="3" width="6" height="9"  rx="1"/><rect x="19" y="3" width="2" height="6"  rx="1"/></svg>' },
+    { k: 'gantt',  label: 'Gantt', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="5"  width="9" height="3" rx="1"/><rect x="7"  y="11" width="11" height="3" rx="1"/><rect x="5"  y="17" width="8"  height="3" rx="1"/></svg>' },
+  ];
+  return `<div class="view-switcher">
+    ${opts.map(o => `<button class="vs-btn ${active===o.k?'active':''}" onclick="setView('${o.k}')" title="${o.label} view">
+      ${o.icon}<span>${o.label}</span>
+    </button>`).join('')}
+  </div>`;
+}
 
 /* Real implementations below */
 
@@ -2548,10 +2612,9 @@ function renderWorkView(opts){
 
   const canWrite = canWriteView(opts.kindFilter === 'interface' ? 'interfaces' : opts.kindFilter === 'work' ? 'workitems' : 'tasks');
   const actions = `
+    ${viewSwitcher('tasks')}
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
-    <button class="btn btn-ghost btn-sm" onclick="setView('kanban')">Board view</button>
-    <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Gantt view</button>
     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`;
   setTopbar(title, sub, actions);
 
@@ -4029,8 +4092,7 @@ function renderGantt(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Gantt', `${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-ghost btn-sm" onclick="setView('tasks')">List view</button>
-     <button class="btn btn-ghost btn-sm" onclick="setView('kanban')">Board view</button>
+    `${viewSwitcher('gantt')}
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
 
   const content = document.getElementById('content');
@@ -4225,9 +4287,16 @@ function renderGantt(){
     });
     const wi = workItems.find(w => w.id === b.task.workItemId);
     // WI pill only shown in phase grouping (in workitem grouping the WI is the parent group)
-    const wiPill = (ganttViewState.groupBy === 'phase' && wi)
-      ? `<span class="gantt-wi-pill kind-${wi.kind}" title="${escHtml(wi.title || '')}">${escHtml(wi.code || '')}</span>`
-      : '';
+    let wiPill = '';
+    if(ganttViewState.groupBy === 'phase' && wi){
+      const fullTitle = wi.title || '';
+      const tipText = wi.code && fullTitle ? `${wi.code} · ${fullTitle}` : (wi.code || fullTitle);
+      wiPill = `<span class="gantt-wi-pill kind-${wi.kind}" title="${escHtml(tipText)}">`
+        + (wi.code ? `<span class="wi-pill-code">${escHtml(wi.code)}</span>` : '')
+        + (wi.code && fullTitle ? `<span class="wi-pill-sep">·</span>` : '')
+        + (fullTitle ? `<span class="wi-pill-title">${escHtml(fullTitle)}</span>` : '')
+        + `</span>`;
+    }
     // Group attribute changes meaning per mode
     const groupAttr = ganttViewState.groupBy === 'phase'
       ? `data-phase="${groupId||'_none'}"`
@@ -4658,6 +4727,63 @@ function hideGanttTooltip(){
   if(ganttTooltipEl){ ganttTooltipEl.remove(); ganttTooltipEl = null; }
 }
 
+/* Reusable info tooltip — shows the title attribute as a styled tooltip on hover.
+   Works for any element with class "info-tooltip-trigger" (or .phase-info-ico).
+   Uses delegated listeners on document so it works for elements rendered into modals. */
+let infoTooltipEl = null;
+function showInfoTooltip(target){
+  hideInfoTooltip();
+  // Pull the text from data-info first, then fall back to title
+  const text = target.dataset.info || target.getAttribute('title') || target.dataset.title;
+  if(!text) return;
+  // Stash native title to avoid double tooltip from the browser
+  if(target.hasAttribute('title')){
+    target.dataset.title = target.getAttribute('title');
+    target.removeAttribute('title');
+  }
+  const tt = document.createElement('div');
+  tt.className = 'info-tooltip';
+  tt.textContent = text;
+  document.body.appendChild(tt);
+  infoTooltipEl = tt;
+  // Position above the icon
+  const r = target.getBoundingClientRect();
+  tt.style.left = (r.left + r.width / 2) + 'px';
+  tt.style.top  = (r.top - 8) + 'px';
+  // Adjust if off-screen
+  const tr = tt.getBoundingClientRect();
+  if(tr.left < 8) tt.style.left = '8px';
+  if(tr.right > window.innerWidth - 8) tt.style.left = (window.innerWidth - tr.width - 8) + 'px';
+  if(tr.top < 8){
+    // Flip below the icon
+    tt.style.top = (r.bottom + 8) + 'px';
+    tt.classList.add('flip-below');
+  }
+  tt.classList.add('visible');
+}
+function hideInfoTooltip(){
+  if(infoTooltipEl){
+    // Restore native title we removed in showInfoTooltip (if any)
+    document.querySelectorAll('[data-title]').forEach(el => {
+      if(!el.hasAttribute('title')) el.setAttribute('title', el.dataset.title);
+    });
+    infoTooltipEl.remove();
+    infoTooltipEl = null;
+  }
+}
+// Set up delegated listeners once
+document.addEventListener('mouseover', e => {
+  const trigger = e.target.closest('.phase-info-ico, .info-tooltip-trigger, .gantt-warn-ico, .gantt-wi-pill');
+  if(trigger) showInfoTooltip(trigger);
+}, true);
+document.addEventListener('mouseout', e => {
+  const trigger = e.target.closest('.phase-info-ico, .info-tooltip-trigger, .gantt-warn-ico, .gantt-wi-pill');
+  if(trigger) hideInfoTooltip();
+}, true);
+// Hide on scroll/resize so it doesn't float orphaned
+window.addEventListener('scroll', () => hideInfoTooltip(), true);
+window.addEventListener('resize', () => hideInfoTooltip());
+
 /* SAP Activate phase planning modal — sets project-level phase ranges */
 function openPhasePlanningModal(){
   const proj = state.projects.find(p => p.id === state.activeProject);
@@ -4782,8 +4908,7 @@ function renderKanban(){
 
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-ghost btn-sm" onclick="setView('tasks')">List view</button>
-     <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Gantt view</button>
+    `${viewSwitcher('kanban')}
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ New task</button>`);
 
   const colBy = kanbanViewState.columnBy;
@@ -4811,7 +4936,9 @@ function renderKanban(){
       const dueColor = dueDays !== null && c.k !== 'done' ? (dueDays < 0 ? 'var(--danger)' : dueDays <= 3 ? 'var(--warn)' : 'var(--text-muted)') : 'var(--text-muted)';
       return `<div class="kb-card ${extraClass}" data-tid="${t.id}" draggable="true">
         <div class="kb-card-top">
-          <span class="kb-iface">${wi?escHtml(wi.code):''}</span>
+          <span class="kb-iface" title="${wi?escHtml((wi.code||'') + (wi.title?' · '+wi.title:'')):''}">
+            ${wi?`<span class="kb-iface-code">${escHtml(wi.code||'')}</span>${wi.code&&wi.title?'<span class="kb-iface-sep">·</span>':''}<span class="kb-iface-title">${escHtml(wi.title||'')}</span>`:''}
+          </span>
           <span class="chip chip-${prio==='high'?'danger':prio==='low'?'muted':'warn'}" style="padding:1px 7px;font-size:10px">${prio[0].toUpperCase()+prio.slice(1)}</span>
         </div>
         <div class="kb-card-title">${escHtml(t.title||'Untitled')}</div>
