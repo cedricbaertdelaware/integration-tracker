@@ -1800,11 +1800,28 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .sched-month-meta{
   font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:6px 0 14px;
 }
-/* Vertical bar chart for monthly distribution */
-.sched-bars{
-  background:var(--surface-2);border-radius:var(--radius);padding:18px 14px 12px;
+/* Two-column layout: bar chart + donut chart side by side */
+.sched-charts{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
   margin-top:6px;
 }
+@media (max-width: 880px){
+  .sched-charts{grid-template-columns:1fr;}
+}
+.sched-chart-card{
+  background:var(--surface-2);border-radius:var(--radius);
+  padding:14px 16px;
+  display:flex;flex-direction:column;
+}
+.sched-chart-card-title{
+  font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-muted);font-weight:600;font-family:var(--mono);
+  margin-bottom:10px;
+}
+.sched-chart-card-body{flex:1;display:flex;align-items:center;justify-content:center;}
+.sched-chart-card-body > *{width:100%;}
+
+/* Vertical bar chart */
 .sched-chart{
   width:100%;height:auto;display:block;
   font-family:var(--sans);
@@ -1822,18 +1839,92 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   cursor:pointer;transition:opacity .15s, transform .15s;
   transform-origin:center bottom;transform-box:fill-box;
 }
-.sched-chart-bar:hover{transform:translateY(-1px);}
-.sched-chart-bar:hover .sched-chart-rect{filter:brightness(1.06);}
+.sched-chart-bar:hover .sched-chart-rect{filter:brightness(1.08);}
 .sched-chart-rect{
   transition:filter .12s;
 }
 .sched-chart-value{
-  font-family:var(--mono);font-size:10.5px;font-weight:600;fill:var(--text);
+  font-family:var(--mono);font-size:10px;font-weight:600;fill:var(--text);
 }
 .sched-chart-label{
-  font-size:11.5px;fill:var(--text);font-weight:500;
-  dominant-baseline:central;
+  font-size:10.5px;fill:var(--text-muted);font-weight:500;
 }
+
+/* Top 3 podium — olympic-style ranking display */
+.sched-podium{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+  width:100%;height:280px;align-items:end;
+  padding:0 10px;
+}
+.sched-podium-col{
+  display:flex;flex-direction:column;align-items:center;
+  height:100%;justify-content:flex-end;min-width:0;
+}
+.sched-podium-empty{visibility:hidden;}
+.sched-podium-info{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  margin-bottom:10px;text-align:center;width:100%;
+}
+.sched-podium-medal{
+  --m:var(--text-dim);
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:12px;
+  background:color-mix(in srgb, var(--m) 14%, transparent);
+  border:1px solid color-mix(in srgb, var(--m) 40%, transparent);
+}
+.sched-podium-medal-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--m);
+  box-shadow:0 0 0 1.5px color-mix(in srgb, var(--m) 30%, transparent);
+}
+.sched-podium-medal-text{
+  font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.06em;
+  color:color-mix(in srgb, var(--m) 80%, var(--text));
+  text-transform:uppercase;
+}
+.sched-podium-name{
+  font-size:12.5px;font-weight:600;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  margin-top:2px;
+}
+.sched-podium-days{
+  font-family:var(--mono);font-size:10.5px;color:var(--text-muted);
+}
+.sched-podium-bar{
+  --cc:var(--accent);
+  width:80%;max-width:90px;border-radius:8px 8px 0 0;
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--cc) 75%, transparent) 0%,
+    var(--cc) 100%
+  );
+  border:1px solid color-mix(in srgb, var(--cc) 60%, transparent);
+  border-bottom:none;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding-top:14px;
+  position:relative;
+  box-shadow:0 -1px 0 0 color-mix(in srgb, var(--cc) 30%, transparent) inset;
+  transition:filter .12s, transform .12s;
+}
+.sched-podium-bar:hover{filter:brightness(1.06);}
+.sched-podium-rank{
+  font-family:var(--sans);font-size:32px;font-weight:700;
+  color:#fff;letter-spacing:-.03em;
+  text-shadow:0 1px 2px rgba(0,0,0,.18);
+  line-height:1;
+  /* Bigger # on the 1st place column */
+}
+.sched-podium-col[data-rank="1"] .sched-podium-rank{
+  font-size:42px;
+}
+.sched-podium-col[data-rank="1"] .sched-podium-bar{
+  /* The winner gets a slight gold glow accent */
+  box-shadow:
+    0 -1px 0 0 color-mix(in srgb, var(--cc) 30%, transparent) inset,
+    0 0 0 0 transparent;
+}
+.sched-podium-col[data-rank="1"] .sched-podium-name{
+  font-size:13.5px;
+}
+
 .sched-empty{color:var(--text-muted);font-size:13px;padding:10px 0;text-align:center;}
 
 /* ════════════════════════════════════════════════════════
@@ -6459,7 +6550,7 @@ function renderSchedule(){
   };
   const dayRow = SCHEDULE_DAYS.map(d => renderDayCell(d.key)).join('');
 
-  // ─── Month aggregate: vertical bar chart ───────────────────
+  // ─── Month aggregate: vertical bar chart + donut chart ─────
   const aggEntries = [...halvesByClient.entries()]
     .filter(([k]) => k !== '_unassigned')
     .map(([cid, halves]) => {
@@ -6481,27 +6572,23 @@ function renderSchedule(){
     });
   }
   const maxDays = Math.max(1, ...barEntries.map(e => e.days));
-  // Round chart Y-axis up to a clean tick (next integer for small values, or to nearest 5/10 for larger)
   const yMax = maxDays <= 5 ? Math.ceil(maxDays) : maxDays <= 12 ? Math.ceil(maxDays / 2) * 2 : Math.ceil(maxDays / 5) * 5;
-  // Generate Y ticks: 5 horizontal grid lines including 0 and yMax
   const yTickCount = 5;
   const yTicks = Array.from({ length: yTickCount }, (_, i) => (yMax * i / (yTickCount - 1)));
 
-  // Chart geometry (SVG viewBox-based for responsiveness)
-  const chartW = 720;
+  // Bar chart geometry — narrower now since it sits next to the donut
+  const chartW = 360;
   const chartH = 280;
-  const padTop = 24, padBottom = 56, padLeft = 36, padRight = 12;
+  const padTop = 22, padBottom = 56, padLeft = 32, padRight = 8;
   const plotW = chartW - padLeft - padRight;
   const plotH = chartH - padTop - padBottom;
   const barCount = barEntries.length || 1;
-  // Bar width: thin, with gap between
   const slotW = plotW / barCount;
-  const barW = Math.min(54, slotW * 0.55);
+  const barW = Math.min(36, slotW * 0.55);
 
-  const aggHtml = barEntries.length === 0
-    ? `<div class="sched-empty">No assignments yet. Fill in the week grid to see your monthly distribution.</div>`
+  const barChartHtml = barEntries.length === 0
+    ? `<div class="sched-empty">No assignments yet.</div>`
     : `<svg class="sched-chart" viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Monthly customer distribution bar chart">
-      <!-- Y-axis grid lines + labels -->
       ${yTicks.map(t => {
         const y = padTop + plotH - (t / yMax) * plotH;
         return `<g class="sched-chart-grid">
@@ -6509,19 +6596,17 @@ function renderSchedule(){
           <text x="${padLeft - 8}" y="${y}" text-anchor="end" dominant-baseline="middle" class="sched-chart-tick">${t % 1 === 0 ? t : t.toFixed(1)}</text>
         </g>`;
       }).join('')}
-      <!-- X-axis baseline -->
       <line x1="${padLeft}" y1="${padTop + plotH}" x2="${chartW - padRight}" y2="${padTop + plotH}" class="sched-chart-axis"/>
-
-      <!-- Bars -->
       ${barEntries.map((e, i) => {
         const cx = padLeft + slotW * (i + 0.5);
         const x = cx - barW / 2;
         const h = (e.days / yMax) * plotH;
         const y = padTop + plotH - h;
         const baseColor = e.isUnassigned ? 'var(--text-dim)' : e.client.color;
-        // Use SVG linear gradient: top is lighter, bottom is fuller
         const gradId = `schedGrad${i}`;
         const labelText = `${e.days % 1 === 0 ? e.days : e.days.toFixed(1)}d`;
+        // Truncate long names on the X-axis since space is now tight
+        const shortName = e.client.name.length > 8 ? e.client.name.slice(0, 7) + '…' : e.client.name;
         return `<g class="sched-chart-bar" data-cid="${e.isUnassigned ? '' : e.client.id}">
           <defs>
             <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
@@ -6529,16 +6614,61 @@ function renderSchedule(){
               <stop offset="100%" stop-color="${baseColor}" stop-opacity="${e.isUnassigned ? 0.55 : 1}"/>
             </linearGradient>
           </defs>
+          <title>${escHtml(e.client.name)}: ${labelText}</title>
           <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" ry="4" fill="url(#${gradId})" class="sched-chart-rect"/>
-          <text x="${cx}" y="${y - 8}" text-anchor="middle" class="sched-chart-value">${labelText}</text>
-          <!-- Customer name + dot below baseline -->
+          <text x="${cx}" y="${y - 6}" text-anchor="middle" class="sched-chart-value">${labelText}</text>
           <g transform="translate(${cx}, ${padTop + plotH + 18})">
-            <circle cx="-4" cy="-4" r="4" fill="${baseColor}" opacity="${e.isUnassigned ? 0.5 : 1}"/>
-            <text x="4" y="0" text-anchor="start" class="sched-chart-label">${escHtml(e.client.name)}</text>
+            <circle cx="0" cy="-3" r="3.5" fill="${baseColor}" opacity="${e.isUnassigned ? 0.5 : 1}"/>
+            <text x="0" y="11" text-anchor="middle" class="sched-chart-label">${escHtml(shortName)}</text>
           </g>
         </g>`;
       }).join('')}
     </svg>`;
+
+  // ─── Top 3 podium ───────────────────────────────────────────
+  // Olympic-style podium showing the three customers with the most days this month.
+  // 1st in the middle (tallest), 2nd left (medium), 3rd right (shortest).
+  // Heights are based on a fixed visual ratio rather than scaled to the data —
+  // ranking matters more than precise relative magnitude here, and it keeps the
+  // podium readable when one customer dominates.
+  const top3 = aggEntries.slice(0, 3);
+  let podiumHtml;
+  if(top3.length === 0){
+    podiumHtml = `<div class="sched-empty">Assign customers to see the top 3.</div>`;
+  } else {
+    const totalAssigned = aggEntries.reduce((s, e) => s + e.halves, 0);
+    // Layout positions: visual order is 2-1-3 left to right
+    const positions = [
+      { rank: 2, heightRatio: 0.72, medalColor: '#9aa1a8', medalLabel: '2nd', visualOrder: 0 }, // silver
+      { rank: 1, heightRatio: 1.0,  medalColor: '#d4a82a', medalLabel: '1st', visualOrder: 1 }, // gold
+      { rank: 3, heightRatio: 0.52, medalColor: '#b87333', medalLabel: '3rd', visualOrder: 2 }, // bronze
+    ];
+    // Build columns array indexed by visual order, mapping back to top3 by rank
+    const columns = positions.map(pos => {
+      const entry = top3[pos.rank - 1]; // top3[0] is rank 1, etc.
+      if(!entry) return null;
+      const days = entry.days;
+      const pct = totalAssigned > 0 ? (entry.halves / totalAssigned) * 100 : 0;
+      return { ...pos, entry, days, pct };
+    });
+    podiumHtml = `<div class="sched-podium">
+      ${columns.map(col => col ? `
+        <div class="sched-podium-col" data-rank="${col.rank}">
+          <div class="sched-podium-info">
+            <div class="sched-podium-medal" style="--m:${col.medalColor}">
+              <span class="sched-podium-medal-dot"></span>
+              <span class="sched-podium-medal-text">${col.medalLabel}</span>
+            </div>
+            <div class="sched-podium-name">${escHtml(col.entry.client.name)}</div>
+            <div class="sched-podium-days">${col.days % 1 === 0 ? col.days : col.days.toFixed(1)} day${col.days===1?'':'s'} · ${col.pct.toFixed(0)}%</div>
+          </div>
+          <div class="sched-podium-bar" style="height:${col.heightRatio * 100}%;--cc:${col.entry.client.color}">
+            <div class="sched-podium-rank">${col.rank}</div>
+          </div>
+        </div>
+      ` : '<div class="sched-podium-col sched-podium-empty"></div>').join('')}
+    </div>`;
+  }
 
   content.innerHTML = `
     <div class="sched-section">
@@ -6573,7 +6703,16 @@ function renderSchedule(){
         </div>
       </div>
       <div class="sched-month-meta">${totalHalves / 2} working days · ${SCHEDULE_DAYS.map(d => `${d.label.toLowerCase()} ×${wdCounts[d.key]}`).join(' · ')}</div>
-      <div class="sched-bars">${aggHtml}</div>
+      <div class="sched-charts">
+        <div class="sched-chart-card">
+          <div class="sched-chart-card-title">Days per customer</div>
+          <div class="sched-chart-card-body">${barChartHtml}</div>
+        </div>
+        <div class="sched-chart-card">
+          <div class="sched-chart-card-title">Top 3 customers</div>
+          <div class="sched-chart-card-body">${podiumHtml}</div>
+        </div>
+      </div>
     </div>`;
 }
 
