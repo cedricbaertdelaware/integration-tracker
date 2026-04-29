@@ -812,12 +812,12 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
    GANTT GRID — Rafael-style (table left + bars right)
    ════════════════════════════════════════════════════════ */
 .gg-container{
-  --gg-side-w:520px;
+  --gg-side-w:600px;
   --col-task:1.6fr;
-  --col-eff:54px;
-  --col-status:74px;
-  --col-prog:36px;
-  --col-date:78px;
+  --col-eff:50px;
+  --col-status:78px;
+  --col-prog:42px;
+  --col-date:110px;
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   overflow:auto;max-height:calc(100vh - 240px);
   position:relative;
@@ -845,8 +845,8 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .gg-h-eff{grid-column:3;text-align:right;}
 .gg-h-status{grid-column:4;}
 .gg-h-prog{grid-column:5;text-align:right;}
-.gg-h-date:nth-of-type(1){grid-column:6;}
-.gg-h-date:nth-last-of-type(1){grid-column:7;}
+.gg-h-start{grid-column:6;}
+.gg-h-end{grid-column:7;}
 
 .gg-row-handle{
   grid-column:1;justify-self:center;
@@ -869,41 +869,66 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .gg-cell-eff{grid-column:3;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
 .gg-cell-status{grid-column:4;}
 .gg-cell-prog{grid-column:5;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
-.gg-cell-date:nth-of-type(2){grid-column:6;}
-.gg-cell-date:nth-of-type(3){grid-column:7;}
-.gg-cell-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);}
+.gg-cell-start{grid-column:6;font-family:var(--mono);font-size:11px;color:var(--text-muted);}
+.gg-cell-end{grid-column:7;font-family:var(--mono);font-size:11px;color:var(--text-muted);}
 .gg-cell-milestone-mark{color:var(--accent);font-size:14px;text-align:center;}
 
-/* Inline editable cells — appear as plain text, get input chrome on focus/hover */
+/* ── Inline editable cells in the Gantt grid ──
+   Goal: cells are visually IDENTICAL to non-editable cells in their resting state.
+   No borders, no chrome, just plain text that happens to be editable.
+   Hover gives a faint background hint; focus only changes the background slightly. */
 .gg-cell-input{
-  border:1px solid transparent;background:transparent;
-  padding:4px 6px;margin:2px;border-radius:5px;
-  font-family:inherit;font-size:inherit;color:inherit;
-  width:calc(100% - 4px);min-width:0;outline:none;
-  transition:background .12s, border-color .12s;
+  border:none !important;background:transparent;
+  padding:6px 8px;margin:0;border-radius:5px;
+  font-family:inherit !important;font-size:12.5px !important;font-weight:inherit;line-height:inherit;
+  color:inherit;
+  width:100%;min-width:0;outline:none;box-sizing:border-box;
+  transition:background .12s;
+  cursor:text;
   -moz-appearance:textfield;
+  appearance:textfield;
+  -webkit-appearance:none;
 }
+/* Hide native number-input spinners */
 .gg-cell-input::-webkit-outer-spin-button,
 .gg-cell-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-.gg-cell-input:hover:not(:disabled){background:var(--surface);border-color:var(--border);}
-.gg-cell-input:focus:not(:disabled){background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
-.gg-cell-input:disabled{cursor:default;opacity:.7;}
-.gg-input-eff,.gg-input-prog{text-align:right;}
-.gg-input-start,.gg-input-end{font-family:var(--mono);font-size:11px;}
-/* Hide native date picker spinner clutter */
-.gg-input-start::-webkit-calendar-picker-indicator,
-.gg-input-end::-webkit-calendar-picker-indicator{opacity:.4;cursor:pointer;}
-.gg-input-start:hover::-webkit-calendar-picker-indicator,
-.gg-input-end:hover::-webkit-calendar-picker-indicator{opacity:.9;}
-
-/* Status button (popover trigger) — clickable chip */
-.gg-cell-btn{
-  border:none;background:transparent;padding:4px 6px;margin:2px;border-radius:5px;
-  cursor:pointer;text-align:left;
-  display:flex;align-items:center;
-  transition:background .12s;
+.gg-cell-input:hover:not(:disabled){background:var(--surface-3);}
+.gg-cell-input:focus:not(:disabled){
+  background:var(--surface);
 }
-.gg-cell-btn:hover:not(:disabled){background:var(--surface);}
+.gg-cell-input:disabled{cursor:default;opacity:.7;}
+
+/* Number-input cells: right-aligned, mono — match other mono cells exactly */
+.gg-input-eff,.gg-input-prog{text-align:right;font-family:var(--mono) !important;font-size:11.5px !important;}
+
+/* Date inputs: mono font matches the side-grid date columns */
+.gg-input-date{font-family:var(--mono) !important;font-size:11px !important;cursor:pointer;}
+/* Hide the native calendar icon — keep the cell as plain text only.
+   The whole cell is still clickable to open the picker via showPicker(). */
+.gg-input-date::-webkit-calendar-picker-indicator{
+  display:none;-webkit-appearance:none;appearance:none;
+}
+.gg-input-date::-webkit-inner-spin-button,
+.gg-input-date::-webkit-clear-button{display:none;}
+/* Remove the reserved padding/margin that Webkit gives the date-edit field by default,
+   otherwise the date text can be visually clipped on narrow cells. */
+.gg-input-date::-webkit-datetime-edit{padding:0;}
+.gg-input-date::-webkit-datetime-edit-fields-wrapper{padding:0;}
+.gg-input-date::-webkit-datetime-edit-text,
+.gg-input-date::-webkit-datetime-edit-month-field,
+.gg-input-date::-webkit-datetime-edit-day-field,
+.gg-input-date::-webkit-datetime-edit-year-field{padding:0;}
+
+/* Status button (popover trigger): same treatment as inputs */
+.gg-cell-btn{
+  border:none;background:transparent;
+  padding:6px 8px;margin:0;border-radius:5px;
+  cursor:pointer;text-align:left;
+  display:inline-flex;align-items:center;
+  transition:background .12s;
+  font-family:inherit;font-size:12.5px;color:inherit;outline:none;
+}
+.gg-cell-btn:hover:not(:disabled){background:var(--surface-3);}
 .gg-cell-btn:disabled{cursor:default;}
 
 /* Status chip in side grid */
@@ -981,21 +1006,17 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 /* Bars */
 .gg-bar{
   position:absolute;top:50%;transform:translateY(-50%);
-  height:14px;border-radius:4px;border:1px solid;
-  cursor:pointer;overflow:hidden;
+  height:18px;border-radius:4px;
+  cursor:pointer;
   transition:filter .12s, transform .12s;
   box-sizing:border-box;
 }
-.gg-bar:hover{filter:brightness(0.92);}
-.gg-bar.dragging{opacity:.5;}
-.gg-bar.gg-overdue{box-shadow:0 0 0 1px var(--danger);}
-.gg-bar-progress{
-  position:absolute;top:0;left:0;height:100%;
-  opacity:.55;pointer-events:none;
-}
+.gg-bar:hover{filter:brightness(0.9);}
+.gg-bar.dragging{opacity:.4 !important;}
+.gg-bar.gg-overdue{box-shadow:inset 0 0 0 1.5px var(--danger);}
 .gg-milestone{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:14px;height:14px;cursor:pointer;
+  width:18px;height:18px;cursor:pointer;background:transparent !important;
   display:flex;align-items:center;justify-content:center;
 }
 .gg-milestone:hover{filter:brightness(0.85);}
@@ -1897,7 +1918,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
       <div class="nav-label">Workspace</div>
       <nav class="nav" id="navPrimary">
         <a data-view="dashboard" class="active" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
-        <a data-view="tasks" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
+        <a data-view="gantt" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
         <a data-view="workitems" title="Work items"><span class="ico">◰</span><span>Work items</span> <span class="nav-count" id="navWorkCount">0</span></a>
         <a data-view="interfaces" title="Interfaces"><span class="ico">⇄</span><span>Interfaces</span> <span class="nav-count" id="navIfaceCount">0</span></a>
         <a data-view="timelog" title="Time log"><span class="ico">◷</span><span>Time log</span></a>
@@ -2219,7 +2240,12 @@ function ensureDefaults(){
     });
   }
 }
+// Preview mode flag — set to true when seed data is loaded (sandbox / Claude.ai preview).
+// While this is true, saveState() does nothing, so demo edits don't persist anywhere.
+let previewMode = false;
+
 function saveState(){
+  if(previewMode) return; // sandbox: never persist
   try{
     const clean = JSON.parse(JSON.stringify(state));
     delete clean.activeProject; delete clean.activeView;
@@ -2230,6 +2256,7 @@ function saveState(){
   }catch(e){ console.error('Save error', e); }
 }
 function startRealtimeSync(){
+  if(previewMode) return; // sandbox: no live updates
   if(!useFirebase) return;
   db.collection('appdata').doc('v2').onSnapshot(snap => {
     if(!snap.exists) return;
@@ -2391,7 +2418,9 @@ function bootApp(){
   if(!state.activeProject && state.projects.length) state.activeProject = state.projects[0].id;
   renderProjectList();
   renderNav();
-  setView('dashboard');
+  // Honor the seed-set activeView (if any) instead of forcing dashboard
+  const initialView = (previewMode && state.activeView) ? state.activeView : 'dashboard';
+  setView(initialView);
   startRealtimeSync();
   updateMobileMenuBtn();
 }
@@ -2467,7 +2496,15 @@ function setView(v){
   if(!canReadView(permKey)) v = 'dashboard';
   if(!canReadView('dashboard') && !canReadView(v)) v = ALL_VIEWS.find(canReadView);
   state.activeView = v;
-  document.querySelectorAll('.nav a[data-view]').forEach(a => a.classList.toggle('active', a.dataset.view === v));
+  // Sidebar active state: the "Tasks" link covers all task views (tasks/kanban/gantt/timeline);
+  // other links match their data-view exactly.
+  const taskViews = ['tasks', 'kanban', 'gantt', 'timeline'];
+  document.querySelectorAll('.nav a[data-view]').forEach(a => {
+    const linkView = a.dataset.view;
+    let isActive = linkView === v;
+    if(!isActive && taskViews.includes(linkView) && taskViews.includes(v)) isActive = true;
+    a.classList.toggle('active', isActive);
+  });
   renderAll();
   if(isMobileViewport()) closeMobileSidebar();
 }
@@ -2739,9 +2776,9 @@ function clearAllNotifs(){
 
 function viewSwitcher(active){
   const opts = [
+    { k: 'gantt',    label: 'Gantt',    icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="5"  width="9" height="3" rx="1"/><rect x="7"  y="11" width="11" height="3" rx="1"/><rect x="5"  y="17" width="8"  height="3" rx="1"/></svg>' },
     { k: 'tasks',    label: 'List',     icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6"  r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>' },
     { k: 'kanban',   label: 'Board',    icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="3" width="6" height="14" rx="1"/><rect x="11" y="3" width="6" height="9"  rx="1"/><rect x="19" y="3" width="2" height="6"  rx="1"/></svg>' },
-    { k: 'gantt',    label: 'Gantt',    icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="5"  width="9" height="3" rx="1"/><rect x="7"  y="11" width="11" height="3" rx="1"/><rect x="5"  y="17" width="8"  height="3" rx="1"/></svg>' },
     { k: 'timeline', label: 'Timeline', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18"/><circle cx="6"  cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg>' },
   ];
   return `<div class="view-switcher">
@@ -4785,8 +4822,8 @@ function renderGantt(){
     <div class="gg-h-eff">Effort</div>
     <div class="gg-h-status">Status</div>
     <div class="gg-h-prog">%</div>
-    <div class="gg-h-date">Start</div>
-    <div class="gg-h-date">End</div>`;
+    <div class="gg-h-start">Start</div>
+    <div class="gg-h-end">End</div>`;
 
   const groupRowsHtml = groups.map(g => {
     const collapsed = ganttViewState.collapsedGroups.has(g.key);
@@ -4821,9 +4858,10 @@ function renderGantt(){
       const endLabel = fmtDate(endStr);
       const overdue = !done && t.due && (new Date(t.due) < today);
 
-      // Bar geometry: split into per-week segments (Mon→Sun)
-      const barColor = statusBarColor(t.status);
-      const barFillColor = statusBarFill(t.status);
+      // Bar color comes from the PHASE (not status). Done tasks render with lower opacity.
+      const phaseObj = t.phase ? phaseDef(t.phase) : null;
+      const phaseColor = phaseObj ? phaseObj.color : '#9aa39c';
+      const barOpacity = done ? 0.45 : 1;
 
       // Tooltip
       const wi = workItems.find(w => w.id === t.workItemId);
@@ -4848,26 +4886,22 @@ function renderGantt(){
       let barEl;
       if(t.isMilestone){
         const barX = dayToX(b.start);
-        barEl = `<div class="gg-bar gg-milestone" style="left:${barX + dayPx/2 - 7}px" data-tid="${t.id}" data-tooltip='${escHtml(tooltipData)}'>
-             <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z" fill="${barColor}" stroke="${barColor}" stroke-width="1"/></svg>
+        barEl = `<div class="gg-bar gg-milestone" style="left:${barX + dayPx/2 - 9}px;opacity:${barOpacity}" data-tid="${t.id}" data-tooltip='${escHtml(tooltipData)}'>
+             <svg width="18" height="18" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z" fill="${phaseColor}" stroke="${phaseColor}" stroke-width="1"/></svg>
            </div>`;
       } else {
-        // One bar per week-segment. Each segment gets its own progress overlay
-        // proportional to the OVERALL progress (i.e. all segments share the same %).
+        // One solid bar per week-segment, phase-colored. No progress overlay; no border.
         const segments = splitIntoWeekSegments(b.start, b.end);
-        const SEG_GAP = 2; // px gap between segments
+        const SEG_GAP = 2; // px visual gap between segments
         barEl = segments.map((seg, idx) => {
           let segX = dayToX(seg.start);
           let segW = Math.max(dayPx, dayToX(seg.end) + dayPx - segX);
-          // Add gap on the left of segments 2+ (shift right + reduce width)
           if(idx > 0){
             segX += SEG_GAP;
             segW -= SEG_GAP;
           }
           const isFirst = idx === 0;
-          return `<div class="gg-bar gg-status-${escHtml(t.status||'todo')} ${overdue?'gg-overdue':''}${isFirst?'':' gg-bar-segment'}" data-tid="${t.id}"${isFirst?` data-tooltip='${escHtml(tooltipData)}'`:''} draggable="${(canWrite && isFirst)?'true':'false'}" style="left:${segX}px;width:${segW}px;background:${barFillColor};border-color:${barColor}">
-            ${prog > 0 && prog < 100 ? `<div class="gg-bar-progress" style="width:${prog}%;background:${barColor}"></div>` : ''}
-          </div>`;
+          return `<div class="gg-bar ${overdue?'gg-overdue':''}${isFirst?'':' gg-bar-segment'}" data-tid="${t.id}"${isFirst?` data-tooltip='${escHtml(tooltipData)}'`:''} draggable="${(canWrite && isFirst)?'true':'false'}" style="left:${segX}px;width:${segW}px;background:${phaseColor};opacity:${barOpacity}"></div>`;
         }).join('');
       }
 
@@ -4880,8 +4914,8 @@ function renderGantt(){
         : `<input class="gg-cell gg-cell-eff gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortInputVal}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
       const statusCell = `<button class="gg-cell gg-cell-status gg-cell-btn" data-pop-status="${t.id}" ${canWrite?'':'disabled'}>${stChip}</button>`;
       const progCell = `<input class="gg-cell gg-cell-prog gg-cell-input gg-input-prog" type="number" min="0" max="100" step="5" value="${prog}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
-      const startCell = `<input class="gg-cell gg-cell-date gg-cell-input gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} title="${escHtml(startLabel)}"/>`;
-      const endCell = `<input class="gg-cell gg-cell-date gg-cell-input gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} title="${escHtml(endLabel)}"/>`;
+      const startCell = `<input class="gg-cell gg-cell-start gg-cell-input gg-input-date gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+      const endCell = `<input class="gg-cell gg-cell-end gg-cell-input gg-input-date gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
 
       return `<div class="gg-row gg-taskrow ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
         <div class="gg-side">
@@ -5032,7 +5066,13 @@ function renderGantt(){
     });
     // Start date
     cont.querySelectorAll('.gg-input-start').forEach(inp => {
-      inp.addEventListener('click', e => e.stopPropagation());
+      inp.addEventListener('click', e => {
+        e.stopPropagation();
+        // Calendar icon is hidden — open the picker programmatically on click.
+        // showPicker() is the modern API; some browsers ignore it silently, in which case
+        // the user can still type the date or use keyboard arrows.
+        if(typeof inp.showPicker === 'function'){ try { inp.showPicker(); } catch(_) {} }
+      });
       inp.addEventListener('change', e => {
         const tid = Number(inp.dataset.tid);
         const v = inp.value || null;
@@ -5047,7 +5087,10 @@ function renderGantt(){
     });
     // End date (= due)
     cont.querySelectorAll('.gg-input-end').forEach(inp => {
-      inp.addEventListener('click', e => e.stopPropagation());
+      inp.addEventListener('click', e => {
+        e.stopPropagation();
+        if(typeof inp.showPicker === 'function'){ try { inp.showPicker(); } catch(_) {} }
+      });
       inp.addEventListener('change', e => {
         const tid = Number(inp.dataset.tid);
         const v = inp.value || null;
@@ -6491,13 +6534,198 @@ function saveNewProject(){
 }
 
 /* ════════════════════════════════════════════════════════
+   PREVIEW SEED DATA
+   Only fires when running inside a sandbox/preview environment
+   where Firebase is unreachable AND localStorage has no saved data.
+   This means: running on GitHub Pages with Firebase enabled will
+   NEVER trigger this — real data wins.
+   ════════════════════════════════════════════════════════ */
+function maybeSeedPreviewData(){
+  // The trigger is simple: if after loadState() we still have NO projects
+  // (Firebase failed silently OR localStorage was empty OR we're in a sandbox),
+  // seed the demo data into memory only — never persist it.
+  // This means: real users on GitHub Pages with their Firebase data loaded
+  // will never see this fire, because state.projects.length > 0.
+  if(state.projects && state.projects.length > 0) return;
+  if(localStorage.getItem(LS_STATE)) return; // they have local data, even if empty projects
+
+  console.info('[PreviewSeed] Loading demo data — sandbox/preview environment detected.');
+  previewMode = true;
+
+  // Demo admin user (uses bcrypt-style fake hash so login isn't usable)
+  const demoUser = {
+    id: 1,
+    name: 'Cédric Baert',
+    email: 'demo@delaware.pro',
+    password: 'preview',
+    role: 'admin',
+    perms: ROLE_DEFAULTS.admin,
+    active: true,
+    created: new Date().toISOString(),
+  };
+  state.users = [
+    demoUser,
+    { id: 2, name: 'Rafael Tadeu', email: 'rt@delaware.pro', password: 'preview', role: 'admin', perms: ROLE_DEFAULTS.admin, active: true, created: new Date().toISOString() },
+    { id: 3, name: 'Imad Aaouich', email: 'ia@delaware.pro', password: 'preview', role: 'consultant', perms: ROLE_DEFAULTS.consultant, active: true, created: new Date().toISOString() },
+    { id: 4, name: 'Jonas Vreys', email: 'jv@delaware.pro', password: 'preview', role: 'consultant', perms: ROLE_DEFAULTS.consultant, active: true, created: new Date().toISOString() },
+  ];
+
+  // Demo project: Bewel — SF/S4HC Integration Package
+  state.projects = [{
+    id: 1001,
+    name: 'Bewel — SF/S4HC Integration',
+    code: 'BEWEL',
+    color: '#0f7a4b',
+    phases: {
+      discover: { start: '2026-02-02', end: '2026-02-27' },
+      prepare:  { start: '2026-03-02', end: '2026-03-27' },
+      explore:  { start: '2026-03-30', end: '2026-05-22' },
+      realize:  { start: '2026-05-25', end: '2026-09-25' },
+      deploy:   { start: '2026-09-28', end: '2026-10-23' },
+      run:      { start: '2026-10-26', end: '2026-12-18' },
+    },
+  }, {
+    id: 1002,
+    name: 'BAC — AMS Support',
+    code: 'BAC',
+    color: '#b8741a',
+    phases: {},
+  }];
+
+  // Work items for Bewel project
+  state.workItems = [
+    { id: 2001, projectId: 1001, kind: 'interface', code: 'BEWEL-IF1', title: 'MDI Workforce Person', status: 'in-progress', dif: 'dIF-A4', protocol: 'OData', direction: 'inbound', source: 'SuccessFactors', target: 'S/4HANA Cloud' },
+    { id: 2002, projectId: 1001, kind: 'interface', code: 'BEWEL-IF2', title: 'MDI Cost Center', status: 'in-progress', dif: 'dIF-A1', protocol: 'OData', direction: 'outbound', source: 'S/4HANA Cloud', target: 'SuccessFactors' },
+    { id: 2003, projectId: 1001, kind: 'interface', code: 'BEWEL-IF3', title: 'Acerta KLX Calendar Sync', status: 'in-progress', dif: 'dIF-B2', protocol: 'SFTP', direction: 'inbound', source: 'Acerta', target: 'S/4HANA Cloud' },
+    { id: 2004, projectId: 1001, kind: 'interface', code: 'BEWEL-IF4', title: 'GP5 Time Events', status: 'planned', dif: 'dIF-B1', protocol: 'REST', direction: 'inbound', source: 'GP5', target: 'S/4HANA Cloud' },
+    { id: 2005, projectId: 1001, kind: 'interface', code: 'BEWEL-IF5', title: 'GP5 Master Data', status: 'planned', dif: 'dIF-A1', protocol: 'OData', direction: 'outbound', source: 'S/4HANA Cloud', target: 'GP5' },
+    { id: 2006, projectId: 1001, kind: 'work', code: 'BEWEL-WI1', title: 'Compile Solution Design Document', status: 'in-progress' },
+    { id: 2007, projectId: 1001, kind: 'work', code: 'BEWEL-WI2', title: 'Design Review & Sign-off', status: 'planned' },
+  ];
+
+  // Tasks — a realistic mix spread across phases, with milestones, varying status, week-spanning durations
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dStr = (d) => d.toISOString().slice(0,10);
+  const addDays = (base, n) => { const r = new Date(base); r.setDate(r.getDate() + n); return r; };
+
+  state.tasks = [
+    // Explore phase — mostly Done, a few WIP
+    { id: 3001, projectId: 1001, workItemId: 2001, parentTaskId: null, code: 'TSK-3001', title: 'Design IF1 — MDI Workforce Person', type: 'task',
+      status: 'done', priority: 'medium', assignee: 'Rafael Tadeu', phase: 'explore',
+      startDate: '2026-04-06', due: '2026-04-10', estimate: 8, progress: 100,
+      description: 'Design document for SF→S/4HC workforce replication.', comments: [], activity: [], createdAt: '2026-04-01' },
+    { id: 3002, projectId: 1001, workItemId: 2002, parentTaskId: null, code: 'TSK-3002', title: 'Design IF2 — MDI Cost Center', type: 'task',
+      status: 'done', priority: 'medium', assignee: 'Rafael Tadeu', phase: 'explore',
+      startDate: '2026-04-06', due: '2026-04-10', estimate: 8, progress: 100,
+      comments: [], activity: [], createdAt: '2026-04-01' },
+    { id: 3003, projectId: 1001, workItemId: 2003, parentTaskId: null, code: 'TSK-3003', title: 'Design IF3 — Acerta KLX Calendar', type: 'task',
+      status: 'doing', priority: 'high', assignee: 'Cédric Baert', phase: 'explore',
+      startDate: '2026-05-01', due: '2026-05-07', estimate: 16, progress: 75,
+      comments: [], activity: [], createdAt: '2026-04-25' },
+    { id: 3004, projectId: 1001, workItemId: 2001, parentTaskId: null, code: 'TSK-3004', title: 'Design IF6 — D365 Business Partner', type: 'task',
+      status: 'done', priority: 'medium', assignee: 'Rafael Tadeu', phase: 'explore',
+      startDate: '2026-05-05', due: '2026-05-12', estimate: 16, progress: 100,
+      comments: [], activity: [], createdAt: '2026-04-28' },
+    { id: 3005, projectId: 1001, workItemId: 2004, parentTaskId: null, code: 'TSK-3005', title: 'Design IF4 — GP5 Time Events', type: 'task',
+      status: 'done', priority: 'medium', assignee: 'Cédric Baert', phase: 'explore',
+      startDate: '2026-05-07', due: '2026-05-13', estimate: 16, progress: 100,
+      comments: [], activity: [], createdAt: '2026-05-01' },
+    { id: 3006, projectId: 1001, workItemId: 2005, parentTaskId: null, code: 'TSK-3006', title: 'Design IF5 — GP5 Master Data', type: 'task',
+      status: 'done', priority: 'medium', assignee: 'Cédric Baert', phase: 'explore',
+      startDate: '2026-05-13', due: '2026-05-15', estimate: 8, progress: 100,
+      comments: [], activity: [], createdAt: '2026-05-08' },
+    { id: 3007, projectId: 1001, workItemId: 2006, parentTaskId: null, code: 'TSK-3007', title: 'Compile Solution Design Document', type: 'task',
+      status: 'doing', priority: 'high', assignee: 'Rafael Tadeu', phase: 'explore',
+      startDate: '2026-05-19', due: '2026-05-21', estimate: 8, progress: 75,
+      comments: [], activity: [], createdAt: '2026-05-10' },
+    { id: 3008, projectId: 1001, workItemId: 2007, parentTaskId: null, code: 'TSK-3008', title: 'Design Review & Sign-off', type: 'task',
+      status: 'todo', priority: 'high', assignee: 'Rafael Tadeu', phase: 'explore',
+      startDate: '2026-05-21', due: '2026-05-21', estimate: 0, isMilestone: true,
+      comments: [], activity: [], createdAt: '2026-05-10' },
+
+    // Realize phase — mostly Todo, some WIP, multi-week tasks
+    { id: 3010, projectId: 1001, workItemId: 2002, parentTaskId: null, code: 'TSK-3010', title: 'MDI Cost Center — Development', type: 'task',
+      status: 'done', priority: 'medium', assignee: 'Cédric Baert', phase: 'realize',
+      startDate: '2026-04-20', due: '2026-04-24', estimate: 32, progress: 100,
+      comments: [], activity: [], createdAt: '2026-04-15' },
+    { id: 3011, projectId: 1001, workItemId: 2002, parentTaskId: null, code: 'TSK-3011', title: 'MDI Cost Center — Unit testing', type: 'task',
+      status: 'done', priority: 'medium', assignee: 'Cédric Baert', phase: 'realize',
+      startDate: '2026-04-20', due: '2026-04-24', estimate: 16, progress: 100,
+      comments: [], activity: [], createdAt: '2026-04-15' },
+    { id: 3012, projectId: 1001, workItemId: 2002, parentTaskId: null, code: 'TSK-3012', title: 'MDI Cost Center — Specification', type: 'task',
+      status: 'todo', priority: 'medium', assignee: 'Cédric Baert', phase: 'realize',
+      startDate: '2026-05-21', due: '2026-05-22', estimate: 8, progress: 0,
+      comments: [], activity: [], createdAt: '2026-05-15' },
+    { id: 3013, projectId: 1001, workItemId: 2001, parentTaskId: null, code: 'TSK-3013', title: 'MDI Workforce Person — Build outbound iFlow', type: 'task',
+      status: 'todo', priority: 'high', assignee: 'Cédric Baert', phase: 'realize',
+      startDate: '2026-06-01', due: '2026-06-19', estimate: 80, progress: 0,
+      comments: [], activity: [], createdAt: '2026-05-20' },
+    { id: 3014, projectId: 1001, workItemId: 2003, parentTaskId: null, code: 'TSK-3014', title: 'Acerta KLX — SFTP setup + parser', type: 'task',
+      status: 'doing', priority: 'high', assignee: 'Imad Aaouich', phase: 'realize',
+      startDate: '2026-05-25', due: '2026-06-12', estimate: 80, progress: 30,
+      comments: [], activity: [], createdAt: '2026-05-20' },
+    { id: 3015, projectId: 1001, workItemId: 2004, parentTaskId: null, code: 'TSK-3015', title: 'GP5 Time Events — REST integration', type: 'task',
+      status: 'todo', priority: 'medium', assignee: 'Imad Aaouich', phase: 'realize',
+      startDate: '2026-06-15', due: '2026-07-03', estimate: 80, progress: 0,
+      comments: [], activity: [], createdAt: '2026-06-01' },
+    { id: 3016, projectId: 1001, workItemId: 2005, parentTaskId: null, code: 'TSK-3016', title: 'GP5 Master Data — OData consumer', type: 'task',
+      status: 'todo', priority: 'medium', assignee: 'Cédric Baert', phase: 'realize',
+      startDate: '2026-07-06', due: '2026-07-24', estimate: 80, progress: 0,
+      comments: [], activity: [], createdAt: '2026-06-15' },
+    { id: 3017, projectId: 1001, workItemId: 2006, parentTaskId: null, code: 'TSK-3017', title: 'Integration testing milestone', type: 'task',
+      status: 'todo', priority: 'high', assignee: 'Rafael Tadeu', phase: 'realize',
+      startDate: '2026-08-28', due: '2026-08-28', estimate: 0, isMilestone: true,
+      comments: [], activity: [], createdAt: '2026-07-01' },
+
+    // Deploy phase — placeholders
+    { id: 3020, projectId: 1001, workItemId: 2001, parentTaskId: null, code: 'TSK-3020', title: 'Cutover preparation', type: 'task',
+      status: 'todo', priority: 'high', assignee: 'Cédric Baert', phase: 'deploy',
+      startDate: '2026-09-28', due: '2026-10-09', estimate: 40, progress: 0,
+      comments: [], activity: [], createdAt: '2026-09-01' },
+    { id: 3021, projectId: 1001, workItemId: 2007, parentTaskId: null, code: 'TSK-3021', title: 'Go-Live', type: 'task',
+      status: 'todo', priority: 'high', assignee: 'Rafael Tadeu', phase: 'deploy',
+      startDate: '2026-10-23', due: '2026-10-23', estimate: 0, isMilestone: true,
+      comments: [], activity: [], createdAt: '2026-09-01' },
+  ];
+
+  // Some time logs for "actual hours" demo (overrun on one task)
+  state.timeLogs = [
+    { id: 'tl1', projectId: 1001, taskId: 3001, person: 'Rafael Tadeu', date: '2026-04-08', hours: 8, note: 'Initial draft' },
+    { id: 'tl2', projectId: 1001, taskId: 3003, person: 'Cédric Baert', date: '2026-05-04', hours: 6, note: 'API analysis' },
+    { id: 'tl3', projectId: 1001, taskId: 3003, person: 'Cédric Baert', date: '2026-05-05', hours: 8, note: 'Mapping draft' },
+    { id: 'tl4', projectId: 1001, taskId: 3014, person: 'Imad Aaouich', date: '2026-05-26', hours: 24, note: 'SFTP keypair + connection setup' },
+  ];
+
+  state.activeProject = 1001;
+  state.activeView = 'gantt'; // Land on Gantt to showcase the new view
+  // Don't save — we want this to live only in memory for the preview
+
+  // Subtle banner so the user knows this is demo data, not their real project
+  setTimeout(() => {
+    if(document.getElementById('previewBanner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'previewBanner';
+    banner.style.cssText = 'position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);padding:7px 14px;border-radius:20px;font-size:11.5px;font-weight:500;z-index:300;box-shadow:0 4px 18px rgba(0,0,0,.18);display:flex;align-items:center;gap:8px;';
+    banner.innerHTML = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffb547"></span> Preview mode — demo data, changes not saved';
+    document.body.appendChild(banner);
+  }, 400);
+}
+
+/* ════════════════════════════════════════════════════════
    INIT
    ════════════════════════════════════════════════════════ */
 restoreTheme();
 restoreSidebar();
 loadState().then(() => {
+  maybeSeedPreviewData();
   const saved = loadCurrentUser();
-  if(saved){ currentUser = saved; bootApp(); }
+  if(saved){ currentUser = saved; bootApp(); return; }
+  // In preview mode (Firebase off + seeded data), auto-login as the demo admin
+  // so the UI is immediately visible without going through the login screen.
+  if(!useFirebase && state.users.length && state.projects.length){
+    currentUser = state.users[0];
+    bootApp();
+  }
 });
 
 /* Update mobile menu button visibility on resize */
