@@ -872,6 +872,39 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .gg-cell-date:nth-of-type(2){grid-column:6;}
 .gg-cell-date:nth-of-type(3){grid-column:7;}
 .gg-cell-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);}
+.gg-cell-milestone-mark{color:var(--accent);font-size:14px;text-align:center;}
+
+/* Inline editable cells — appear as plain text, get input chrome on focus/hover */
+.gg-cell-input{
+  border:1px solid transparent;background:transparent;
+  padding:4px 6px;margin:2px;border-radius:5px;
+  font-family:inherit;font-size:inherit;color:inherit;
+  width:calc(100% - 4px);min-width:0;outline:none;
+  transition:background .12s, border-color .12s;
+  -moz-appearance:textfield;
+}
+.gg-cell-input::-webkit-outer-spin-button,
+.gg-cell-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.gg-cell-input:hover:not(:disabled){background:var(--surface);border-color:var(--border);}
+.gg-cell-input:focus:not(:disabled){background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+.gg-cell-input:disabled{cursor:default;opacity:.7;}
+.gg-input-eff,.gg-input-prog{text-align:right;}
+.gg-input-start,.gg-input-end{font-family:var(--mono);font-size:11px;}
+/* Hide native date picker spinner clutter */
+.gg-input-start::-webkit-calendar-picker-indicator,
+.gg-input-end::-webkit-calendar-picker-indicator{opacity:.4;cursor:pointer;}
+.gg-input-start:hover::-webkit-calendar-picker-indicator,
+.gg-input-end:hover::-webkit-calendar-picker-indicator{opacity:.9;}
+
+/* Status button (popover trigger) — clickable chip */
+.gg-cell-btn{
+  border:none;background:transparent;padding:4px 6px;margin:2px;border-radius:5px;
+  cursor:pointer;text-align:left;
+  display:flex;align-items:center;
+  transition:background .12s;
+}
+.gg-cell-btn:hover:not(:disabled){background:var(--surface);}
+.gg-cell-btn:disabled{cursor:default;}
 
 /* Status chip in side grid */
 .gg-st-chip{
@@ -895,10 +928,12 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .gg-row.gg-done .gg-cell-title .gg-title,
 .gg-row.gg-done .gg-cell-eff,
 .gg-row.gg-done .gg-cell-prog,
-.gg-row.gg-done .gg-cell-date{
-  color:var(--text-dim);text-decoration:line-through;
+.gg-row.gg-done .gg-cell-date,
+.gg-row.gg-done .gg-cell-input{
+  color:var(--text-dim);
 }
 .gg-row.gg-done .gg-cell-title .gg-code{opacity:.5;}
+.gg-row.gg-done .gg-st-chip{opacity:.85;}
 
 /* Group rows */
 .gg-grouprow{
@@ -949,13 +984,14 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   height:14px;border-radius:4px;border:1px solid;
   cursor:pointer;overflow:hidden;
   transition:filter .12s, transform .12s;
+  box-sizing:border-box;
 }
-.gg-bar:hover{filter:brightness(0.94);}
+.gg-bar:hover{filter:brightness(0.92);}
 .gg-bar.dragging{opacity:.5;}
 .gg-bar.gg-overdue{box-shadow:0 0 0 1px var(--danger);}
 .gg-bar-progress{
   position:absolute;top:0;left:0;height:100%;
-  border-radius:3px 0 0 3px;opacity:.55;
+  opacity:.55;pointer-events:none;
 }
 .gg-milestone{
   position:absolute;top:50%;transform:translateY(-50%);
@@ -4785,9 +4821,7 @@ function renderGantt(){
       const endLabel = fmtDate(endStr);
       const overdue = !done && t.due && (new Date(t.due) < today);
 
-      // Bar geometry
-      const barX = dayToX(b.start);
-      const barW = Math.max(dayPx, dayToX(b.end) + dayPx - barX);
+      // Bar geometry: split into per-week segments (Mon→Sun)
       const barColor = statusBarColor(t.status);
       const barFillColor = statusBarFill(t.status);
 
@@ -4811,25 +4845,53 @@ function renderGantt(){
         warning: null,
       });
 
-      const barEl = t.isMilestone
-        ? `<div class="gg-bar gg-milestone" style="left:${barX + dayPx/2 - 7}px" data-tooltip='${escHtml(tooltipData)}'>
+      let barEl;
+      if(t.isMilestone){
+        const barX = dayToX(b.start);
+        barEl = `<div class="gg-bar gg-milestone" style="left:${barX + dayPx/2 - 7}px" data-tid="${t.id}" data-tooltip='${escHtml(tooltipData)}'>
              <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z" fill="${barColor}" stroke="${barColor}" stroke-width="1"/></svg>
-           </div>`
-        : `<div class="gg-bar gg-status-${escHtml(t.status||'todo')} ${overdue?'gg-overdue':''}" data-tid="${t.id}" data-tooltip='${escHtml(tooltipData)}' draggable="${canWrite?'true':'false'}" style="left:${barX}px;width:${barW}px;background:${barFillColor};border-color:${barColor}">
-             ${prog > 0 && prog < 100 ? `<div class="gg-bar-progress" style="width:${prog}%;background:${barColor}"></div>` : ''}
            </div>`;
+      } else {
+        // One bar per week-segment. Each segment gets its own progress overlay
+        // proportional to the OVERALL progress (i.e. all segments share the same %).
+        const segments = splitIntoWeekSegments(b.start, b.end);
+        const SEG_GAP = 2; // px gap between segments
+        barEl = segments.map((seg, idx) => {
+          let segX = dayToX(seg.start);
+          let segW = Math.max(dayPx, dayToX(seg.end) + dayPx - segX);
+          // Add gap on the left of segments 2+ (shift right + reduce width)
+          if(idx > 0){
+            segX += SEG_GAP;
+            segW -= SEG_GAP;
+          }
+          const isFirst = idx === 0;
+          return `<div class="gg-bar gg-status-${escHtml(t.status||'todo')} ${overdue?'gg-overdue':''}${isFirst?'':' gg-bar-segment'}" data-tid="${t.id}"${isFirst?` data-tooltip='${escHtml(tooltipData)}'`:''} draggable="${(canWrite && isFirst)?'true':'false'}" style="left:${segX}px;width:${segW}px;background:${barFillColor};border-color:${barColor}">
+            ${prog > 0 && prog < 100 ? `<div class="gg-bar-progress" style="width:${prog}%;background:${barColor}"></div>` : ''}
+          </div>`;
+        }).join('');
+      }
 
       const todayLineInRow = showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : '';
+
+      // Editable cells: clickable inputs/buttons that update task on change
+      const effortInputVal = t.isMilestone ? '' : (effortDays > 0 ? effortDays.toFixed(1) : '');
+      const effortCell = t.isMilestone
+        ? `<span class="gg-cell gg-cell-eff gg-cell-milestone-mark" title="Milestone">◆</span>`
+        : `<input class="gg-cell gg-cell-eff gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortInputVal}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+      const statusCell = `<button class="gg-cell gg-cell-status gg-cell-btn" data-pop-status="${t.id}" ${canWrite?'':'disabled'}>${stChip}</button>`;
+      const progCell = `<input class="gg-cell gg-cell-prog gg-cell-input gg-input-prog" type="number" min="0" max="100" step="5" value="${prog}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+      const startCell = `<input class="gg-cell gg-cell-date gg-cell-input gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} title="${escHtml(startLabel)}"/>`;
+      const endCell = `<input class="gg-cell gg-cell-date gg-cell-input gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} title="${escHtml(endLabel)}"/>`;
 
       return `<div class="gg-row gg-taskrow ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
         <div class="gg-side">
           <span class="gg-row-handle" title="Drag to reorder" data-drag-tid="${t.id}" draggable="${canWrite?'true':'false'}">⋮⋮</span>
           <span class="gg-cell gg-cell-title" data-open-task="${t.id}">${t.code ? `<span class="gg-code">${escHtml(t.code)}</span>` : ''}<span class="gg-title">${escHtml(t.title || '—')}</span></span>
-          <span class="gg-cell gg-cell-eff">${escHtml(effortStr)}</span>
-          <span class="gg-cell gg-cell-status">${stChip}</span>
-          <span class="gg-cell gg-cell-prog">${prog}</span>
-          <span class="gg-cell gg-cell-date">${escHtml(startLabel)}</span>
-          <span class="gg-cell gg-cell-date">${escHtml(endLabel)}</span>
+          ${effortCell}
+          ${statusCell}
+          ${progCell}
+          ${startCell}
+          ${endCell}
         </div>
         <div class="gg-timeline" style="width:${timelineWidth}px">
           ${todayLineInRow}
@@ -4947,6 +5009,70 @@ function renderGantt(){
     bar.addEventListener('mouseleave', () => hideGanttTooltip());
   });
 
+  // Inline editing in the side grid cells
+  if(canWrite){
+    // Effort (in days, stored as hours in task.estimate)
+    cont.querySelectorAll('.gg-input-eff').forEach(inp => {
+      inp.addEventListener('click', e => e.stopPropagation());
+      inp.addEventListener('change', e => {
+        const tid = Number(inp.dataset.tid);
+        const val = inp.value === '' ? null : Number(inp.value);
+        const hours = val == null ? null : Math.round(val * 8 * 10) / 10; // days → hours, 1 decimal
+        mutateTask(tid, t => { t.estimate = hours; pushActivity(t, `set estimate to ${hours != null ? hours + 'h' : '—'}`); });
+      });
+    });
+    // Progress
+    cont.querySelectorAll('.gg-input-prog').forEach(inp => {
+      inp.addEventListener('click', e => e.stopPropagation());
+      inp.addEventListener('change', e => {
+        const tid = Number(inp.dataset.tid);
+        let val = inp.value === '' ? null : Math.max(0, Math.min(100, Number(inp.value)));
+        mutateTask(tid, t => { t.progress = val; pushActivity(t, `set progress to ${val != null ? val + '%' : 'auto'}`); });
+      });
+    });
+    // Start date
+    cont.querySelectorAll('.gg-input-start').forEach(inp => {
+      inp.addEventListener('click', e => e.stopPropagation());
+      inp.addEventListener('change', e => {
+        const tid = Number(inp.dataset.tid);
+        const v = inp.value || null;
+        const t = state.tasks.find(x => x.id === tid);
+        if(v && t.due && new Date(v) > new Date(t.due)){
+          toast('Start cannot be after end', 'error');
+          inp.value = t.startDate || '';
+          return;
+        }
+        mutateTask(tid, t => { t.startDate = v; pushActivity(t, `set start to ${v || 'auto'}`); });
+      });
+    });
+    // End date (= due)
+    cont.querySelectorAll('.gg-input-end').forEach(inp => {
+      inp.addEventListener('click', e => e.stopPropagation());
+      inp.addEventListener('change', e => {
+        const tid = Number(inp.dataset.tid);
+        const v = inp.value || null;
+        const t = state.tasks.find(x => x.id === tid);
+        if(v && t.startDate && new Date(v) < new Date(t.startDate)){
+          toast('End cannot be before start', 'error');
+          inp.value = t.due || '';
+          return;
+        }
+        mutateTask(tid, t => { t.due = v; pushActivity(t, `set end to ${v || 'none'}`); });
+      });
+    });
+    // Status popover trigger
+    cont.querySelectorAll('[data-pop-status]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const tid = Number(btn.dataset.popStatus);
+        const t = state.tasks.find(x => x.id === tid);
+        const cur = t.status || 'todo';
+        const opts = ['todo','doing','review','blocked','done'].map(s => ({label: fmtStatus(s), value: s, selected: s === cur}));
+        openPopover(btn, opts, v => mutateTask(tid, t => { const old = t.status; t.status = v; pushActivity(t, `changed status ${old||'todo'} → ${v}`); }));
+      });
+    });
+  }
+
   // Drag-and-drop: bar OR row-handle → drop on group row to change phase/workitem,
   // or drop on task row to reorder within the same group.
   if(canWrite){
@@ -5059,6 +5185,28 @@ function renderGantt(){
 }
 
 // Helpers for new Gantt
+// Split a [start, end] date range into per-week segments (Mon→Sun calendar weeks).
+// Returns array of {start, end} where each segment lies within a single ISO week.
+// Used for the Gantt to render one bar per week instead of a single continuous bar.
+function splitIntoWeekSegments(start, end){
+  const segments = [];
+  let cursor = new Date(start); cursor.setHours(0,0,0,0);
+  const endDate = new Date(end); endDate.setHours(0,0,0,0);
+  while(cursor <= endDate){
+    // Find Sunday of this week (= last day of week in Mon-Sun numbering)
+    const dow = cursor.getDay(); // 0 Sun .. 6 Sat
+    const daysToSunday = dow === 0 ? 0 : 7 - dow;
+    const sundayOfWeek = new Date(cursor);
+    sundayOfWeek.setDate(sundayOfWeek.getDate() + daysToSunday);
+    const segEnd = sundayOfWeek > endDate ? new Date(endDate) : sundayOfWeek;
+    segments.push({ start: new Date(cursor), end: segEnd });
+    // Move cursor to the next Monday
+    cursor = new Date(segEnd);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return segments;
+}
+
 function statusToProgress(status){
   return ({
     todo: 0,
