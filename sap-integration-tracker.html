@@ -6523,20 +6523,22 @@ function openScheduleClientModal(id){
     <button type="button" class="sched-swatch ${col === defaultColor ? 'active' : ''}" style="background:${col}" data-col="${col}" onclick="document.querySelectorAll('.sched-swatch').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('sched-color').value='${col}'"></button>
   `).join('');
   const html = `<div class="modal-overlay" id="schedClientModal" onclick="if(event.target===this)closeScheduleClientModal()">
-    <div class="modal" style="max-width:420px">
-      <div class="modal-head"><h3>${editing ? 'Edit customer' : 'New customer'}</h3><button class="modal-close" onclick="closeScheduleClientModal()">×</button></div>
-      <div class="modal-body">
+    <div class="modal" style="width:420px">
+      <div class="modal-title">${editing ? 'Edit customer' : 'New customer'}<button class="modal-close" onclick="closeScheduleClientModal()">×</button></div>
+      <div class="form-row">
         <div class="form-group">
           <label>Name</label>
-          <input id="sched-name" value="${escHtml(c?.name || '')}" placeholder="e.g. BAC, NMBS, Public Cloud" autofocus/>
+          <input id="sched-name" value="${escHtml(c?.name || '')}" placeholder="e.g. BAC, NMBS, Public Cloud"/>
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label>Color</label>
           <input type="hidden" id="sched-color" value="${defaultColor}"/>
           <div class="sched-swatches">${swatches}</div>
         </div>
       </div>
-      <div class="modal-foot">
+      <div class="modal-actions">
         ${editing ? `<button class="btn btn-danger" onclick="deleteScheduleClient(${c.id})" style="margin-right:auto">Delete</button>` : ''}
         <button class="btn btn-outline" onclick="closeScheduleClientModal()">Cancel</button>
         <button class="btn btn-primary" onclick="saveScheduleClient(${editing ? id : 'null'})">${editing ? 'Save' : 'Add'}</button>
@@ -6544,10 +6546,16 @@ function openScheduleClientModal(id){
     </div>
   </div>`;
   document.body.insertAdjacentHTML('beforeend', html);
+  const overlay = document.getElementById('schedClientModal');
+  // Use the same visibility pattern as other modals: animate in via 'visible' class
+  requestAnimationFrame(() => overlay.classList.add('visible'));
   setTimeout(() => document.getElementById('sched-name')?.focus(), 50);
 }
 function closeScheduleClientModal(){
-  document.getElementById('schedClientModal')?.remove();
+  const overlay = document.getElementById('schedClientModal');
+  if(!overlay) return;
+  overlay.classList.remove('visible');
+  setTimeout(() => overlay.remove(), 180);
 }
 function saveScheduleClient(id){
   const name = document.getElementById('sched-name').value.trim();
