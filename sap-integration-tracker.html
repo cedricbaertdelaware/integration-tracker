@@ -1640,6 +1640,150 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .ft-side{border-left:1px solid var(--border);padding-left:28px;}
 
 /* ════════════════════════════════════════════════════════
+   SCHEDULE
+   ════════════════════════════════════════════════════════ */
+.sched-section{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 20px;margin-bottom:14px;
+}
+.sched-section-head{margin-bottom:14px;}
+.sched-section-title{font-size:14px;font-weight:600;color:var(--text);margin:0 0 2px;}
+.sched-section-sub{font-size:12px;color:var(--text-muted);}
+
+/* Customer chips */
+.sched-customers-row{display:flex;flex-wrap:wrap;gap:8px;}
+.sched-customer-chip{
+  --cc:var(--accent);
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 10px 6px 8px;border-radius:8px;
+  background:color-mix(in srgb, var(--cc) 10%, transparent);
+  border:1px solid color-mix(in srgb, var(--cc) 30%, transparent);
+  font-size:12.5px;color:var(--text);cursor:pointer;
+  transition:background .12s, border-color .12s;
+}
+.sched-customer-chip:hover{
+  background:color-mix(in srgb, var(--cc) 18%, transparent);
+  border-color:color-mix(in srgb, var(--cc) 50%, transparent);
+}
+.sched-cc-dot{width:8px;height:8px;border-radius:50%;background:var(--cc);flex-shrink:0;}
+.sched-cc-name{font-weight:500;}
+.sched-cc-del{
+  width:16px;height:16px;border:none;background:transparent;color:var(--text-muted);
+  border-radius:4px;font-size:13px;line-height:1;cursor:pointer;padding:0;margin-left:2px;
+}
+.sched-cc-del:hover{background:var(--surface-3);color:var(--danger);}
+.sched-empty-customers{color:var(--text-muted);font-size:13px;padding:6px 0;}
+
+/* Week grid: 1 corner col + 5 day cols, header row + 2 half rows */
+.sched-grid{
+  display:grid;grid-template-columns:60px repeat(5, 1fr);
+  gap:8px;
+}
+.sched-grid-corner{}
+.sched-grid-head{
+  font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-muted);text-align:center;padding:6px 0;font-weight:500;
+}
+.sched-grid-half{
+  font-family:var(--mono);font-size:11px;color:var(--text-muted);font-weight:600;
+  display:flex;align-items:center;justify-content:flex-end;padding-right:10px;
+  letter-spacing:.06em;
+}
+.sched-slot{
+  min-height:50px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:6px 10px;font-size:13px;cursor:pointer;
+  transition:transform .1s, box-shadow .12s, border-color .12s;
+  position:relative;
+}
+.sched-slot-empty{
+  background:var(--surface-2);border:1.5px dashed var(--border);color:var(--text-muted);
+}
+.sched-slot-empty:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.sched-slot-add{font-size:18px;font-weight:300;line-height:1;}
+.sched-slot-dash{font-size:14px;color:var(--text-dim);}
+.sched-slot-filled{
+  --cc:var(--accent);
+  background:color-mix(in srgb, var(--cc) 14%, transparent);
+  border:1.5px solid color-mix(in srgb, var(--cc) 40%, transparent);
+  color:var(--text);font-weight:500;
+}
+.sched-slot-filled:hover{
+  background:color-mix(in srgb, var(--cc) 22%, transparent);
+  border-color:color-mix(in srgb, var(--cc) 65%, transparent);
+}
+.sched-slot-name{
+  flex:1;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.sched-slot-clear{
+  position:absolute;top:4px;right:4px;
+  width:18px;height:18px;border:none;background:transparent;color:var(--text-muted);
+  border-radius:4px;font-size:14px;line-height:1;cursor:pointer;padding:0;opacity:0;
+  transition:opacity .12s, background .12s;
+}
+.sched-slot-filled:hover .sched-slot-clear{opacity:1;}
+.sched-slot-clear:hover{background:var(--surface-3);color:var(--danger);}
+
+/* Slot picker (popover) */
+.sched-picker{
+  position:fixed;z-index:600;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;
+  box-shadow:var(--shadow-lg);padding:6px;min-width:180px;max-height:300px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:2px;
+}
+.sched-picker-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border:none;background:transparent;color:var(--text);
+  font-size:12.5px;text-align:left;border-radius:6px;cursor:pointer;
+  transition:background .1s;
+}
+.sched-picker-item:hover{background:var(--surface-2);}
+.sched-picker-item.is-current{background:var(--accent-soft);color:var(--accent);font-weight:500;}
+.sched-picker-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+/* Color swatches in customer modal */
+.sched-swatches{display:flex;flex-wrap:wrap;gap:8px;}
+.sched-swatch{
+  width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;
+  transition:transform .1s, border-color .12s;
+  padding:0;
+}
+.sched-swatch:hover{transform:scale(1.1);}
+.sched-swatch.active{border-color:var(--text);box-shadow:0 0 0 2px var(--surface);}
+
+/* Month aggregate bars */
+.sched-month-nav{display:flex;gap:6px;}
+.sched-nav-btn{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;
+  transition:.12s;
+}
+.sched-nav-btn:hover:not(:disabled){border-color:var(--border-strong);background:var(--surface-2);}
+.sched-nav-btn:disabled{opacity:.5;cursor:default;}
+.sched-month-meta{
+  font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:6px 0 14px;
+}
+.sched-bars{display:flex;flex-direction:column;gap:8px;}
+.sched-bar-row{
+  display:grid;grid-template-columns:180px 1fr 90px;align-items:center;gap:14px;
+  font-size:13px;
+}
+.sched-bar-label{display:flex;align-items:center;gap:8px;min-width:0;}
+.sched-bar-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sched-bar-name{
+  font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.sched-bar-track{
+  height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden;
+}
+.sched-bar-fill{height:100%;border-radius:7px;transition:width .25s;}
+.sched-bar-value{
+  font-family:var(--mono);font-size:12px;color:var(--text-muted);text-align:right;
+}
+.sched-empty{color:var(--text-muted);font-size:13px;padding:10px 0;}
+
+/* ════════════════════════════════════════════════════════
    TEMPLATES + USERS + TIME LOG
    ════════════════════════════════════════════════════════ */
 .tmpl-card{
@@ -1919,9 +2063,8 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
       <nav class="nav" id="navPrimary">
         <a data-view="dashboard" class="active" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
         <a data-view="gantt" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
-        <a data-view="workitems" title="Work items"><span class="ico">◰</span><span>Work items</span> <span class="nav-count" id="navWorkCount">0</span></a>
-        <a data-view="interfaces" title="Interfaces"><span class="ico">⇄</span><span>Interfaces</span> <span class="nav-count" id="navIfaceCount">0</span></a>
         <a data-view="timelog" title="Time log"><span class="ico">◷</span><span>Time log</span></a>
+        <a data-view="schedule" title="Schedule"><span class="ico">▤</span><span>Schedule</span></a>
       </nav>
     </div>
 
@@ -2141,14 +2284,14 @@ function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
    STATE + FIREBASE
    ════════════════════════════════════════════════════════ */
 const ROLE_DEFAULTS = {
-  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
-  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
-  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:1},templates:{r:0,w:0},users:{r:0,w:0}},
-  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
-  custom:    {dashboard:{r:0,w:0},tasks:{r:0,w:0},workitems:{r:0,w:0},interfaces:{r:0,w:0},timelog:{r:0,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
+  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
+  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:1},schedule:{r:1,w:1},templates:{r:0,w:0},users:{r:0,w:0}},
+  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:0},schedule:{r:1,w:1},templates:{r:0,w:0},users:{r:0,w:0}},
+  custom:    {dashboard:{r:0,w:0},tasks:{r:0,w:0},workitems:{r:0,w:0},interfaces:{r:0,w:0},timelog:{r:0,w:0},schedule:{r:0,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
 };
 const ADMIN_VIEWS = ['templates','users'];
-const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','timelog','templates','users'];
+const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','timelog','schedule','templates','users'];
 
 const DEFAULT_DIF_TEMPLATES = [
   {id:1, code:'TF000', name:'External Connections', ver:'2.0.1', short:'Reusable external connection configs.', desc:'', dir:'N/A', proc:'N/A', proto:'HTTPS/SFTP/AMQP'},
@@ -2174,6 +2317,8 @@ let state = {
   users: [],
   accessRequests: [],
   notifReadIds: [], // notification IDs marked as read
+  scheduleClients: [], // {id, name, color} — user-managed list of customers for the weekly schedule
+  scheduleTemplate: {}, // { mon: {am: clientId|null, pm: clientId|null}, tue: {...}, ..., fri: {...} }
   activeProject: null,
   activeView: 'tasks',
 };
@@ -2232,6 +2377,12 @@ function ensureDefaults(){
   state.users           = state.users           || [];
   state.accessRequests  = state.accessRequests  || [];
   state.notifReadIds    = state.notifReadIds    || [];
+  state.scheduleClients = state.scheduleClients || [];
+  state.scheduleTemplate = state.scheduleTemplate || {};
+  // Ensure all 5 weekdays exist in the template object so renderers can iterate safely
+  ['mon','tue','wed','thu','fri'].forEach(d => {
+    if(!state.scheduleTemplate[d]) state.scheduleTemplate[d] = { am: null, pm: null };
+  });
   // Ensure Cédric admin exists
   if(!state.users.find(u => u.email && u.email.toLowerCase() === 'cedric.baert@delaware.pro')){
     sha256('Tie2eiha3759').then(h => {
@@ -2453,8 +2604,11 @@ function renderNav(){
   const wi = state.workItems.filter(w => w.projectId === activeProj);
   const ts = state.tasks.filter(t => t.projectId === activeProj && !t.parentTaskId);
   document.getElementById('navTaskCount').textContent = ts.length;
-  document.getElementById('navWorkCount').textContent = wi.filter(w => w.kind === 'work').length;
-  document.getElementById('navIfaceCount').textContent = wi.filter(w => w.kind === 'interface').length;
+  // Work items and Interfaces sidebar links were removed; their counters may not exist anymore.
+  const navWorkCountEl = document.getElementById('navWorkCount');
+  if(navWorkCountEl) navWorkCountEl.textContent = wi.filter(w => w.kind === 'work').length;
+  const navIfaceCountEl = document.getElementById('navIfaceCount');
+  if(navIfaceCountEl) navIfaceCountEl.textContent = wi.filter(w => w.kind === 'interface').length;
   const reqC = state.accessRequests.filter(r => r.status === 'pending').length;
   const reqEl = document.getElementById('navReqCount');
   if(reqC > 0){ reqEl.style.display=''; reqEl.textContent = reqC; reqEl.style.background='var(--warn-soft)'; reqEl.style.color='var(--warn)'; }
@@ -2516,7 +2670,7 @@ function renderAll(){
   refreshTopbarViewSwitcher();
   const content = document.getElementById('content');
   const v = state.activeView;
-  if(!state.activeProject && v !== 'users' && v !== 'templates'){
+  if(!state.activeProject && v !== 'users' && v !== 'templates' && v !== 'schedule'){
     setTopbar('Welcome', 'Create or pick a project from the sidebar.');
     const isAdmin = currentUser.role === 'admin';
     content.innerHTML = `<div class="empty-screen"><div class="empty-screen-icon">◈</div>
@@ -2535,6 +2689,7 @@ function renderAll(){
     else if(v === 'workitems') renderWorkItemsView();
     else if(v === 'interfaces') renderInterfacesView();
     else if(v === 'timelog') renderTimeLog();
+    else if(v === 'schedule') renderSchedule();
     else if(v === 'templates') renderTemplatesView();
     else if(v === 'users') renderUsersView();
     else if(v === 'fulltask') renderFullTask();
@@ -6109,6 +6264,300 @@ function exportTimeLog(){
 }
 
 /* ════════════════════════════════════════════════════════
+   SCHEDULE — weekly customer pattern (Mon-Fri × AM/PM)
+   ════════════════════════════════════════════════════════ */
+const SCHEDULE_DAYS = [
+  { key: 'mon', label: 'Mon', long: 'Monday' },
+  { key: 'tue', label: 'Tue', long: 'Tuesday' },
+  { key: 'wed', label: 'Wed', long: 'Wednesday' },
+  { key: 'thu', label: 'Thu', long: 'Thursday' },
+  { key: 'fri', label: 'Fri', long: 'Friday' },
+];
+const SCHEDULE_CLIENT_PALETTE = [
+  '#0f7a4b', '#2d5fa0', '#b8741a', '#7a3ea8', '#b3362e', '#0a8b8b', '#c44a4a', '#5e7a1a',
+];
+
+// Returns the configured client object for a given dayKey/half ('am'|'pm'), or null.
+function getScheduleClient(dayKey, half){
+  const slot = state.scheduleTemplate[dayKey];
+  if(!slot) return null;
+  const cid = slot[half];
+  if(!cid) return null;
+  return state.scheduleClients.find(c => c.id === cid) || null;
+}
+
+// Count working days in a calendar month (Mon-Fri only)
+function workingDaysInMonth(year, month){
+  const counts = { mon:0, tue:0, wed:0, thu:0, fri:0 };
+  const dayKeyByDow = ['sun','mon','tue','wed','thu','fri','sat'];
+  const last = new Date(year, month + 1, 0).getDate();
+  for(let d = 1; d <= last; d++){
+    const dow = new Date(year, month, d).getDay();
+    const key = dayKeyByDow[dow];
+    if(counts[key] !== undefined) counts[key]++;
+  }
+  return counts;
+}
+
+let scheduleViewState = { monthOffset: 0 }; // 0 = current month, -1 = previous, +1 = next
+
+function renderSchedule(){
+  const canWrite = canWriteView('schedule');
+
+  setTopbar('Schedule', 'Weekly customer pattern — repeats every week unless adjusted',
+    canWrite ? `<button class="btn btn-outline btn-sm" onclick="openScheduleClientModal()">＋ Customer</button>` : '');
+
+  const content = document.getElementById('content');
+  const clients = state.scheduleClients;
+
+  // Build month aggregate (current viewed month based on monthOffset)
+  const baseDate = new Date();
+  baseDate.setDate(1);
+  baseDate.setMonth(baseDate.getMonth() + scheduleViewState.monthOffset);
+  const year = baseDate.getFullYear();
+  const month = baseDate.getMonth();
+  const monthLbl = baseDate.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+  const wdCounts = workingDaysInMonth(year, month);
+  // For each client: how many half-days are scheduled in this month?
+  // Half-days = (count of weekday occurrences × 1 if assigned to am, + same for pm)
+  const halvesByClient = new Map();
+  let totalHalves = 0;
+  SCHEDULE_DAYS.forEach(d => {
+    const occ = wdCounts[d.key] || 0;
+    ['am','pm'].forEach(h => {
+      const c = getScheduleClient(d.key, h);
+      const halves = occ; // each occurrence of that weekday contributes 1 half
+      totalHalves += halves;
+      const key = c ? c.id : '_unassigned';
+      halvesByClient.set(key, (halvesByClient.get(key) || 0) + halves);
+    });
+  });
+
+  // ─── Customer chips ─────────────────────────────────────
+  const customersHtml = clients.length === 0
+    ? `<div class="sched-empty-customers">No customers yet. ${canWrite ? 'Click <strong>＋ Customer</strong> to add one.' : 'Ask an admin to add customers.'}</div>`
+    : clients.map(c => `
+        <div class="sched-customer-chip" style="--cc:${c.color}" data-cid="${c.id}" ${canWrite ? `onclick="openScheduleClientModal(${c.id})"` : ''}>
+          <span class="sched-cc-dot"></span>
+          <span class="sched-cc-name">${escHtml(c.name)}</span>
+          ${canWrite ? `<button class="sched-cc-del" onclick="event.stopPropagation();deleteScheduleClient(${c.id})" title="Delete">×</button>` : ''}
+        </div>`).join('');
+
+  // ─── Week grid (5 cols × 2 rows) ────────────────────────
+  const headerRow = SCHEDULE_DAYS.map(d => `<div class="sched-grid-head">${d.label}</div>`).join('');
+  const renderSlot = (dayKey, half) => {
+    const c = getScheduleClient(dayKey, half);
+    if(!c){
+      return `<div class="sched-slot sched-slot-empty" data-day="${dayKey}" data-half="${half}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','${half}', this)"` : ''}>
+        ${canWrite ? '<span class="sched-slot-add">＋</span>' : '<span class="sched-slot-dash">—</span>'}
+      </div>`;
+    }
+    return `<div class="sched-slot sched-slot-filled" style="--cc:${c.color}" data-day="${dayKey}" data-half="${half}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','${half}', this)"` : ''}>
+      <span class="sched-slot-name">${escHtml(c.name)}</span>
+      ${canWrite ? `<button class="sched-slot-clear" onclick="event.stopPropagation();clearScheduleSlot('${dayKey}','${half}')" title="Clear">×</button>` : ''}
+    </div>`;
+  };
+  const amRow = SCHEDULE_DAYS.map(d => renderSlot(d.key, 'am')).join('');
+  const pmRow = SCHEDULE_DAYS.map(d => renderSlot(d.key, 'pm')).join('');
+
+  // ─── Month aggregate bars ──────────────────────────────
+  const aggEntries = [...halvesByClient.entries()]
+    .filter(([k]) => k !== '_unassigned')
+    .map(([cid, halves]) => {
+      const c = clients.find(x => x.id === Number(cid)) || clients.find(x => x.id === cid);
+      if(!c) return null;
+      return { client: c, halves, days: halves / 2 };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.halves - a.halves);
+  const unassignedHalves = halvesByClient.get('_unassigned') || 0;
+  const maxHalves = Math.max(1, ...aggEntries.map(e => e.halves), unassignedHalves);
+  const aggHtml = aggEntries.length === 0 && unassignedHalves === totalHalves
+    ? `<div class="sched-empty">No assignments yet. Fill in the week grid to see your monthly distribution.</div>`
+    : `
+      ${aggEntries.map(e => `
+        <div class="sched-bar-row">
+          <div class="sched-bar-label">
+            <span class="sched-bar-dot" style="background:${e.client.color}"></span>
+            <span class="sched-bar-name">${escHtml(e.client.name)}</span>
+          </div>
+          <div class="sched-bar-track"><div class="sched-bar-fill" style="width:${(e.halves / maxHalves * 100).toFixed(1)}%;background:${e.client.color}"></div></div>
+          <div class="sched-bar-value">${e.days % 1 === 0 ? e.days : e.days.toFixed(1)} day${e.days===1?'':'s'}</div>
+        </div>`).join('')}
+      ${unassignedHalves > 0 ? `
+        <div class="sched-bar-row sched-bar-unassigned">
+          <div class="sched-bar-label">
+            <span class="sched-bar-dot" style="background:var(--text-dim)"></span>
+            <span class="sched-bar-name">Unassigned</span>
+          </div>
+          <div class="sched-bar-track"><div class="sched-bar-fill" style="width:${(unassignedHalves / maxHalves * 100).toFixed(1)}%;background:var(--text-dim);opacity:.5"></div></div>
+          <div class="sched-bar-value">${unassignedHalves / 2} day${unassignedHalves/2===1?'':'s'}</div>
+        </div>` : ''}`;
+
+  content.innerHTML = `
+    <div class="sched-section">
+      <div class="sched-section-head">
+        <h3 class="sched-section-title">Customers</h3>
+        <span class="sched-section-sub">Manage your customer list — these appear as options in the weekly grid below.</span>
+      </div>
+      <div class="sched-customers-row">${customersHtml}</div>
+    </div>
+
+    <div class="sched-section">
+      <div class="sched-section-head">
+        <h3 class="sched-section-title">Weekly pattern</h3>
+        <span class="sched-section-sub">${canWrite ? 'Click any slot to assign a customer. Each day has an AM and PM half — up to 2 customers per day.' : 'Read-only view of the weekly schedule.'}</span>
+      </div>
+      <div class="sched-grid">
+        <div class="sched-grid-corner"></div>
+        ${headerRow}
+        <div class="sched-grid-half">AM</div>
+        ${amRow}
+        <div class="sched-grid-half">PM</div>
+        ${pmRow}
+      </div>
+    </div>
+
+    <div class="sched-section">
+      <div class="sched-section-head" style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <h3 class="sched-section-title">Monthly distribution</h3>
+          <span class="sched-section-sub">Days per customer based on the weekly pattern × working days in <strong>${monthLbl}</strong>.</span>
+        </div>
+        <div class="sched-month-nav">
+          <button class="sched-nav-btn" onclick="scheduleViewState.monthOffset--;renderSchedule()" title="Previous month">‹</button>
+          <button class="sched-nav-btn" onclick="scheduleViewState.monthOffset=0;renderSchedule()" ${scheduleViewState.monthOffset === 0 ? 'disabled' : ''}>This month</button>
+          <button class="sched-nav-btn" onclick="scheduleViewState.monthOffset++;renderSchedule()" title="Next month">›</button>
+        </div>
+      </div>
+      <div class="sched-month-meta">${totalHalves / 2} working days · ${SCHEDULE_DAYS.map(d => `${d.label.toLowerCase()} ×${wdCounts[d.key]}`).join(' · ')}</div>
+      <div class="sched-bars">${aggHtml}</div>
+    </div>`;
+}
+
+// ── Customer modal ──────────────────────────────────────────
+function openScheduleClientModal(id){
+  const editing = id != null;
+  const c = editing ? state.scheduleClients.find(x => x.id === id) : null;
+  const usedColors = new Set(state.scheduleClients.filter(x => x.id !== id).map(x => x.color));
+  const defaultColor = c ? c.color : (SCHEDULE_CLIENT_PALETTE.find(col => !usedColors.has(col)) || SCHEDULE_CLIENT_PALETTE[0]);
+  const swatches = SCHEDULE_CLIENT_PALETTE.map(col => `
+    <button type="button" class="sched-swatch ${col === defaultColor ? 'active' : ''}" style="background:${col}" data-col="${col}" onclick="document.querySelectorAll('.sched-swatch').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('sched-color').value='${col}'"></button>
+  `).join('');
+  const html = `<div class="modal-overlay" id="schedClientModal" onclick="if(event.target===this)closeScheduleClientModal()">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-head"><h3>${editing ? 'Edit customer' : 'New customer'}</h3><button class="modal-close" onclick="closeScheduleClientModal()">×</button></div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Name</label>
+          <input id="sched-name" value="${escHtml(c?.name || '')}" placeholder="e.g. BAC, NMBS, Public Cloud" autofocus/>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="hidden" id="sched-color" value="${defaultColor}"/>
+          <div class="sched-swatches">${swatches}</div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        ${editing ? `<button class="btn btn-danger" onclick="deleteScheduleClient(${c.id})" style="margin-right:auto">Delete</button>` : ''}
+        <button class="btn btn-outline" onclick="closeScheduleClientModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveScheduleClient(${editing ? id : 'null'})">${editing ? 'Save' : 'Add'}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  setTimeout(() => document.getElementById('sched-name')?.focus(), 50);
+}
+function closeScheduleClientModal(){
+  document.getElementById('schedClientModal')?.remove();
+}
+function saveScheduleClient(id){
+  const name = document.getElementById('sched-name').value.trim();
+  const color = document.getElementById('sched-color').value;
+  if(!name){ toast('Name required', 'error'); return; }
+  if(id){
+    const c = state.scheduleClients.find(x => x.id === id);
+    if(c){ c.name = name; c.color = color; }
+  } else {
+    state.scheduleClients.push({ id: uid(), name, color });
+  }
+  saveState();
+  closeScheduleClientModal();
+  renderSchedule();
+}
+function deleteScheduleClient(id){
+  confirmAction('Delete customer? This will also clear them from any scheduled slots.', () => {
+    state.scheduleClients = state.scheduleClients.filter(c => c.id !== id);
+    // Clear any references in the schedule template
+    SCHEDULE_DAYS.forEach(d => {
+      ['am','pm'].forEach(h => {
+        if(state.scheduleTemplate[d.key] && state.scheduleTemplate[d.key][h] === id){
+          state.scheduleTemplate[d.key][h] = null;
+        }
+      });
+    });
+    saveState();
+    closeScheduleClientModal();
+    renderSchedule();
+  });
+}
+
+// ── Slot picker (popover) ─────────────────────────────────
+function openScheduleSlotPicker(dayKey, half, anchorEl){
+  closeScheduleSlotPicker();
+  const clients = state.scheduleClients;
+  if(clients.length === 0){
+    toast('Add a customer first', 'info');
+    return;
+  }
+  const current = state.scheduleTemplate[dayKey]?.[half] || null;
+  const html = `<div class="sched-picker" id="schedPicker">
+    <button class="sched-picker-item ${!current ? 'is-current' : ''}" data-cid=""><span class="sched-picker-dot" style="background:transparent;border:1px solid var(--border-strong)"></span>None</button>
+    ${clients.map(c => `
+      <button class="sched-picker-item ${current === c.id ? 'is-current' : ''}" data-cid="${c.id}">
+        <span class="sched-picker-dot" style="background:${c.color}"></span>${escHtml(c.name)}
+      </button>
+    `).join('')}
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  const picker = document.getElementById('schedPicker');
+  const r = anchorEl.getBoundingClientRect();
+  picker.style.top = (r.bottom + 4) + 'px';
+  picker.style.left = r.left + 'px';
+  // Adjust if off-screen
+  const pr = picker.getBoundingClientRect();
+  if(pr.right > window.innerWidth - 8) picker.style.left = (window.innerWidth - pr.width - 8) + 'px';
+  if(pr.bottom > window.innerHeight - 8) picker.style.top = (r.top - pr.height - 4) + 'px';
+
+  picker.querySelectorAll('.sched-picker-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cidStr = btn.dataset.cid;
+      const cid = cidStr ? Number(cidStr) : null;
+      if(!state.scheduleTemplate[dayKey]) state.scheduleTemplate[dayKey] = { am: null, pm: null };
+      state.scheduleTemplate[dayKey][half] = cid;
+      saveState();
+      closeScheduleSlotPicker();
+      renderSchedule();
+    });
+  });
+  setTimeout(() => document.addEventListener('click', schedPickerOutsideClick, true), 0);
+}
+function schedPickerOutsideClick(e){
+  const p = document.getElementById('schedPicker');
+  if(p && !p.contains(e.target)) closeScheduleSlotPicker();
+}
+function closeScheduleSlotPicker(){
+  document.getElementById('schedPicker')?.remove();
+  document.removeEventListener('click', schedPickerOutsideClick, true);
+}
+function clearScheduleSlot(dayKey, half){
+  if(!state.scheduleTemplate[dayKey]) return;
+  state.scheduleTemplate[dayKey][half] = null;
+  saveState();
+  renderSchedule();
+}
+
+/* ════════════════════════════════════════════════════════
    TEMPLATES
    ════════════════════════════════════════════════════════ */
 function renderTemplatesView(){
@@ -6695,6 +7144,22 @@ function maybeSeedPreviewData(){
     { id: 'tl3', projectId: 1001, taskId: 3003, person: 'Cédric Baert', date: '2026-05-05', hours: 8, note: 'Mapping draft' },
     { id: 'tl4', projectId: 1001, taskId: 3014, person: 'Imad Aaouich', date: '2026-05-26', hours: 24, note: 'SFTP keypair + connection setup' },
   ];
+
+  // Schedule demo: customers + a typical week pattern
+  state.scheduleClients = [
+    { id: 5001, name: 'BAC',           color: '#0f7a4b' },
+    { id: 5002, name: 'NMBS',          color: '#2d5fa0' },
+    { id: 5003, name: 'Public Cloud',  color: '#b8741a' },
+    { id: 5004, name: 'Shurgard',      color: '#7a3ea8' },
+    { id: 5005, name: 'AMS support',   color: '#0a8b8b' },
+  ];
+  state.scheduleTemplate = {
+    mon: { am: 5003, pm: 5003 }, // Monday: full day Public Cloud
+    tue: { am: 5002, pm: 5002 }, // Tuesday: full day NMBS
+    wed: { am: 5001, pm: 5005 }, // Wednesday: BAC AM + AMS support PM
+    thu: { am: 5004, pm: 5004 }, // Thursday: full day Shurgard
+    fri: { am: 5005, pm: null  }, // Friday: AMS support AM, free PM
+  };
 
   state.activeProject = 1001;
   state.activeView = 'gantt'; // Land on Gantt to showcase the new view
