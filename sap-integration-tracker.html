@@ -1800,24 +1800,41 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .sched-month-meta{
   font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:6px 0 14px;
 }
-.sched-bars{display:flex;flex-direction:column;gap:8px;}
-.sched-bar-row{
-  display:grid;grid-template-columns:180px 1fr 90px;align-items:center;gap:14px;
-  font-size:13px;
+/* Vertical bar chart for monthly distribution */
+.sched-bars{
+  background:var(--surface-2);border-radius:var(--radius);padding:18px 14px 12px;
+  margin-top:6px;
 }
-.sched-bar-label{display:flex;align-items:center;gap:8px;min-width:0;}
-.sched-bar-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.sched-bar-name{
-  font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+.sched-chart{
+  width:100%;height:auto;display:block;
+  font-family:var(--sans);
 }
-.sched-bar-track{
-  height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden;
+.sched-chart-grid line{
+  stroke:var(--border);stroke-width:1;stroke-dasharray:2 4;
 }
-.sched-bar-fill{height:100%;border-radius:7px;transition:width .25s;}
-.sched-bar-value{
-  font-family:var(--mono);font-size:12px;color:var(--text-muted);text-align:right;
+.sched-chart-tick{
+  font-family:var(--mono);font-size:10px;fill:var(--text-dim);
 }
-.sched-empty{color:var(--text-muted);font-size:13px;padding:10px 0;}
+.sched-chart-axis{
+  stroke:var(--border-strong);stroke-width:1;
+}
+.sched-chart-bar{
+  cursor:pointer;transition:opacity .15s, transform .15s;
+  transform-origin:center bottom;transform-box:fill-box;
+}
+.sched-chart-bar:hover{transform:translateY(-1px);}
+.sched-chart-bar:hover .sched-chart-rect{filter:brightness(1.06);}
+.sched-chart-rect{
+  transition:filter .12s;
+}
+.sched-chart-value{
+  font-family:var(--mono);font-size:10.5px;font-weight:600;fill:var(--text);
+}
+.sched-chart-label{
+  font-size:11.5px;fill:var(--text);font-weight:500;
+  dominant-baseline:central;
+}
+.sched-empty{color:var(--text-muted);font-size:13px;padding:10px 0;text-align:center;}
 
 /* ════════════════════════════════════════════════════════
    TEMPLATES + USERS + TIME LOG
@@ -6442,7 +6459,7 @@ function renderSchedule(){
   };
   const dayRow = SCHEDULE_DAYS.map(d => renderDayCell(d.key)).join('');
 
-  // ─── Month aggregate bars ──────────────────────────────
+  // ─── Month aggregate: vertical bar chart ───────────────────
   const aggEntries = [...halvesByClient.entries()]
     .filter(([k]) => k !== '_unassigned')
     .map(([cid, halves]) => {
@@ -6453,28 +6470,75 @@ function renderSchedule(){
     .filter(Boolean)
     .sort((a, b) => b.halves - a.halves);
   const unassignedHalves = halvesByClient.get('_unassigned') || 0;
-  const maxHalves = Math.max(1, ...aggEntries.map(e => e.halves), unassignedHalves);
-  const aggHtml = aggEntries.length === 0 && unassignedHalves === totalHalves
+  // Build the bar list: customers first (highest first), then "Unassigned" if any
+  const barEntries = [...aggEntries];
+  if(unassignedHalves > 0){
+    barEntries.push({
+      client: { name: 'Unassigned', color: 'var(--text-dim)' },
+      halves: unassignedHalves,
+      days: unassignedHalves / 2,
+      isUnassigned: true,
+    });
+  }
+  const maxDays = Math.max(1, ...barEntries.map(e => e.days));
+  // Round chart Y-axis up to a clean tick (next integer for small values, or to nearest 5/10 for larger)
+  const yMax = maxDays <= 5 ? Math.ceil(maxDays) : maxDays <= 12 ? Math.ceil(maxDays / 2) * 2 : Math.ceil(maxDays / 5) * 5;
+  // Generate Y ticks: 5 horizontal grid lines including 0 and yMax
+  const yTickCount = 5;
+  const yTicks = Array.from({ length: yTickCount }, (_, i) => (yMax * i / (yTickCount - 1)));
+
+  // Chart geometry (SVG viewBox-based for responsiveness)
+  const chartW = 720;
+  const chartH = 280;
+  const padTop = 24, padBottom = 56, padLeft = 36, padRight = 12;
+  const plotW = chartW - padLeft - padRight;
+  const plotH = chartH - padTop - padBottom;
+  const barCount = barEntries.length || 1;
+  // Bar width: thin, with gap between
+  const slotW = plotW / barCount;
+  const barW = Math.min(54, slotW * 0.55);
+
+  const aggHtml = barEntries.length === 0
     ? `<div class="sched-empty">No assignments yet. Fill in the week grid to see your monthly distribution.</div>`
-    : `
-      ${aggEntries.map(e => `
-        <div class="sched-bar-row">
-          <div class="sched-bar-label">
-            <span class="sched-bar-dot" style="background:${e.client.color}"></span>
-            <span class="sched-bar-name">${escHtml(e.client.name)}</span>
-          </div>
-          <div class="sched-bar-track"><div class="sched-bar-fill" style="width:${(e.halves / maxHalves * 100).toFixed(1)}%;background:${e.client.color}"></div></div>
-          <div class="sched-bar-value">${e.days % 1 === 0 ? e.days : e.days.toFixed(1)} day${e.days===1?'':'s'}</div>
-        </div>`).join('')}
-      ${unassignedHalves > 0 ? `
-        <div class="sched-bar-row sched-bar-unassigned">
-          <div class="sched-bar-label">
-            <span class="sched-bar-dot" style="background:var(--text-dim)"></span>
-            <span class="sched-bar-name">Unassigned</span>
-          </div>
-          <div class="sched-bar-track"><div class="sched-bar-fill" style="width:${(unassignedHalves / maxHalves * 100).toFixed(1)}%;background:var(--text-dim);opacity:.5"></div></div>
-          <div class="sched-bar-value">${unassignedHalves / 2} day${unassignedHalves/2===1?'':'s'}</div>
-        </div>` : ''}`;
+    : `<svg class="sched-chart" viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Monthly customer distribution bar chart">
+      <!-- Y-axis grid lines + labels -->
+      ${yTicks.map(t => {
+        const y = padTop + plotH - (t / yMax) * plotH;
+        return `<g class="sched-chart-grid">
+          <line x1="${padLeft}" y1="${y}" x2="${chartW - padRight}" y2="${y}"/>
+          <text x="${padLeft - 8}" y="${y}" text-anchor="end" dominant-baseline="middle" class="sched-chart-tick">${t % 1 === 0 ? t : t.toFixed(1)}</text>
+        </g>`;
+      }).join('')}
+      <!-- X-axis baseline -->
+      <line x1="${padLeft}" y1="${padTop + plotH}" x2="${chartW - padRight}" y2="${padTop + plotH}" class="sched-chart-axis"/>
+
+      <!-- Bars -->
+      ${barEntries.map((e, i) => {
+        const cx = padLeft + slotW * (i + 0.5);
+        const x = cx - barW / 2;
+        const h = (e.days / yMax) * plotH;
+        const y = padTop + plotH - h;
+        const baseColor = e.isUnassigned ? 'var(--text-dim)' : e.client.color;
+        // Use SVG linear gradient: top is lighter, bottom is fuller
+        const gradId = `schedGrad${i}`;
+        const labelText = `${e.days % 1 === 0 ? e.days : e.days.toFixed(1)}d`;
+        return `<g class="sched-chart-bar" data-cid="${e.isUnassigned ? '' : e.client.id}">
+          <defs>
+            <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${baseColor}" stop-opacity="${e.isUnassigned ? 0.35 : 0.78}"/>
+              <stop offset="100%" stop-color="${baseColor}" stop-opacity="${e.isUnassigned ? 0.55 : 1}"/>
+            </linearGradient>
+          </defs>
+          <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" ry="4" fill="url(#${gradId})" class="sched-chart-rect"/>
+          <text x="${cx}" y="${y - 8}" text-anchor="middle" class="sched-chart-value">${labelText}</text>
+          <!-- Customer name + dot below baseline -->
+          <g transform="translate(${cx}, ${padTop + plotH + 18})">
+            <circle cx="-4" cy="-4" r="4" fill="${baseColor}" opacity="${e.isUnassigned ? 0.5 : 1}"/>
+            <text x="4" y="0" text-anchor="start" class="sched-chart-label">${escHtml(e.client.name)}</text>
+          </g>
+        </g>`;
+      }).join('')}
+    </svg>`;
 
   content.innerHTML = `
     <div class="sched-section">
@@ -6572,7 +6636,10 @@ function saveScheduleClient(id){
   renderSchedule();
 }
 function deleteScheduleClient(id){
-  confirmAction('Delete customer? This will also clear them from any scheduled slots.', () => {
+  // Close the edit modal first so the confirm dialog can take focus cleanly
+  closeScheduleClientModal();
+  confirmDialog('Delete customer? This will also clear them from any scheduled slots.', 'Delete').then(ok => {
+    if(!ok) return;
     state.scheduleClients = state.scheduleClients.filter(c => c.id !== id);
     // Clear any references in the schedule template
     SCHEDULE_DAYS.forEach(d => {
@@ -6583,7 +6650,6 @@ function deleteScheduleClient(id){
       });
     });
     saveState();
-    closeScheduleClientModal();
     renderSchedule();
   });
 }
