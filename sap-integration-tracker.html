@@ -808,141 +808,202 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface);
   border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;
 }
-.gantt-container{
-  --gantt-side-w:200px;
-  --gantt-assignee-w:130px;
-  --gantt-status-w:140px;
+/* ════════════════════════════════════════════════════════
+   GANTT GRID — Rafael-style (table left + bars right)
+   ════════════════════════════════════════════════════════ */
+.gg-container{
+  --gg-side-w:520px;
+  --col-task:1.6fr;
+  --col-eff:54px;
+  --col-status:74px;
+  --col-prog:36px;
+  --col-date:78px;
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  overflow:auto;max-height:calc(100vh - 220px);
+  overflow:auto;max-height:calc(100vh - 240px);
   position:relative;
 }
-.gantt-header{
+.gg-header{
   display:flex;position:sticky;top:0;z-index:5;background:var(--surface-2);border-bottom:1px solid var(--border);
   width:fit-content;min-width:100%;
 }
-/* Sticky frozen columns — explicit non-transparent background is REQUIRED for sticky to mask
-   the scrolling timeline behind them. They sit at z-index 4 below the header (5), but above the body. */
-.gantt-side-cell{
-  width:var(--gantt-side-w);min-width:var(--gantt-side-w);max-width:var(--gantt-side-w);
-  flex-shrink:0;padding:8px 14px;border-right:1px solid var(--border);
+.gg-side{
+  width:var(--gg-side-w);min-width:var(--gg-side-w);max-width:var(--gg-side-w);
+  flex-shrink:0;border-right:1px solid var(--border);
   background:var(--surface);
-  position:sticky;left:0;z-index:4;display:flex;align-items:center;
+  position:sticky;left:0;z-index:4;
+  display:grid;grid-template-columns:24px var(--col-task) var(--col-eff) var(--col-status) var(--col-prog) var(--col-date) var(--col-date);
+  align-items:center;gap:0;
 }
-.gantt-side-head{
-  font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);
+.gg-side-head{
   background:var(--surface-2);
+  font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);
+  padding:0;
 }
+.gg-side-head > div{padding:10px 8px;}
+.gg-side-head > div:first-of-type{padding-left:10px;}
+.gg-h-task{grid-column:2;}
+.gg-h-eff{grid-column:3;text-align:right;}
+.gg-h-status{grid-column:4;}
+.gg-h-prog{grid-column:5;text-align:right;}
+.gg-h-date:nth-of-type(1){grid-column:6;}
+.gg-h-date:nth-last-of-type(1){grid-column:7;}
 
-/* Column resizer — sits on the right border of the Phase/Task header */
-.gantt-col-resizer{
-  position:absolute;top:0;bottom:0;right:-4px;width:8px;
-  cursor:col-resize;z-index:6;
-  background:transparent;transition:background .12s;
+.gg-row-handle{
+  grid-column:1;justify-self:center;
+  font-size:11px;color:var(--text-dim);opacity:.45;
+  cursor:grab;letter-spacing:-2px;user-select:none;
+  padding:0 4px;
 }
-.gantt-col-resizer:hover,.gantt-col-resizer.resizing{
-  background:color-mix(in srgb, var(--accent) 50%, transparent);
-}
-.gantt-container.resizing-col,.gantt-container.resizing-col *{
-  cursor:col-resize !important;user-select:none;
-}
-.gantt-assignee-cell{
-  width:var(--gantt-assignee-w);min-width:var(--gantt-assignee-w);max-width:var(--gantt-assignee-w);
-  flex-shrink:0;padding:6px 10px;border-right:1px solid var(--border);
-  background:var(--surface);
-  position:sticky;left:var(--gantt-side-w);z-index:4;display:flex;align-items:center;
-}
-.gantt-status-cell{
-  width:var(--gantt-status-w);min-width:var(--gantt-status-w);max-width:var(--gantt-status-w);
-  flex-shrink:0;padding:6px 12px;border-right:1px solid var(--border);
-  background:var(--surface);
-  position:sticky;left:calc(var(--gantt-side-w) + var(--gantt-assignee-w));z-index:4;display:flex;align-items:center;
-}
-/* In header row, the sticky column cells use the header's surface-2 background instead */
-.gantt-header .gantt-side-cell,
-.gantt-header .gantt-assignee-cell,
-.gantt-header .gantt-status-cell{background:var(--surface-2);}
-/* In phase rows, sticky cells use the phase-row's surface-2 background */
-.gantt-phase-row .gantt-side-cell,
-.gantt-phase-row .gantt-assignee-cell,
-.gantt-phase-row .gantt-status-cell{background:var(--surface-2);}
-/* Hover color on task-cells — but only on non-sticky parts; sticky cells must keep their bg */
-.gantt-row:hover .gantt-task-cell{background:var(--surface-2);}
-.gantt-row:hover .gantt-assignee-cell,
-.gantt-row:hover .gantt-status-cell{background:var(--surface-2);}
+.gg-row:hover .gg-row-handle{opacity:.9;color:var(--text);}
+.gg-row-handle:active{cursor:grabbing;}
+.gg-row-handle.dragging{opacity:.3;}
 
-.gantt-timeline-head{position:relative;height:48px;flex-shrink:0;}
-.gantt-month-band{position:relative;height:24px;border-bottom:1px solid var(--border);}
-.gantt-month-cell{
-  position:absolute;top:0;height:24px;display:flex;align-items:center;padding:0 10px;
-  font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text);
-  border-right:1px dashed var(--border);
+.gg-cell{padding:6px 8px;font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.gg-cell-title{grid-column:2;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.gg-cell-title:hover .gg-title{color:var(--accent);}
+.gg-cell-title .gg-code{
+  font-family:var(--mono);font-size:10.5px;color:var(--text-dim);
+  flex-shrink:0;
 }
-.gantt-week-band{position:relative;height:24px;}
-.gantt-week-tick{
-  position:absolute;top:0;height:24px;display:flex;align-items:center;padding:0 6px;
-  font-family:var(--mono);font-size:10px;color:var(--text-muted);border-right:1px solid var(--border);
-  white-space:nowrap;overflow:hidden;
-}
-.gantt-body{position:relative;width:fit-content;min-width:100%;}
-.gantt-row,.gantt-phase-row{
-  display:flex;border-bottom:1px solid var(--border);min-height:36px;
-}
+.gg-cell-title .gg-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.gg-cell-eff{grid-column:3;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
+.gg-cell-status{grid-column:4;}
+.gg-cell-prog{grid-column:5;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
+.gg-cell-date:nth-of-type(2){grid-column:6;}
+.gg-cell-date:nth-of-type(3){grid-column:7;}
+.gg-cell-date{font-family:var(--mono);font-size:11px;color:var(--text-muted);}
 
-/* Phase row */
-.gantt-phase-row{
-  background:var(--surface-2);min-height:42px;
+/* Status chip in side grid */
+.gg-st-chip{
+  display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:10.5px;font-weight:500;letter-spacing:.02em;
+  white-space:nowrap;
+}
+.gg-st-todo{background:#e8e6df;color:#5a5852;}
+.gg-st-doing{background:#fae6bc;color:#7a4a08;}
+.gg-st-review{background:#d4e4f5;color:#2a4f7a;}
+.gg-st-blocked{background:#fbd6d6;color:#8a2828;}
+.gg-st-done{background:#cfe6dc;color:#1f5e42;}
+
+/* Body + rows */
+.gg-body{position:relative;width:fit-content;min-width:100%;}
+.gg-row{
+  display:flex;border-bottom:1px solid var(--border);min-height:34px;
+  align-items:stretch;
+}
+.gg-row:hover .gg-side{background:var(--surface-2);}
+.gg-row.gg-done .gg-cell-title .gg-title,
+.gg-row.gg-done .gg-cell-eff,
+.gg-row.gg-done .gg-cell-prog,
+.gg-row.gg-done .gg-cell-date{
+  color:var(--text-dim);text-decoration:line-through;
+}
+.gg-row.gg-done .gg-cell-title .gg-code{opacity:.5;}
+
+/* Group rows */
+.gg-grouprow{
+  background:var(--surface-2);min-height:36px;cursor:pointer;
   border-top:1px solid var(--border);border-bottom:1px solid var(--border-strong);
 }
-.gantt-phase-name{padding:6px 12px;gap:10px;}
-.gantt-phase-dot{
-  width:10px;height:10px;border-radius:50%;flex-shrink:0;
-  background:var(--phase-color);
-  box-shadow:0 0 0 3px color-mix(in srgb, var(--phase-color) 15%, transparent);
+.gg-grouprow:hover{background:color-mix(in srgb, var(--accent) 5%, var(--surface-2));}
+.gg-grouprow .gg-side{
+  background:var(--surface-2);
+  display:flex;align-items:center;gap:9px;padding:0 12px;
+  grid-template-columns:none;
 }
-.gantt-phase-label{
-  font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.005em;
-  display:flex;align-items:center;gap:2px;min-width:0;
+.gg-grouprow:hover .gg-side{background:color-mix(in srgb, var(--accent) 5%, var(--surface-2));}
+.gg-collapse-btn{
+  width:18px;height:18px;border:none;background:transparent;color:var(--text-muted);
+  cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:4px;flex-shrink:0;
 }
-.gantt-phase-label > :first-child{
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.gg-collapse-btn:hover{background:var(--surface-3);color:var(--text);}
+.gg-group-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
 }
-.gantt-phase-meta{
-  font-family:var(--mono);font-size:10.5px;color:var(--text-muted);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.gg-group-label{font-weight:600;font-size:13px;color:var(--text);flex-shrink:0;}
+.gg-group-meta{
+  font-family:var(--mono);font-size:11px;color:var(--text-muted);
+  margin-left:auto;padding-right:4px;
 }
-.gantt-phase-track{position:relative;background:transparent;}
-.gantt-phase-band{
-  position:absolute;top:8px;height:26px;border-radius:8px;
-  background:color-mix(in srgb, var(--phase-color) 15%, transparent);
-  border:1.5px solid var(--phase-color);
-  transition:background .15s, box-shadow .15s;
+.gg-grouprow.drop-target .gg-side{
+  background:color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+  box-shadow:inset 4px 0 0 var(--accent);
 }
-/* Drop target highlight when dragging a bar over a phase */
-.gantt-phase-row.drop-target .gantt-phase-band{
-  background:color-mix(in srgb, var(--phase-color) 28%, transparent);
-  box-shadow:0 0 0 2px var(--phase-color), 0 4px 14px color-mix(in srgb, var(--phase-color) 35%, transparent);
-}
-.gantt-phase-row.drop-target{
-  background:color-mix(in srgb, var(--phase-color) 8%, var(--surface-2));
-}
-/* Bar in dragging state */
-.gantt-bar.dragging{
-  opacity:.45;cursor:grabbing;
-}
-.gantt-bar[draggable="true"]{cursor:grab;}
-.gantt-bar[draggable="true"]:active{cursor:grabbing;}
+.gg-row.drop-before{box-shadow:inset 0 2px 0 0 var(--accent);}
+.gg-row.drop-after{box-shadow:inset 0 -2px 0 0 var(--accent);}
+.gg-row.row-dragging{opacity:.4;}
 
-/* Custom Gantt tooltip — appears instantly on hover */
-.gantt-tooltip{
-  position:fixed;z-index:1000;pointer-events:none;
-  transform:translate(-50%, -100%);
-  background:var(--text);color:var(--surface);
-  padding:11px 14px;border-radius:10px;
-  font-size:12px;line-height:1.45;
-  box-shadow:0 8px 28px rgba(0,0,0,.22);
-  opacity:0;transition:opacity .08s;
-  max-width:320px;min-width:240px;white-space:normal;
+/* Timeline column on right */
+.gg-timeline{
+  position:relative;flex-shrink:0;background:var(--surface);
+  border-left:1px solid var(--border);
 }
+.gg-row:hover .gg-timeline{background:var(--surface-2);}
+.gg-timeline-group{background:var(--surface-2);}
+.gg-grouprow:hover .gg-timeline-group{background:color-mix(in srgb, var(--accent) 5%, var(--surface-2));}
+
+/* Bars */
+.gg-bar{
+  position:absolute;top:50%;transform:translateY(-50%);
+  height:14px;border-radius:4px;border:1px solid;
+  cursor:pointer;overflow:hidden;
+  transition:filter .12s, transform .12s;
+}
+.gg-bar:hover{filter:brightness(0.94);}
+.gg-bar.dragging{opacity:.5;}
+.gg-bar.gg-overdue{box-shadow:0 0 0 1px var(--danger);}
+.gg-bar-progress{
+  position:absolute;top:0;left:0;height:100%;
+  border-radius:3px 0 0 3px;opacity:.55;
+}
+.gg-milestone{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.gg-milestone:hover{filter:brightness(0.85);}
+.gg-milestone svg{display:block;}
+
+/* Today line */
+.gg-row-today{
+  position:absolute;top:0;bottom:0;left:0;
+  width:1.5px;background:var(--accent);opacity:.55;
+  pointer-events:none;
+}
+
+/* Time axis */
+.gg-axis{position:relative;flex-shrink:0;background:var(--surface-2);}
+.gg-axis-months{position:relative;height:24px;border-bottom:1px solid var(--border);}
+.gg-axis-month{
+  position:absolute;top:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-muted);font-weight:500;
+  border-right:1px solid var(--border);
+}
+.gg-axis-weeks{position:relative;height:24px;}
+.gg-axis-week{
+  position:absolute;top:0;bottom:0;
+  display:flex;align-items:center;
+  font-family:var(--mono);font-size:10px;color:var(--text-dim);
+  padding-left:4px;
+}
+.gg-axis-today{
+  position:absolute;top:0;bottom:0;width:1.5px;
+  background:var(--accent);opacity:.7;
+  pointer-events:none;
+}
+.gg-axis-today::before{
+  content:'TODAY';
+  position:absolute;top:4px;left:-22px;
+  background:var(--accent);color:#fff;
+  font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.06em;
+  padding:1px 6px;border-radius:3px;
+  white-space:nowrap;
+}
+[data-theme="dark"] .gg-axis-today::before{color:#0a120d;}
+
 .gantt-tooltip.gtt-visible{opacity:1;}
 .gantt-tooltip .gtt-title{
   font-weight:600;margin-bottom:6px;font-size:13px;
@@ -978,12 +1039,6 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.16);
   color:#FFB97D;font-family:var(--sans);font-size:11px;
 }
-
-/* Effort tracking block in tooltip */
-.gantt-tooltip .gtt-effort{
-  margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.14);
-  display:grid;grid-template-columns:repeat(3, 1fr);gap:4px 10px;
-}
 .gantt-tooltip .gtt-effort-row{
   display:flex;flex-direction:column;line-height:1.2;
 }
@@ -1002,151 +1057,9 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   height:100%;background:#8dd2aa;transition:width .2s;
 }
 .gantt-tooltip .gtt-effort-fill.is-overrun{background:#ff9b9b;}
-
-/* Reusable info tooltip — for ⓘ icons across the app */
-.info-tooltip{
-  position:fixed;z-index:9999;pointer-events:none;
-  transform:translate(-50%, -100%);
-  background:var(--text);color:var(--surface);
-  padding:9px 13px;border-radius:8px;
-  font-size:12.5px;line-height:1.5;
-  box-shadow:0 8px 28px rgba(0,0,0,.22);
-  opacity:0;transition:opacity .08s;
-  max-width:320px;white-space:normal;
-}
 .info-tooltip.visible{opacity:1;}
 .info-tooltip.flip-below{transform:translate(-50%, 0);}
-/* Out-of-phase task styling */
-.gantt-bar.gb-out-of-phase{
-  outline:2px dashed var(--warn);outline-offset:-2px;
-}
-.gantt-bar.gb-overdue.gb-out-of-phase{
-  outline:2px dashed var(--danger);
-}
-.gantt-warn-ico{
-  font-size:13px;color:var(--warn);flex-shrink:0;line-height:1;cursor:help;
-}
-.gantt-phase-band.configured{
-  background:color-mix(in srgb, var(--phase-color) 18%, transparent);
-  border-style:solid;
-  box-shadow:0 1px 4px color-mix(in srgb, var(--phase-color) 25%, transparent);
-}
 
-/* WI code pill in task row (only shown in phase grouping) */
-.gantt-wi-pill{
-  display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
-  font-family:var(--sans);font-size:10.5px;font-weight:500;
-  padding:1px 7px;border-radius:4px;letter-spacing:.005em;
-  background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);
-  max-width:240px;overflow:hidden;
-  cursor:help;
-}
-.gantt-wi-pill .wi-pill-code{
-  font-family:var(--mono);font-size:10px;flex-shrink:0;
-  white-space:nowrap;
-}
-.gantt-wi-pill .wi-pill-sep{opacity:.45;flex-shrink:0;}
-.gantt-wi-pill .wi-pill-title{
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
-}
-.gantt-wi-pill.kind-interface{
-  background:var(--accent-soft);color:var(--accent-deep);border-color:transparent;
-}
-[data-theme="dark"] .gantt-wi-pill.kind-interface{color:var(--accent);}
-
-/* WI grouping mode: header band + icon */
-.gantt-wi-row{
-  background:var(--surface-2);
-  border-top:1px solid var(--border);border-bottom:1px solid var(--border-strong);
-}
-.gantt-wi-icon{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:22px;height:22px;border-radius:6px;flex-shrink:0;
-  font-size:13px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);
-}
-.gantt-wi-icon.kind-interface{color:var(--accent);background:var(--accent-soft);border-color:transparent;}
-.gantt-wi-band{
-  position:absolute;top:8px;height:26px;border-radius:8px;
-  background:color-mix(in srgb, var(--text-muted) 12%, transparent);
-  border:1.5px solid var(--text-muted);
-  opacity:.6;
-}
-
-/* Task row left columns */
-.gantt-task-cell{
-  font-size:12.5px;cursor:pointer;background:var(--surface);transition:.1s;color:var(--text);
-  display:flex;align-items:center;gap:8px;
-}
-.gantt-task-cell:hover{background:var(--surface-2);}
-.gantt-task-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
-
-/* Drag handle in Gantt task cell */
-.gantt-row-handle{
-  color:var(--text-muted);opacity:.45;font-size:13px;line-height:1;
-  cursor:grab;transition:opacity .12s, color .12s, background .12s;user-select:none;
-  padding:2px 3px;border-radius:3px;flex-shrink:0;
-}
-.gantt-row:hover .gantt-row-handle{opacity:.85;color:var(--text);}
-.gantt-row-handle:hover{opacity:1;color:var(--accent);background:var(--surface-2);}
-.gantt-row-handle:active{cursor:grabbing;}
-.gantt-row-handle.dragging{opacity:.4;}
-.gantt-row.row-dragging{opacity:.5;}
-.gantt-row.drop-before{box-shadow:inset 0 2px 0 0 var(--accent);}
-.gantt-row.drop-after{box-shadow:inset 0 -2px 0 0 var(--accent);}
-
-/* Assignee button */
-.gantt-as-btn{
-  display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:6px;
-  background:var(--surface);border:1px solid var(--border);cursor:pointer;width:100%;
-  transition:.12s;
-}
-.gantt-as-btn:hover:not(:disabled){background:var(--surface-2);border-color:var(--border-strong);}
-.gantt-as-btn:disabled{cursor:default;opacity:.7;}
-.gantt-as-empty{border-style:dashed;background:transparent;}
-.gantt-as-empty .gantt-as-name.muted{color:var(--text-muted);}
-.gantt-as-name{
-  font-size:12px;color:var(--text);flex:1;text-align:left;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.gantt-pop-caret{font-size:9px;color:var(--text-muted);flex-shrink:0;opacity:.7;}
-
-/* Status button */
-.gantt-st-btn{
-  display:inline-flex;align-items:center;gap:4px;padding:0;border-radius:999px;
-  background:transparent;border:none;cursor:pointer;white-space:nowrap;
-}
-.gantt-st-btn:disabled{cursor:default;}
-.gantt-st-chip{
-  display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
-}
-.gantt-st-chip::after{
-  content:"▾";font-size:9px;opacity:.7;margin-left:2px;
-}
-.gantt-st-btn:disabled .gantt-st-chip::after{display:none;}
-
-/* Timeline track */
-.gantt-track{position:relative;flex-shrink:0;}
-
-/* Bar — empty rectangle, color = phase color */
-.gantt-bar{
-  position:absolute;top:6px;height:24px;border-radius:6px;
-  cursor:pointer;transition:filter .12s, transform .12s, box-shadow .12s;
-  box-shadow:0 1px 3px rgba(0,0,0,.08);
-}
-.gantt-bar:hover{
-  filter:brightness(1.08);transform:translateY(-1px);
-  box-shadow:0 2px 6px rgba(0,0,0,.12), 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
-}
-.gb-overdue{outline:2px solid var(--danger);outline-offset:-2px;}
-.gantt-today-line{
-  position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:3;pointer-events:none;
-}
-.gantt-today-line::before{
-  content:"Today";position:absolute;top:4px;left:6px;background:var(--accent);color:#fff;
-  font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;
-  padding:1px 6px;border-radius:4px;white-space:nowrap;
-}
-[data-theme="dark"] .gantt-today-line::before{color:#0a120d;}
 .gantt-undated-row{
   padding:8px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;
   background:var(--surface);font-size:13px;cursor:pointer;transition:.1s;color:var(--text);
@@ -2198,7 +2111,7 @@ const DEFAULT_DIF_TEMPLATES = [
 let state = {
   projects: [],
   workItems: [],   // {id, projectId, kind:'interface'|'work', code, title, status, priority, owner, tags, source, target, dif, protocol, direction, description, createdAt}
-  tasks: [],       // {id, projectId, workItemId, parentTaskId|null, code, title, type, status, priority, assignee, due, estimate, description, comments:[], activity:[], createdAt}
+  tasks: [],       // {id, projectId, workItemId, parentTaskId|null, code, title, type, status, priority, assignee, startDate, due, estimate, progress, isMilestone, description, comments:[], activity:[], createdAt}
   timeLogs: [],    // {id, projectId, taskId, person, date, hours, note}
   difTemplates: [],
   users: [],
@@ -3137,7 +3050,7 @@ function renderDashboard(){
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
 let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:false };
-let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase' };  // groupBy: 'phase' | 'workitem'
+let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set() };
 let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 
 function renderTasks(){ renderWorkView({kindFilter: null}); }
@@ -3850,6 +3763,20 @@ function renderSidePanel(){
         <div class="sp-prop-val"><input type="number" id="sp-estimate" value="${task.estimate||''}" min="0" step="0.5" ${canWrite?'':'disabled'}/>
           <span style="color:var(--text-muted);font-size:12px">h · ${loggedH.toFixed(1)}h logged</span></div>
 
+        <span class="sp-prop-key">Progress</span>
+        <div class="sp-prop-val">
+          <input type="number" id="sp-progress" value="${task.progress != null ? task.progress : ''}" min="0" max="100" step="5" placeholder="auto" ${canWrite?'':'disabled'} style="width:70px"/>
+          <span style="color:var(--text-muted);font-size:12px">% complete</span>
+        </div>
+
+        <span class="sp-prop-key">Milestone</span>
+        <div class="sp-prop-val">
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:${canWrite?'pointer':'default'}">
+            <input type="checkbox" id="sp-milestone" ${task.isMilestone?'checked':''} ${canWrite?'':'disabled'}/>
+            <span style="color:var(--text-muted)">Render as milestone (◆)</span>
+          </label>
+        </div>
+
         ${wi ? `<span class="sp-prop-key">Parent</span>
           <div class="sp-prop-val">
             ${task.parentTaskId
@@ -3964,6 +3891,15 @@ function renderSidePanel(){
   };
   const estInput = sp.querySelector('#sp-estimate');
   if(estInput) estInput.onchange = e => { mutateTaskQuiet(task.id, t => { t.estimate = e.target.value ? Number(e.target.value) : null; pushActivity(t, `set estimate to ${t.estimate||'—'}h`); }); };
+  const progInput = sp.querySelector('#sp-progress');
+  if(progInput) progInput.onchange = e => {
+    let v = e.target.value === '' ? null : Math.max(0, Math.min(100, Number(e.target.value)));
+    mutateTaskQuiet(task.id, t => { t.progress = v; pushActivity(t, `set progress to ${v != null ? v + '%' : 'auto'}`); });
+  };
+  const msInput = sp.querySelector('#sp-milestone');
+  if(msInput) msInput.onchange = e => {
+    mutateTask(task.id, t => { t.isMilestone = e.target.checked; pushActivity(t, e.target.checked ? 'marked as milestone' : 'unmarked as milestone'); });
+  };
 
   sp.querySelectorAll('[data-pop]').forEach(btn => {
     btn.onclick = () => {
@@ -4672,6 +4608,7 @@ function saveNewTask(){
    ════════════════════════════════════════════════════════ */
 function renderGantt(){
   const pid = state.activeProject;
+  const proj = state.projects.find(p => p.id === pid);
   const workItems = state.workItems.filter(w => w.projectId === pid);
   const allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
   const canWrite = canWriteView('tasks');
@@ -4685,10 +4622,8 @@ function renderGantt(){
     return;
   }
 
-  // Compute task bars: bar = explicit [startDate, endDate]. If startDate is missing,
-  // getTaskDateRange falls back to (end − ceil(estimate/8) working days) for backwards compat.
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  // Compute task bars (grid+gantt rows). undated = no start AND no end at all.
+  const today = new Date(); today.setHours(0,0,0,0);
   const bars = [];
   const undated = [];
   allTasks.forEach(t => {
@@ -4700,7 +4635,7 @@ function renderGantt(){
 
   if(!bars.length){
     content.innerHTML = `
-      <div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▭</div><h3>No dated tasks</h3><p>Add a due date to your tasks to see them on the Gantt.</p></div>
+      <div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▭</div><h3>No dated tasks</h3><p>Add a start or end date to see tasks on the Gantt.</p></div>
       ${undated.length ? `<div style="padding:0 28px 28px"><h4 style="font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">${undated.length} task${undated.length===1?'':'s'} without a date</h4>${undated.map(t => `<div class="gantt-undated-row" data-tid="${t.id}">${escHtml(t.title)}</div>`).join('')}</div>` : ''}`;
     document.getElementById('content').onclick = e => {
       const row = e.target.closest('.gantt-undated-row');
@@ -4709,403 +4644,318 @@ function renderGantt(){
     return;
   }
 
-  // Span: pad before/after for breathing room, snap to Mondays
+  // ─── Date span ────────────────────────────────────────────
   let minDate = new Date(Math.min(...bars.map(b => b.start.getTime())));
   let maxDate = new Date(Math.max(...bars.map(b => b.end.getTime())));
-  // Include any configured project phase boundaries so they're visible even without tasks
+  // Extend with configured phase boundaries so empty phases still appear
   PHASES.forEach(p => {
-    const range = getProjectPhase(state.activeProject, p.k);
-    if(range){
-      if(range.start){
-        const s = new Date(range.start);
-        if(!isNaN(s) && s < minDate) minDate = s;
-      }
-      if(range.end){
-        const e = new Date(range.end);
-        if(!isNaN(e) && e > maxDate) maxDate = e;
-      }
+    const r = getProjectPhase(pid, p.k);
+    if(r){
+      if(r.start){ const s = new Date(r.start); if(!isNaN(s) && s < minDate) minDate = s; }
+      if(r.end)  { const e = new Date(r.end);   if(!isNaN(e) && e > maxDate) maxDate = e; }
     }
   });
   if(today < minDate) minDate = new Date(today);
   if(today > maxDate) maxDate = new Date(today);
-  minDate = snapToMonday(minDate);
-  minDate.setDate(minDate.getDate() - 7);
-  maxDate = snapToMonday(maxDate);
-  maxDate.setDate(maxDate.getDate() + 14);
+  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 7);
+  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 14);
 
   const zoom = ganttViewState.zoom;
-  const dayPx = zoom === 'day' ? 36 : zoom === 'week' ? 18 : 6;
+  const dayPx = zoom === 'day' ? 28 : zoom === 'week' ? 14 : 5;
   const totalDays = Math.round((maxDate - minDate) / 86400000);
-  const timelineWidth = totalDays * dayPx;
+  const timelineWidth = Math.max(600, totalDays * dayPx);
+  const dayToX = d => Math.round((d - minDate) / 86400000) * dayPx;
 
-  // Build week ticks (every week, all zoom levels) + month band
-  const weekTicks = [];
+  // ─── Time-axis ticks ──────────────────────────────────────
   const monthBand = [];
+  const weekBand  = [];
   let cursor = new Date(minDate);
   let curMonth = -1, monthStart = 0;
   for(let i = 0; i < totalDays; i++){
     if(cursor.getDay() === 1 || i === 0){
-      const left = i * dayPx;
-      const wk = isoWeek(cursor);
-      // Every zoom level: just "Wk N" label, fits even at month zoom
-      const lbl = `Wk ${wk}`;
-      weekTicks.push(`<div class="gantt-week-tick" style="left:${left}px;width:${7*dayPx}px"><span>${lbl}</span></div>`);
+      weekBand.push({ x: i * dayPx, label: `Wk ${isoWeek(cursor)}` });
     }
     if(cursor.getMonth() !== curMonth){
       if(curMonth !== -1){
-        monthBand.push(`<div class="gantt-month-cell" style="left:${monthStart*dayPx}px;width:${(i-monthStart)*dayPx}px">${monthLabel(curMonth, cursor.getFullYear())}</div>`);
+        monthBand.push({ x: monthStart * dayPx, w: (i - monthStart) * dayPx, label: monthLabel(curMonth, cursor.getFullYear()) });
       }
       curMonth = cursor.getMonth();
       monthStart = i;
     }
     cursor.setDate(cursor.getDate() + 1);
   }
-  monthBand.push(`<div class="gantt-month-cell" style="left:${monthStart*dayPx}px;width:${(totalDays-monthStart)*dayPx}px">${monthLabel(curMonth, cursor.getFullYear())}</div>`);
+  monthBand.push({ x: monthStart * dayPx, w: (totalDays - monthStart) * dayPx, label: monthLabel(curMonth, cursor.getFullYear()) });
+  const todayX = dayToX(today);
+  const showToday = todayX >= 0 && todayX <= timelineWidth;
 
-  const todayOffset = Math.round((today - minDate) / 86400000) * dayPx;
-  const showTodayLine = todayOffset >= 0 && todayOffset <= timelineWidth;
-
-  // Group bars: by phase (default) OR by work item
-  const groupKey = ganttViewState.groupBy === 'workitem' ? 'workitem' : 'phase';
-  const byGroup = new Map();
-  if(groupKey === 'phase'){
-    PHASES.forEach(p => byGroup.set(p.k, []));
-    byGroup.set(null, []);
-    bars.forEach(b => {
-      const ph = b.task.phase || null;
-      if(!byGroup.has(ph)) byGroup.set(ph, []);
-      byGroup.get(ph).push(b);
+  // ─── Group tasks by phase or workitem ────────────────────
+  const groupBy = ganttViewState.groupBy;
+  let groups = []; // [{ key, label, color?, tasks: [bars], totalEffort, doneCount }]
+  if(groupBy === 'phase'){
+    PHASES.forEach(p => {
+      const groupBars = bars.filter(b => (b.task.phase || '_no') === p.k);
+      if(!groupBars.length && !getProjectPhase(pid, p.k)) return;
+      groups.push({
+        key: 'phase:' + p.k,
+        label: p.label,
+        color: p.color,
+        phase: p,
+        tasks: groupBars,
+        totalEffort: groupBars.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+        doneCount: groupBars.filter(b => b.task.status === 'done').length,
+      });
     });
+    const noPhase = bars.filter(b => !b.task.phase);
+    if(noPhase.length){
+      groups.push({
+        key: 'phase:_none',
+        label: 'No phase',
+        color: '#9aa39c',
+        tasks: noPhase,
+        totalEffort: noPhase.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+        doneCount: noPhase.filter(b => b.task.status === 'done').length,
+      });
+    }
   } else {
-    // By work item — keep WI order from state, then a "no parent" bucket if any
-    workItems.forEach(w => byGroup.set(w.id, []));
-    byGroup.set('_orphan', []);
-    bars.forEach(b => {
-      const wi = workItems.find(w => w.id === b.task.workItemId);
-      if(wi) byGroup.get(wi.id).push(b);
-      else byGroup.get('_orphan').push(b);
+    workItems.forEach(wi => {
+      const groupBars = bars.filter(b => b.task.workItemId === wi.id);
+      if(!groupBars.length) return;
+      groups.push({
+        key: 'wi:' + wi.id,
+        label: `${wi.code ? wi.code + ' · ' : ''}${wi.title || ''}`,
+        color: '#0f7a4b',
+        workItem: wi,
+        tasks: groupBars,
+        totalEffort: groupBars.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+        doneCount: groupBars.filter(b => b.task.status === 'done').length,
+      });
     });
   }
-  // Sort tasks within each group: manual order first (if set), then by start date as fallback
-  byGroup.forEach(arr => arr.sort((a, b) => {
-    const ao = typeof a.task.order === 'number' ? a.task.order : Number.MAX_SAFE_INTEGER;
-    const bo = typeof b.task.order === 'number' ? b.task.order : Number.MAX_SAFE_INTEGER;
-    if(ao !== bo) return ao - bo;
-    return a.start - b.start;
-  }));
-  const groupOrder = groupKey === 'phase'
-    ? PHASES.map(p => p.k).concat([null])
-    : workItems.map(w => w.id).concat(['_orphan']);
 
-  // Helper to render an assignee cell: shows avatar+name as a button (popover trigger)
-  const renderAssigneeCell = (task) => {
-    if(!task.assignee){
-      return `<div class="gantt-assignee-cell">
-        <button class="gantt-as-btn gantt-as-empty" data-pop-assignee="${task.id}" ${canWrite?'':'disabled'}>
-          <span class="gantt-as-name muted">— assign</span>
-          ${canWrite?'<span class="gantt-pop-caret">▾</span>':''}
-        </button>
-      </div>`;
-    }
-    return `<div class="gantt-assignee-cell">
-      <button class="gantt-as-btn" data-pop-assignee="${task.id}" ${canWrite?'':'disabled'}>
-        ${avatarEl(task.assignee, 22)}
-        <span class="gantt-as-name">${escHtml(task.assignee.split(' ')[0])}</span>
-        ${canWrite?'<span class="gantt-pop-caret">▾</span>':''}
-      </button>
-    </div>`;
-  };
-
-  // Helper to render a status cell
-  const renderStatusCell = (task) => {
-    const st = task.status || 'todo';
-    const stChipCls = `chip chip-${st==='done'?'success':st==='doing'?'warn':st==='review'?'info':st==='blocked'?'danger':'muted'}`;
-    return `<div class="gantt-status-cell">
-      <button class="gantt-st-btn" data-pop-status="${task.id}" ${canWrite?'':'disabled'}>
-        <span class="${stChipCls} gantt-st-chip">${fmtStatus(st)}</span>
-      </button>
-    </div>`;
-  };
-
-  // Helper to render a single task row (used by both phase and workitem grouping)
-  const renderGanttTaskRow = (b, groupId, idx, workItems, canWrite, dayPx, minDate, today, timelineWidth) => {
-    const startOffset = Math.round((b.start - minDate) / 86400000) * dayPx;
-    const width = Math.max(dayPx, b.days * dayPx);
-    const st = b.task.status || 'todo';
-    const isOverdue = st !== 'done' && b.end < today;
-    const overdueCls = isOverdue ? ' gb-overdue' : '';
-    const phaseColor = b.task.phase ? phaseDef(b.task.phase)?.color : '#9aa39c';
-    const dueCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.task.due) : 'unset';
-    const startCheck = b.task.phase ? checkDateInPhase(b.task.projectId, b.task.phase, b.start.toISOString().slice(0,10)) : 'unset';
-    const isOutOfPhase = (dueCheck === 'before' || dueCheck === 'after' || startCheck === 'before' || startCheck === 'after');
-    const outOfPhaseCls = isOutOfPhase ? ' gb-out-of-phase' : '';
-    let phaseWarning = null;
-    if(isOutOfPhase){
-      const range = getProjectPhase(b.task.projectId, b.task.phase);
-      const rangeStr = range ? `${range.start?fmtDate(range.start):'…'} → ${range.end?fmtDate(range.end):'…'}` : '';
-      phaseWarning = `Outside ${fmtPhase(b.task.phase)} phase (${rangeStr})`;
-    }
-    const startStr = fmtDate(b.start.toISOString().slice(0,10));
-    const endStr = fmtDate(b.end.toISOString().slice(0,10));
-    const durationStr = `${b.days} day${b.days===1?'':'s'}`;
-    const wi = workItems.find(w => w.id === b.task.workItemId);
-    const estimate = Number(b.task.estimate) || 0;
-    const actual = sumActualHours(b.task.id);
-    const remaining = Math.max(0, estimate - actual);
-    const overrun = actual > estimate && estimate > 0;
-    const tooltipData = JSON.stringify({
-      title: b.task.title || 'Untitled',
-      code: b.task.code || null,
-      range: `${startStr} → ${endStr}`,
-      duration: durationStr,
-      status: b.task.status ? fmtStatus(b.task.status) : 'Todo',
-      assignee: b.task.assignee || null,
-      phase: b.task.phase ? fmtPhase(b.task.phase) : null,
-      workItem: wi ? `${wi.code ? wi.code + ' · ' : ''}${wi.title || ''}` : null,
-      estimate: estimate,
-      actual: actual,
-      remaining: remaining,
-      overrun: overrun,
-      warning: phaseWarning,
+  // Sort tasks within group by start date, but allow manual order to override
+  groups.forEach(g => {
+    g.tasks.sort((a, b) => {
+      const ao = a.task.order, bo = b.task.order;
+      if(ao !== undefined && bo !== undefined) return ao - bo;
+      if(ao !== undefined) return -1;
+      if(bo !== undefined) return 1;
+      return a.start - b.start;
     });
-    // WI pill only shown in phase grouping (in workitem grouping the WI is the parent group)
-    let wiPill = '';
-    if(ganttViewState.groupBy === 'phase' && wi){
-      const fullTitle = wi.title || '';
-      if(fullTitle){
-        const truncTitle = fullTitle.length > 20 ? fullTitle.slice(0, 20) + '…' : fullTitle;
-        // Tooltip shows full title (and code, if any) so nothing is lost
-        const tipText = wi.code ? `${wi.code} · ${fullTitle}` : fullTitle;
-        wiPill = `<span class="gantt-wi-pill kind-${wi.kind}" title="${escHtml(tipText)}"><span class="wi-pill-title">${escHtml(truncTitle)}</span></span>`;
-      }
-    }
-    // Group attribute changes meaning per mode
-    const groupAttr = ganttViewState.groupBy === 'phase'
-      ? `data-phase="${groupId||'_none'}"`
-      : `data-wi="${groupId}"`;
-    return `<div class="gantt-row" ${groupAttr} data-row-idx="${idx}">
-      <div class="gantt-side-cell gantt-task-cell" data-tid="${b.task.id}" title="Open">
-        ${canWrite?`<span class="gantt-row-handle" data-drag-tid="${b.task.id}" draggable="true" title="Drag">⋮⋮</span>`:''}
-        ${wiPill}
-        <span class="gantt-task-title">${escHtml(b.task.title || 'Untitled')}</span>
-        ${isOutOfPhase?`<span class="gantt-warn-ico" title="${escHtml(phaseWarning||'')}">⚠</span>`:''}
-      </div>
-      ${renderAssigneeCell(b.task)}
-      ${renderStatusCell(b.task)}
-      <div class="gantt-track" style="width:${timelineWidth}px">
-        <div class="gantt-bar${overdueCls}${outOfPhaseCls}" data-tid="${b.task.id}" ${canWrite?'draggable="true"':''} style="left:${startOffset}px;width:${width}px;background:${phaseColor};" data-tooltip='${escHtml(tooltipData)}'></div>
-      </div>
-    </div>`;
-  };
+  });
 
-  let rowIdx = 0;
-  const groupRows = groupOrder.map(gk => {
-    const grBars = byGroup.get(gk) || [];
+  // ─── Build HTML ─────────────────────────────────────────
+  const SIDE_COL_TPL = `
+    <div class="gg-h-task">Task</div>
+    <div class="gg-h-eff">Effort</div>
+    <div class="gg-h-status">Status</div>
+    <div class="gg-h-prog">%</div>
+    <div class="gg-h-date">Start</div>
+    <div class="gg-h-date">End</div>`;
 
-    // ============== PHASE GROUPING ==============
-    if(groupKey === 'phase'){
-      const phk = gk;
-      const projPhase = phk ? getProjectPhase(state.activeProject, phk) : null;
-      // Skip a phase if it has no tasks AND no project-level config — and it's not the "no phase" bucket
-      if(!grBars.length && !projPhase) return '';
-      // The "no phase" bucket only shows if it has tasks
-      if(phk === null && !grBars.length) return '';
-      const def = phk ? phaseDef(phk) : { label:'No phase set', color:'#9aa39c', soft:'#F1EFE8', deep:'#5F5E5A', desc:'' };
-
-      // Determine phase boundaries: project config takes priority, fallback to derived from tasks
-      let phStart, phEnd, isConfigured = false;
-      if(projPhase && projPhase.start && projPhase.end){
-        phStart = new Date(projPhase.start); phStart.setHours(0,0,0,0);
-        phEnd = new Date(projPhase.end); phEnd.setHours(0,0,0,0);
-        isConfigured = true;
-      } else if(grBars.length){
-        phStart = new Date(Math.min(...grBars.map(b => b.start.getTime())));
-        phEnd = new Date(Math.max(...grBars.map(b => b.end.getTime())));
-      } else {
-        phStart = phEnd = null;
-      }
-
-      const phStartOffset = phStart ? Math.round((phStart - minDate) / 86400000) * dayPx : 0;
-      const phEndOffset = phEnd ? Math.round((phEnd - minDate) / 86400000) * dayPx + dayPx : 0;
-      const phWidth = Math.max(dayPx, phEndOffset - phStartOffset);
-      const taskCountStr = `${grBars.length} task${grBars.length===1?'':'s'}`;
-      const dateStr = phStart && phEnd
-        ? `${fmtDate(phStart.toISOString().slice(0,10))} → ${fmtDate(phEnd.toISOString().slice(0,10))}`
-        : '';
-      const metaStr = `${taskCountStr}${dateStr?' · ':''}${dateStr}${isConfigured?' · planned':''}`;
-      const bandHtml = phStart && phEnd
-        ? `<div class="gantt-phase-band${isConfigured?' configured':''}" style="left:${phStartOffset}px;width:${phWidth}px"></div>`
-        : '';
-      const phHeader = `<div class="gantt-phase-row" data-phase="${phk||'_none'}" style="--phase-color:${def.color};--phase-soft:${def.soft};--phase-deep:${def.deep}">
-        <div class="gantt-side-cell gantt-phase-name">
-          <span class="gantt-phase-dot"></span>
-          <div style="display:flex;flex-direction:column;min-width:0">
-            <span class="gantt-phase-label">
-              <span>${escHtml(def.label)}</span>
-              ${phk ? `<span class="phase-info-ico" title="${escHtml(def.longDesc || '')}">ⓘ</span>` : ''}
-            </span>
-            <span class="gantt-phase-meta">${escHtml(metaStr)}</span>
-          </div>
+  const groupRowsHtml = groups.map(g => {
+    const collapsed = ganttViewState.collapsedGroups.has(g.key);
+    const effDays = (g.totalEffort / 8).toFixed(1);
+    const groupHeader = `
+      <div class="gg-row gg-grouprow" data-gkey="${escHtml(g.key)}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (g.phase ? g.phase.k : '_none') : (g.workItem ? g.workItem.id : '')}">
+        <div class="gg-side gg-side-group">
+          <button class="gg-collapse-btn" data-toggle="${escHtml(g.key)}" title="${collapsed ? 'Expand' : 'Collapse'}">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" style="transform:rotate(${collapsed ? 0 : 90}deg);transition:transform .15s">
+              <path d="M3 2 L7 5 L3 8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span class="gg-group-dot" style="background:${g.color}"></span>
+          <span class="gg-group-label">${escHtml(g.label)}</span>
+          <span class="gg-group-meta">${g.tasks.length} task${g.tasks.length===1?'':'s'} · ${effDays}d</span>
         </div>
-        <div class="gantt-assignee-cell"></div>
-        <div class="gantt-status-cell"></div>
-        <div class="gantt-track gantt-phase-track" style="width:${timelineWidth}px">
-          ${bandHtml}
-        </div>
+        <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px"></div>
       </div>`;
 
-      const taskRows = grBars.map(b => renderGanttTaskRow(b, phk, ++rowIdx, workItems, canWrite, dayPx, minDate, today, timelineWidth)).join('');
-      return phHeader + taskRows;
-    }
+    if(collapsed) return groupHeader;
 
-    // ============== WORK ITEM GROUPING ==============
-    let wi = null;
-    if(gk === '_orphan'){
-      if(!grBars.length) return '';
-    } else {
-      wi = workItems.find(w => w.id === gk);
-      if(!wi) return '';
-    }
-    const wiTitle = wi ? wi.title : 'No work item';
-    const wiCode = wi ? wi.code : '';
-    const wiKind = wi ? wi.kind : '';
-    if(!grBars.length) return ''; // hide empty WI groups
+    const taskRows = g.tasks.map(b => {
+      const t = b.task;
+      const done = t.status === 'done';
+      const prog = t.progress != null ? Number(t.progress) : statusToProgress(t.status);
+      const stChip = statusChip(t.status);
+      const effortDays = (Number(t.estimate) || 0) / 8;
+      const effortStr = t.isMilestone ? '◆' : (effortDays > 0 ? effortDays.toFixed(1) + 'd' : '—');
+      const startStr = b.start.toISOString().slice(0,10);
+      const endStr = b.end.toISOString().slice(0,10);
+      const startLabel = fmtDate(startStr);
+      const endLabel = fmtDate(endStr);
+      const overdue = !done && t.due && (new Date(t.due) < today);
 
-    // Compute the WI's overall span
-    const wiStart = new Date(Math.min(...grBars.map(b => b.start.getTime())));
-    const wiEnd = new Date(Math.max(...grBars.map(b => b.end.getTime())));
-    const wiStartOffset = Math.round((wiStart - minDate) / 86400000) * dayPx;
-    const wiEndOffset = Math.round((wiEnd - minDate) / 86400000) * dayPx + dayPx;
-    const wiWidth = Math.max(dayPx, wiEndOffset - wiStartOffset);
-    const wiMeta = `${grBars.length} task${grBars.length===1?'':'s'} · ${fmtDate(wiStart.toISOString().slice(0,10))} → ${fmtDate(wiEnd.toISOString().slice(0,10))}`;
-    const wiHeader = `<div class="gantt-phase-row gantt-wi-row" data-wi="${gk}" style="--phase-color:#5F5E5A">
-      <div class="gantt-side-cell gantt-phase-name">
-        <span class="gantt-wi-icon kind-${wiKind}">${wiKind==='interface'?'⟷':'◫'}</span>
-        <div style="display:flex;flex-direction:column;min-width:0">
-          <span class="gantt-phase-label">
-            <span>${escHtml(wiCode ? `${wiCode} · ${wiTitle}` : wiTitle)}</span>
-          </span>
-          <span class="gantt-phase-meta">${escHtml(wiMeta)}</span>
+      // Bar geometry
+      const barX = dayToX(b.start);
+      const barW = Math.max(dayPx, dayToX(b.end) + dayPx - barX);
+      const barColor = statusBarColor(t.status);
+      const barFillColor = statusBarFill(t.status);
+
+      // Tooltip
+      const wi = workItems.find(w => w.id === t.workItemId);
+      const actual = sumActualHours(t.id);
+      const remaining = Math.max(0, (Number(t.estimate) || 0) - actual);
+      const tooltipData = JSON.stringify({
+        title: t.title || 'Untitled',
+        code: t.code || null,
+        range: `${startLabel} → ${endLabel}`,
+        duration: `${b.days} day${b.days===1?'':'s'}`,
+        status: fmtStatus(t.status || 'todo'),
+        assignee: t.assignee || null,
+        phase: t.phase ? fmtPhase(t.phase) : null,
+        workItem: wi ? `${wi.code ? wi.code + ' · ' : ''}${wi.title || ''}` : null,
+        estimate: Number(t.estimate) || 0,
+        actual: actual,
+        remaining: remaining,
+        overrun: actual > (Number(t.estimate) || 0) && (Number(t.estimate) || 0) > 0,
+        warning: null,
+      });
+
+      const barEl = t.isMilestone
+        ? `<div class="gg-bar gg-milestone" style="left:${barX + dayPx/2 - 7}px" data-tooltip='${escHtml(tooltipData)}'>
+             <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z" fill="${barColor}" stroke="${barColor}" stroke-width="1"/></svg>
+           </div>`
+        : `<div class="gg-bar gg-status-${escHtml(t.status||'todo')} ${overdue?'gg-overdue':''}" data-tid="${t.id}" data-tooltip='${escHtml(tooltipData)}' draggable="${canWrite?'true':'false'}" style="left:${barX}px;width:${barW}px;background:${barFillColor};border-color:${barColor}">
+             ${prog > 0 && prog < 100 ? `<div class="gg-bar-progress" style="width:${prog}%;background:${barColor}"></div>` : ''}
+           </div>`;
+
+      const todayLineInRow = showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : '';
+
+      return `<div class="gg-row gg-taskrow ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
+        <div class="gg-side">
+          <span class="gg-row-handle" title="Drag to reorder" data-drag-tid="${t.id}" draggable="${canWrite?'true':'false'}">⋮⋮</span>
+          <span class="gg-cell gg-cell-title" data-open-task="${t.id}">${t.code ? `<span class="gg-code">${escHtml(t.code)}</span>` : ''}<span class="gg-title">${escHtml(t.title || '—')}</span></span>
+          <span class="gg-cell gg-cell-eff">${escHtml(effortStr)}</span>
+          <span class="gg-cell gg-cell-status">${stChip}</span>
+          <span class="gg-cell gg-cell-prog">${prog}</span>
+          <span class="gg-cell gg-cell-date">${escHtml(startLabel)}</span>
+          <span class="gg-cell gg-cell-date">${escHtml(endLabel)}</span>
         </div>
-      </div>
-      <div class="gantt-assignee-cell"></div>
-      <div class="gantt-status-cell"></div>
-      <div class="gantt-track gantt-phase-track" style="width:${timelineWidth}px">
-        <div class="gantt-wi-band" style="left:${wiStartOffset}px;width:${wiWidth}px"></div>
-      </div>
-    </div>`;
-    const taskRows = grBars.map(b => renderGanttTaskRow(b, gk, ++rowIdx, workItems, canWrite, dayPx, minDate, today, timelineWidth)).join('');
-    return wiHeader + taskRows;
+        <div class="gg-timeline" style="width:${timelineWidth}px">
+          ${todayLineInRow}
+          ${barEl}
+        </div>
+      </div>`;
+    }).join('');
+
+    return groupHeader + taskRows;
   }).join('');
+
+  const monthHeaderHtml = monthBand.map(m =>
+    `<div class="gg-axis-month" style="left:${m.x}px;width:${m.w}px">${escHtml(m.label)}</div>`
+  ).join('');
+  const weekHeaderHtml = weekBand.map(w =>
+    `<div class="gg-axis-week" style="left:${w.x}px">${escHtml(w.label)}</div>`
+  ).join('');
+  const todayHeaderLine = showToday
+    ? `<div class="gg-axis-today" style="left:${todayX}px"></div>`
+    : '';
 
   content.innerHTML = `
     <div class="gantt-toolbar">
       <div class="group-toggle" id="ganttGroupBy">
-        <button data-g="phase" class="${ganttViewState.groupBy==='phase'?'active':''}">By phase</button>
-        <button data-g="workitem" class="${ganttViewState.groupBy==='workitem'?'active':''}">By work item</button>
+        <button data-g="phase" class="${groupBy==='phase'?'active':''}">By phase</button>
+        <button data-g="workitem" class="${groupBy==='workitem'?'active':''}">By work item</button>
       </div>
       <div class="group-toggle" id="ganttZoom">
         <button data-z="day" class="${zoom==='day'?'active':''}">Day</button>
         <button data-z="week" class="${zoom==='week'?'active':''}">Week</button>
         <button data-z="month" class="${zoom==='month'?'active':''}">Month</button>
       </div>
-      ${ganttViewState.groupBy==='phase' ? `<button class="btn btn-ghost btn-sm" onclick="openPhasePlanningModal()" ${canWrite?'':'disabled style="opacity:.4"'}>⚙ Configure phases</button>` : ''}
-      ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a due date hidden</span>` : ''}
+      <button class="btn btn-outline btn-sm" onclick="openPhasePlanningModal()">⚙ Configure phases</button>
+      <button class="btn btn-outline btn-sm" id="ganttCollapseAll">Collapse all</button>
+      <button class="btn btn-outline btn-sm" id="ganttExpandAll">Expand all</button>
+      ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a date hidden</span>` : ''}
     </div>
-    <div class="gantt-container" id="ganttContainer" style="--gantt-side-w:${ganttViewState.sideW}px">
-      <div class="gantt-header">
-        <div class="gantt-side-cell gantt-side-head">
-          <span>${ganttViewState.groupBy==='phase'?'Phase / Task':'Work item / Task'}</span>
-          <span class="gantt-col-resizer" data-resize="side" title="Drag to resize"></span>
-        </div>
-        <div class="gantt-assignee-cell gantt-side-head">Assignee</div>
-        <div class="gantt-status-cell gantt-side-head">Status</div>
-        <div class="gantt-timeline-head" style="width:${timelineWidth}px">
-          <div class="gantt-month-band">${monthBand.join('')}</div>
-          <div class="gantt-week-band">${weekTicks.join('')}</div>
+
+    <div class="gg-container">
+      <div class="gg-header">
+        <div class="gg-side gg-side-head">${SIDE_COL_TPL}</div>
+        <div class="gg-axis" style="width:${timelineWidth}px">
+          <div class="gg-axis-months">${monthHeaderHtml}</div>
+          <div class="gg-axis-weeks">${weekHeaderHtml}</div>
+          ${todayHeaderLine}
         </div>
       </div>
-      <div class="gantt-body">
-        ${showTodayLine ? `<div class="gantt-today-line" style="left:calc(var(--gantt-side-w) + var(--gantt-assignee-w) + var(--gantt-status-w) + ${todayOffset}px)"></div>` : ''}
-        ${groupRows}
+      <div class="gg-body">
+        ${groupRowsHtml}
       </div>
     </div>`;
 
-  // Wire interactions
+  // ─── Wire interactions ──────────────────────────────────
+  const cont = content.querySelector('.gg-container');
+
+  // Toolbar
+  document.getElementById('ganttGroupBy').onclick = e => {
+    const b = e.target.closest('button'); if(!b) return;
+    ganttViewState.groupBy = b.dataset.g;
+    renderGantt();
+  };
   document.getElementById('ganttZoom').onclick = e => {
     const b = e.target.closest('button'); if(!b) return;
     ganttViewState.zoom = b.dataset.z;
     renderGantt();
   };
-  const ganttGroupBy = document.getElementById('ganttGroupBy');
-  if(ganttGroupBy){
-    ganttGroupBy.onclick = e => {
-      const b = e.target.closest('button'); if(!b) return;
-      ganttViewState.groupBy = b.dataset.g;
-      renderGantt();
-    };
-  }
-  const cont = document.getElementById('ganttContainer');
-
-  // Column resizer for Phase/Task column
-  const resizer = cont.querySelector('.gantt-col-resizer');
-  if(resizer){
-    resizer.addEventListener('mousedown', e => {
-      e.preventDefault();
-      resizer.classList.add('resizing');
-      cont.classList.add('resizing-col');
-      const startX = e.clientX;
-      const startW = ganttViewState.sideW;
-      const onMove = (ev) => {
-        const dx = ev.clientX - startX;
-        const newW = Math.max(140, Math.min(500, startW + dx));
-        cont.style.setProperty('--gantt-side-w', newW + 'px');
-        ganttViewState.sideW = newW;
-      };
-      const onUp = () => {
-        resizer.classList.remove('resizing');
-        cont.classList.remove('resizing-col');
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-  }
-  cont.onclick = e => {
-    // Assignee popover
-    const aBtn = e.target.closest('[data-pop-assignee]');
-    if(aBtn){
-      e.stopPropagation();
-      openRowAssigneePopover(aBtn, Number(aBtn.dataset.popAssignee));
-      return;
-    }
-    // Status popover
-    const sBtn = e.target.closest('[data-pop-status]');
-    if(sBtn){
-      e.stopPropagation();
-      openRowStatusPopover(sBtn, Number(sBtn.dataset.popStatus));
-      return;
-    }
-    // Bar / task name click → open side panel (but only if it wasn't a drag)
-    const cell = e.target.closest('[data-tid]');
-    if(cell && !cell.dataset.dragJustEnded && !e.target.closest('[data-drag-just-ended],[data-drag-tid].dragging')){
-      // Also check if the actual element clicked has dragJustEnded (could be a handle)
-      const justDragged = e.target.closest('[data-drag-tid]');
-      if(justDragged && justDragged.dataset.dragJustEnded) return;
-      openSidePanel(Number(cell.dataset.tid));
-    }
+  document.getElementById('ganttCollapseAll').onclick = () => {
+    groups.forEach(g => ganttViewState.collapsedGroups.add(g.key));
+    renderGantt();
+  };
+  document.getElementById('ganttExpandAll').onclick = () => {
+    ganttViewState.collapsedGroups.clear();
+    renderGantt();
   };
 
-  // Drag-and-drop: bars OR row handles can be moved between phase rows to change phase
+  // Group collapse toggle
+  cont.querySelectorAll('.gg-collapse-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = btn.dataset.toggle;
+      if(ganttViewState.collapsedGroups.has(key)) ganttViewState.collapsedGroups.delete(key);
+      else ganttViewState.collapsedGroups.add(key);
+      renderGantt();
+    });
+  });
+
+  // Click on group row (anywhere except button) also toggles
+  cont.querySelectorAll('.gg-grouprow').forEach(row => {
+    row.addEventListener('click', e => {
+      if(e.target.closest('button')) return;
+      const key = row.dataset.gkey;
+      if(ganttViewState.collapsedGroups.has(key)) ganttViewState.collapsedGroups.delete(key);
+      else ganttViewState.collapsedGroups.add(key);
+      renderGantt();
+    });
+  });
+
+  // Click on task row (title cell) opens side panel
+  cont.querySelectorAll('[data-open-task]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      openSidePanel(Number(el.dataset.openTask));
+    });
+  });
+
+  // Click on bar opens side panel
+  cont.querySelectorAll('.gg-bar').forEach(bar => {
+    bar.addEventListener('click', e => {
+      e.stopPropagation();
+      if(bar.dataset.dragJustEnded) return;
+      const tid = Number(bar.dataset.tid || bar.closest('.gg-row')?.dataset.tid);
+      if(tid) openSidePanel(tid);
+    });
+    bar.addEventListener('mouseenter', () => showGanttTooltip(bar));
+    bar.addEventListener('mouseleave', () => hideGanttTooltip());
+  });
+
+  // Drag-and-drop: bar OR row-handle → drop on group row to change phase/workitem,
+  // or drop on task row to reorder within the same group.
   if(canWrite){
     let draggedTid = null;
     const wireDrag = (el) => {
       el.addEventListener('dragstart', e => {
         draggedTid = Number(el.dataset.tid || el.dataset.dragTid);
         el.classList.add('dragging');
-        // Also dim the entire row for visual feedback when dragging from the handle
-        const row = el.closest('.gantt-row');
+        const row = el.closest('.gg-row');
         if(row) row.classList.add('row-dragging');
         hideGanttTooltip();
         try { e.dataTransfer.setData('text/plain', String(draggedTid)); } catch(_) {}
@@ -5113,167 +4963,135 @@ function renderGantt(){
       });
       el.addEventListener('dragend', () => {
         el.classList.remove('dragging');
-        const row = el.closest('.gantt-row');
+        const row = el.closest('.gg-row');
         if(row) row.classList.remove('row-dragging');
-        cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(p => p.classList.remove('drop-target'));
-        // Suppress the click that fires after dragend so we don't open the side panel
+        cont.querySelectorAll('.gg-grouprow.drop-target').forEach(p => p.classList.remove('drop-target'));
+        cont.querySelectorAll('.drop-before, .drop-after').forEach(el2 => el2.classList.remove('drop-before', 'drop-after'));
         el.dataset.dragJustEnded = '1';
         setTimeout(() => { delete el.dataset.dragJustEnded; }, 50);
         draggedTid = null;
       });
     };
-    cont.querySelectorAll('.gantt-bar[draggable="true"]').forEach(wireDrag);
-    cont.querySelectorAll('.gantt-row-handle[draggable="true"]').forEach(wireDrag);
+    cont.querySelectorAll('.gg-bar[draggable="true"]').forEach(wireDrag);
+    cont.querySelectorAll('.gg-row-handle[draggable="true"]').forEach(wireDrag);
 
     cont.addEventListener('dragover', e => {
       if(draggedTid === null) return;
-      // Group attribute differs per mode
-      const groupAttr = ganttViewState.groupBy === 'workitem' ? 'data-wi' : 'data-phase';
-      const taskRow = e.target.closest(`.gantt-row[${groupAttr}]`);
-      const groupRow = e.target.closest(`.gantt-phase-row[${groupAttr}]`);
+      const groupAttr = groupBy === 'workitem' ? 'data-wi' : 'data-phase';
+      const taskRow = e.target.closest(`.gg-taskrow[${groupAttr}]`);
+      const groupRow = e.target.closest(`.gg-grouprow[${groupAttr}]`);
       const row = taskRow || groupRow;
       if(!row) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
-      cont.querySelectorAll('.gantt-row.drop-before, .gantt-row.drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
-      const targetGroup = row.getAttribute(groupAttr);
-      const groupHeader = cont.querySelector(`.gantt-phase-row[${groupAttr}="${targetGroup}"]`);
-      if(groupHeader) groupHeader.classList.add('drop-target');
+      cont.querySelectorAll('.gg-grouprow.drop-target').forEach(el => el.classList.remove('drop-target'));
+      cont.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
+      if(groupRow) groupRow.classList.add('drop-target');
       if(taskRow){
-        const targetId = Number(taskRow.querySelector('[data-tid]')?.dataset.tid);
-        if(targetId !== draggedTid){
-          const rect = taskRow.getBoundingClientRect();
-          const above = (e.clientY - rect.top) < rect.height / 2;
-          taskRow.classList.add(above ? 'drop-before' : 'drop-after');
-        }
-      }
-    });
-
-    cont.addEventListener('dragleave', e => {
-      if(e.target === cont || !cont.contains(e.relatedTarget)){
-        cont.querySelectorAll('.gantt-phase-row.drop-target').forEach(el => el.classList.remove('drop-target'));
-        cont.querySelectorAll('.gantt-row.drop-before, .gantt-row.drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
+        const r = taskRow.getBoundingClientRect();
+        const above = (e.clientY - r.top) < r.height / 2;
+        taskRow.classList.add(above ? 'drop-before' : 'drop-after');
       }
     });
 
     cont.addEventListener('drop', e => {
       if(draggedTid === null) return;
-      const groupAttr = ganttViewState.groupBy === 'workitem' ? 'data-wi' : 'data-phase';
-      const taskRow = e.target.closest(`.gantt-row[${groupAttr}]`);
-      const groupRow = e.target.closest(`.gantt-phase-row[${groupAttr}]`);
-      const row = taskRow || groupRow;
-      if(!row) return;
       e.preventDefault();
+      const groupAttr = groupBy === 'workitem' ? 'data-wi' : 'data-phase';
+      const taskRow = e.target.closest(`.gg-taskrow[${groupAttr}]`);
+      const groupRow = e.target.closest(`.gg-grouprow[${groupAttr}]`);
+      const row = taskRow || groupRow;
+      if(!row){ draggedTid = null; return; }
       const t = state.tasks.find(x => x.id === draggedTid);
-      if(!t) return;
+      if(!t){ draggedTid = null; return; }
+      const targetId = taskRow ? Number(taskRow.dataset.tid) : null;
 
-      // Determine drop position relative to a target task-row
-      let targetId = null, placeBefore = true;
-      if(taskRow){
-        targetId = Number(taskRow.querySelector('[data-tid]')?.dataset.tid);
-        if(targetId === draggedTid) targetId = null;
-        if(targetId){
-          const rect = taskRow.getBoundingClientRect();
-          placeBefore = (e.clientY - rect.top) < rect.height / 2;
-        }
-      }
-
-      if(ganttViewState.groupBy === 'phase'){
-        // PHASE MODE: drop in another phase row → change task.phase
-        const newPhase = row.dataset.phase === '_none' ? null : row.dataset.phase;
+      if(groupBy === 'phase'){
+        const newPhase = row.getAttribute('data-phase');
+        const newPhaseNorm = newPhase === '_none' ? null : newPhase;
         const oldPhase = t.phase || null;
-        const phaseChanged = oldPhase !== newPhase;
+        const phaseChanged = newPhaseNorm !== oldPhase;
         if(phaseChanged){
-          t.phase = newPhase;
-          pushActivity(t, newPhase
-            ? `moved to ${fmtPhase(newPhase)} phase`
-            : `cleared phase (was ${fmtPhase(oldPhase)})`);
-          const subs = state.tasks.filter(s => s.parentTaskId === t.id);
-          subs.forEach(s => { s.phase = newPhase; });
+          t.phase = newPhaseNorm;
+          pushActivity(t, `moved to ${newPhaseNorm ? fmtPhase(newPhaseNorm) : 'No phase'}`);
+          state.tasks.filter(s => s.parentTaskId === t.id).forEach(s => { s.phase = newPhaseNorm; });
           t.order = undefined;
         }
-        // Reorder within same phase
         if(targetId){
-          const targetTask = state.tasks.find(x => x.id === targetId);
-          if(targetTask && (targetTask.phase || null) === newPhase){
-            const siblings = state.tasks
-              .filter(s => s.projectId === t.projectId && (s.phase || null) === newPhase && !s.parentTaskId)
-              .sort((a, b) => {
-                const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
-                const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
-                if(ao !== bo) return ao - bo;
-                return (a.due || '').localeCompare(b.due || '');
-              });
-            const without = siblings.filter(s => s.id !== draggedTid);
-            const targetIdx = without.findIndex(s => s.id === targetId);
-            if(targetIdx >= 0){
-              const insertAt = placeBefore ? targetIdx : targetIdx + 1;
-              without.splice(insertAt, 0, t);
-              without.forEach((s, i) => { s.order = (i + 1) * 10; });
-              if(!phaseChanged) pushActivity(t, 'reordered');
-            }
+          const target = state.tasks.find(x => x.id === targetId);
+          if(target && (target.phase || null) === newPhaseNorm){
+            const r2 = taskRow.getBoundingClientRect();
+            const above = (e.clientY - r2.top) < r2.height / 2;
+            reorderTask(draggedTid, targetId, above ? 'before' : 'after');
           }
         } else if(!phaseChanged){
-          return;
+          draggedTid = null; return;
         }
       } else {
-        // WORKITEM MODE: drop in another WI row → change task.workItemId (and cascade subtasks)
-        const newWi = row.getAttribute('data-wi');
-        if(newWi === '_orphan') return; // can't drop into orphan
-        const newWiId = Number(newWi);
+        // workitem mode
+        const newWiId = Number(row.getAttribute('data-wi'));
         const oldWiId = t.workItemId;
-        const wiChanged = newWiId !== oldWiId;
-        if(wiChanged){
-          const oldWiObj = workItems.find(w => w.id === oldWiId);
-          const newWiObj = workItems.find(w => w.id === newWiId);
-          if(!newWiObj) return;
-          t.workItemId = newWiId;
-          pushActivity(t, `moved from ${oldWiObj?oldWiObj.code:'—'} to ${newWiObj.code}`);
-          const subs = state.tasks.filter(s => s.parentTaskId === t.id);
-          subs.forEach(s => { s.workItemId = newWiId; });
-          t.order = undefined;
-        }
-        // Reorder within same WI
-        if(targetId){
-          const targetTask = state.tasks.find(x => x.id === targetId);
-          if(targetTask && targetTask.workItemId === newWiId){
-            const siblings = state.tasks
-              .filter(s => s.projectId === t.projectId && s.workItemId === newWiId && !s.parentTaskId)
-              .sort((a, b) => {
-                const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
-                const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
-                if(ao !== bo) return ao - bo;
-                return (a.due || '').localeCompare(b.due || '');
-              });
-            const without = siblings.filter(s => s.id !== draggedTid);
-            const targetIdx = without.findIndex(s => s.id === targetId);
-            if(targetIdx >= 0){
-              const insertAt = placeBefore ? targetIdx : targetIdx + 1;
-              without.splice(insertAt, 0, t);
-              without.forEach((s, i) => { s.order = (i + 1) * 10; });
-              if(!wiChanged) pushActivity(t, 'reordered');
-            }
+        if(newWiId && newWiId !== oldWiId){
+          const oldWi = workItems.find(w => w.id === oldWiId);
+          const newWi = workItems.find(w => w.id === newWiId);
+          if(newWi){
+            t.workItemId = newWiId;
+            pushActivity(t, `moved from ${oldWi?oldWi.code:'—'} to ${newWi.code}`);
+            state.tasks.filter(s => s.parentTaskId === t.id).forEach(s => { s.workItemId = newWiId; });
+            t.order = undefined;
           }
-        } else if(!wiChanged){
-          return;
+        }
+        if(targetId){
+          const target = state.tasks.find(x => x.id === targetId);
+          if(target && target.workItemId === t.workItemId){
+            const r2 = taskRow.getBoundingClientRect();
+            const above = (e.clientY - r2.top) < r2.height / 2;
+            reorderTask(draggedTid, targetId, above ? 'before' : 'after');
+          }
         }
       }
 
       saveState();
-      if(typeof openPanelTaskId !== 'undefined' && openPanelTaskId === t.id) renderSidePanel();
-      renderGantt();
+      renderAll();
+      draggedTid = null;
     });
   }
-
-  // Fast custom tooltip on bar hover (replaces native title which has ~700ms delay)
-  cont.querySelectorAll('.gantt-bar[data-tooltip]').forEach(bar => {
-    bar.addEventListener('mouseenter', e => showGanttTooltip(bar));
-    bar.addEventListener('mouseleave', e => hideGanttTooltip());
-    bar.addEventListener('mousemove', e => positionGanttTooltip(e));
-  });
 }
 
+// Helpers for new Gantt
+function statusToProgress(status){
+  return ({
+    todo: 0,
+    doing: 50,
+    review: 75,
+    blocked: 25,
+    done: 100,
+  })[status] || 0;
+}
+function statusBarColor(status){
+  return ({
+    todo:    '#8a8a85',
+    doing:   '#d8951c',
+    review:  '#3279c0',
+    blocked: '#c44a4a',
+    done:    '#2d8e60',
+  })[status] || '#8a8a85';
+}
+function statusBarFill(status){
+  // A softer, lighter tint for the bar background; the colored fill on top shows progress
+  return ({
+    todo:    '#e8e6df',
+    doing:   '#fae6bc',
+    review:  '#d4e4f5',
+    blocked: '#fbd6d6',
+    done:    '#cfe6dc',
+  })[status] || '#e8e6df';
+}
+function statusChip(status){
+  const s = status || 'todo';
+  const labelMap = { todo: 'To Do', doing: 'WIP', review: 'Review', blocked: 'Blocked', done: 'Done' };
+  return `<span class="gg-st-chip gg-st-${escHtml(s)}">${escHtml(labelMap[s] || fmtStatus(s))}</span>`;
+}
 let ganttTooltipEl = null;
 function showGanttTooltip(bar){
   hideGanttTooltip();
