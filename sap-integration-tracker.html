@@ -1674,26 +1674,37 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .sched-cc-del:hover{background:var(--surface-3);color:var(--danger);}
 .sched-empty-customers{color:var(--text-muted);font-size:13px;padding:6px 0;}
 
-/* Week grid: 1 corner col + 5 day cols, header row + 2 half rows */
+/* Week grid: 5 columns, one cell per day. Each day-cell adapts to single or split state. */
 .sched-grid{
-  display:grid;grid-template-columns:60px repeat(5, 1fr);
-  gap:8px;
+  display:grid;grid-template-columns:repeat(5, 1fr);
+  gap:10px;
 }
-.sched-grid-corner{}
 .sched-grid-head{
   font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--text-muted);text-align:center;padding:6px 0;font-weight:500;
+  color:var(--text-muted);text-align:center;padding:4px 0 6px;font-weight:500;
 }
-.sched-grid-half{
-  font-family:var(--mono);font-size:11px;color:var(--text-muted);font-weight:600;
-  display:flex;align-items:center;justify-content:flex-end;padding-right:10px;
-  letter-spacing:.06em;
+/* Day cell: holds either one block (empty/single) or two stacked half-blocks (split) */
+.sched-day{
+  display:flex;flex-direction:column;gap:6px;
+  min-height:104px;
 }
+.sched-day-empty{
+  border-radius:10px;background:var(--surface-2);border:1.5px dashed var(--border);
+  color:var(--text-muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .12s, background .12s, color .12s;
+}
+.sched-day-empty:hover{
+  border-color:var(--accent);color:var(--accent);background:var(--accent-soft);
+}
+.sched-day-empty .sched-slot-add{font-size:22px;font-weight:300;line-height:1;}
+
+/* Filled slot — base look used by both single-mode and half-mode */
 .sched-slot{
-  min-height:50px;border-radius:8px;
+  border-radius:10px;
   display:flex;align-items:center;justify-content:center;gap:4px;
-  padding:6px 10px;font-size:13px;cursor:pointer;
-  transition:transform .1s, box-shadow .12s, border-color .12s;
+  padding:8px 12px;font-size:13px;cursor:pointer;
+  transition:background .12s, border-color .12s;
   position:relative;
 }
 .sched-slot-empty{
@@ -1701,6 +1712,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .sched-slot-empty:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
 .sched-slot-add{font-size:18px;font-weight:300;line-height:1;}
+.sched-slot-add-sm{font-size:14px;}
 .sched-slot-dash{font-size:14px;color:var(--text-dim);}
 .sched-slot-filled{
   --cc:var(--accent);
@@ -1724,6 +1736,30 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .sched-slot-filled:hover .sched-slot-clear{opacity:1;}
 .sched-slot-clear:hover{background:var(--surface-3);color:var(--danger);}
+
+/* Single-mode day: one filled block, fills the whole cell, with a small split button below */
+.sched-day-single{align-items:stretch;}
+.sched-day-single .sched-slot-filled{flex:1;min-height:62px;}
+.sched-split-btn{
+  border:1px dashed var(--border);background:var(--surface-2);color:var(--text-muted);
+  padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer;
+  transition:.12s;display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.sched-split-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+
+/* Split-mode day: two halves stacked, each with an AM/PM tag */
+.sched-day-split .sched-slot{padding:6px 10px;min-height:46px;}
+.sched-day-split .sched-slot-half{justify-content:flex-start;}
+.sched-half-tag{
+  font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.08em;
+  color:var(--text-dim);text-transform:uppercase;flex-shrink:0;
+  padding:2px 5px;border-radius:3px;background:var(--surface-3);
+}
+.sched-day-split .sched-slot-filled .sched-half-tag{
+  background:color-mix(in srgb, var(--cc) 22%, transparent);
+  color:color-mix(in srgb, var(--cc) 80%, var(--text));
+}
+.sched-day-split .sched-slot-name{padding:0 4px;}
 
 /* Slot picker (popover) */
 .sched-picker{
@@ -6304,8 +6340,17 @@ let scheduleViewState = { monthOffset: 0 }; // 0 = current month, -1 = previous,
 function renderSchedule(){
   const canWrite = canWriteView('schedule');
 
-  setTopbar('Schedule', 'Weekly customer pattern — repeats every week unless adjusted',
-    canWrite ? `<button class="btn btn-outline btn-sm" onclick="openScheduleClientModal()">＋ Customer</button>` : '');
+  setTopbar('Schedule', 'Weekly customer pattern — repeats every week unless adjusted');
+
+  // Place "+ Customer" button into the right-anchored slot so it sits 5px left of the bell.
+  // refreshTopbarViewSwitcher() runs from renderAll() and would normally clear this slot for
+  // non-task views, but renderSchedule runs AFTER renderAll's switcher refresh, so we set it
+  // here explicitly. The slot's CSS already gives it margin-left:auto + 5px right margin.
+  const slot = document.getElementById('topbarViewSwitcher');
+  if(slot){
+    slot.innerHTML = canWrite ? `<button class="btn btn-outline btn-sm" onclick="openScheduleClientModal()">＋ Customer</button>` : '';
+    slot.style.display = canWrite ? '' : 'none';
+  }
 
   const content = document.getElementById('content');
   const clients = state.scheduleClients;
@@ -6343,22 +6388,59 @@ function renderSchedule(){
           ${canWrite ? `<button class="sched-cc-del" onclick="event.stopPropagation();deleteScheduleClient(${c.id})" title="Delete">×</button>` : ''}
         </div>`).join('');
 
-  // ─── Week grid (5 cols × 2 rows) ────────────────────────
+  // ─── Week grid (5 columns, one cell per day; cell contents adapt to single vs split) ─
   const headerRow = SCHEDULE_DAYS.map(d => `<div class="sched-grid-head">${d.label}</div>`).join('');
-  const renderSlot = (dayKey, half) => {
-    const c = getScheduleClient(dayKey, half);
-    if(!c){
-      return `<div class="sched-slot sched-slot-empty" data-day="${dayKey}" data-half="${half}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','${half}', this)"` : ''}>
+  // Render a single day cell. Three states:
+  //  - empty (no am, no pm): one big "＋" slot
+  //  - single (am === pm and not null): one filled block + small "split" button at bottom
+  //  - split (am !== pm OR exactly one half set): AM and PM rendered separately stacked
+  const renderDayCell = (dayKey) => {
+    const slot = state.scheduleTemplate[dayKey] || { am: null, pm: null };
+    const am = getScheduleClient(dayKey, 'am');
+    const pm = getScheduleClient(dayKey, 'pm');
+    const isEmpty = !am && !pm;
+    const isSingle = am && pm && slot.am === slot.pm;
+    if(isEmpty){
+      return `<div class="sched-day sched-day-empty" data-day="${dayKey}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','am', this)"` : ''}>
         ${canWrite ? '<span class="sched-slot-add">＋</span>' : '<span class="sched-slot-dash">—</span>'}
       </div>`;
     }
-    return `<div class="sched-slot sched-slot-filled" style="--cc:${c.color}" data-day="${dayKey}" data-half="${half}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','${half}', this)"` : ''}>
-      <span class="sched-slot-name">${escHtml(c.name)}</span>
-      ${canWrite ? `<button class="sched-slot-clear" onclick="event.stopPropagation();clearScheduleSlot('${dayKey}','${half}')" title="Clear">×</button>` : ''}
+    if(isSingle){
+      return `<div class="sched-day sched-day-single" data-day="${dayKey}">
+        <div class="sched-slot sched-slot-filled" style="--cc:${am.color}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','am', this)"` : ''}>
+          <span class="sched-slot-name">${escHtml(am.name)}</span>
+          ${canWrite ? `<button class="sched-slot-clear" onclick="event.stopPropagation();clearWholeDay('${dayKey}')" title="Clear day">×</button>` : ''}
+        </div>
+        ${canWrite ? `<button class="sched-split-btn" onclick="splitDay('${dayKey}')" title="Split into AM and PM">＋ Split day</button>` : ''}
+      </div>`;
+    }
+    // Split: AM and PM stacked, each with its own slot, AM/PM label
+    const amSlot = am
+      ? `<div class="sched-slot sched-slot-filled sched-slot-half" style="--cc:${am.color}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','am', this)"` : ''}>
+           <span class="sched-half-tag">AM</span>
+           <span class="sched-slot-name">${escHtml(am.name)}</span>
+           ${canWrite ? `<button class="sched-slot-clear" onclick="event.stopPropagation();clearScheduleSlot('${dayKey}','am')" title="Clear">×</button>` : ''}
+         </div>`
+      : `<div class="sched-slot sched-slot-empty sched-slot-half" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','am', this)"` : ''}>
+           <span class="sched-half-tag">AM</span>
+           ${canWrite ? '<span class="sched-slot-add sched-slot-add-sm">＋</span>' : '<span class="sched-slot-dash">—</span>'}
+         </div>`;
+    const pmSlot = pm
+      ? `<div class="sched-slot sched-slot-filled sched-slot-half" style="--cc:${pm.color}" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','pm', this)"` : ''}>
+           <span class="sched-half-tag">PM</span>
+           <span class="sched-slot-name">${escHtml(pm.name)}</span>
+           ${canWrite ? `<button class="sched-slot-clear" onclick="event.stopPropagation();clearScheduleSlot('${dayKey}','pm')" title="Clear">×</button>` : ''}
+         </div>`
+      : `<div class="sched-slot sched-slot-empty sched-slot-half" ${canWrite ? `onclick="openScheduleSlotPicker('${dayKey}','pm', this)"` : ''}>
+           <span class="sched-half-tag">PM</span>
+           ${canWrite ? '<span class="sched-slot-add sched-slot-add-sm">＋</span>' : '<span class="sched-slot-dash">—</span>'}
+         </div>`;
+    return `<div class="sched-day sched-day-split" data-day="${dayKey}">
+      ${amSlot}
+      ${pmSlot}
     </div>`;
   };
-  const amRow = SCHEDULE_DAYS.map(d => renderSlot(d.key, 'am')).join('');
-  const pmRow = SCHEDULE_DAYS.map(d => renderSlot(d.key, 'pm')).join('');
+  const dayRow = SCHEDULE_DAYS.map(d => renderDayCell(d.key)).join('');
 
   // ─── Month aggregate bars ──────────────────────────────
   const aggEntries = [...halvesByClient.entries()]
@@ -6406,15 +6488,11 @@ function renderSchedule(){
     <div class="sched-section">
       <div class="sched-section-head">
         <h3 class="sched-section-title">Weekly pattern</h3>
-        <span class="sched-section-sub">${canWrite ? 'Click any slot to assign a customer. Each day has an AM and PM half — up to 2 customers per day.' : 'Read-only view of the weekly schedule.'}</span>
+        <span class="sched-section-sub">${canWrite ? 'Click a day to assign a customer. Use the ＋ Split day button to assign a different customer for AM and PM.' : 'Read-only view of the weekly schedule.'}</span>
       </div>
       <div class="sched-grid">
-        <div class="sched-grid-corner"></div>
         ${headerRow}
-        <div class="sched-grid-half">AM</div>
-        ${amRow}
-        <div class="sched-grid-half">PM</div>
-        ${pmRow}
+        ${dayRow}
       </div>
     </div>
 
@@ -6534,7 +6612,18 @@ function openScheduleSlotPicker(dayKey, half, anchorEl){
       const cidStr = btn.dataset.cid;
       const cid = cidStr ? Number(cidStr) : null;
       if(!state.scheduleTemplate[dayKey]) state.scheduleTemplate[dayKey] = { am: null, pm: null };
-      state.scheduleTemplate[dayKey][half] = cid;
+      const slot = state.scheduleTemplate[dayKey];
+      // If the day is currently empty, OR currently in "single mode" (am === pm),
+      // assigning a customer should fill BOTH halves so the day stays a single block.
+      // If the day is in split mode (am !== pm), only the clicked half is updated.
+      const isEmpty = !slot.am && !slot.pm;
+      const isSingle = slot.am !== null && slot.am === slot.pm;
+      if(isEmpty || isSingle){
+        slot.am = cid;
+        slot.pm = cid;
+      } else {
+        slot[half] = cid;
+      }
       saveState();
       closeScheduleSlotPicker();
       renderSchedule();
@@ -6553,6 +6642,23 @@ function closeScheduleSlotPicker(){
 function clearScheduleSlot(dayKey, half){
   if(!state.scheduleTemplate[dayKey]) return;
   state.scheduleTemplate[dayKey][half] = null;
+  saveState();
+  renderSchedule();
+}
+// Split a single-customer day into AM/PM by clearing the PM half.
+// User can then assign a different customer to PM via the picker.
+function splitDay(dayKey){
+  const slot = state.scheduleTemplate[dayKey];
+  if(!slot) return;
+  // PM becomes empty so the day visually splits
+  slot.pm = null;
+  saveState();
+  renderSchedule();
+}
+function clearWholeDay(dayKey){
+  if(!state.scheduleTemplate[dayKey]) return;
+  state.scheduleTemplate[dayKey].am = null;
+  state.scheduleTemplate[dayKey].pm = null;
   saveState();
   renderSchedule();
 }
