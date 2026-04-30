@@ -2493,6 +2493,18 @@ function fmtDateDMY(iso){
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   return `${dd}/${mm}/${d.getFullYear()}`;
 }
+// Convert a Date object to a YYYY-MM-DD string in LOCAL time.
+// CRITICAL: do NOT use Date.toISOString().slice(0,10) for this — toISOString returns
+// UTC, so a Date set to local-midnight in a positive-UTC-offset zone (e.g. Belgium UTC+2)
+// will be silently shifted back by one day. That caused dates picked in the Gantt to
+// appear one day earlier than intended.
+function isoDateLocal(d){
+  if(!d || isNaN(d)) return '';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 function daysUntil(iso){
   if(!iso) return null;
   const d = new Date(iso); if(isNaN(d)) return null;
@@ -5336,8 +5348,8 @@ function renderGantt(){
     const prog = t.progress != null ? Number(t.progress) : statusToProgress(t.status);
     const stChip = statusChip(t.status);
     const effortDays = (Number(t.estimate) || 0) / 8;
-    const startStr = b.start.toISOString().slice(0,10);
-    const endStr = b.end.toISOString().slice(0,10);
+    const startStr = isoDateLocal(b.start);
+    const endStr = isoDateLocal(b.end);
     // Two formats:
     //  - Full dd/mm/yyyy for the side-grid date cells (always BE locale, not browser locale)
     //  - Short "Apr 19" for the rich tooltip (compact)
