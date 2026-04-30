@@ -991,21 +991,29 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   box-shadow:inset 4px 0 0 var(--accent);
 }
 
-/* Work-item sub-group rows (level 2): lighter background, slight indent on the side label
-   so the visual hierarchy is clear: phase header (heaviest) → wi subrow (medium) → task (lightest) */
+/* Work-item sub-group rows (level 2): tinted background based on parent phase color
+   so they sit visually between the phase header and the leaf task rows.
+   The --wi-tint variable is set inline per row from the phase color. */
 .gg-subrow{
-  background:var(--surface);min-height:34px;cursor:pointer;
+  --wi-tint:#9aa39c;
+  background:color-mix(in srgb, var(--wi-tint) 7%, var(--surface));
+  min-height:34px;cursor:pointer;
   border-bottom:1px solid var(--border);
 }
-.gg-subrow:hover{background:var(--surface-2);}
+.gg-subrow:hover{background:color-mix(in srgb, var(--wi-tint) 14%, var(--surface));}
 .gg-subrow .gg-side{
-  background:var(--surface);
+  background:color-mix(in srgb, var(--wi-tint) 7%, var(--surface));
   display:flex;align-items:center;gap:7px;padding:0 12px 0 28px;
   grid-template-columns:none;
+  /* A small color marker on the left edge so the row visually "belongs" to the phase */
+  box-shadow:inset 3px 0 0 color-mix(in srgb, var(--wi-tint) 55%, transparent);
 }
-.gg-subrow:hover .gg-side{background:var(--surface-2);}
-.gg-subrow .gg-timeline-sub{background:var(--surface);position:relative;}
-.gg-subrow:hover .gg-timeline-sub{background:var(--surface-2);}
+.gg-subrow:hover .gg-side{background:color-mix(in srgb, var(--wi-tint) 14%, var(--surface));}
+.gg-subrow .gg-timeline-sub{
+  background:color-mix(in srgb, var(--wi-tint) 7%, var(--surface));
+  position:relative;
+}
+.gg-subrow:hover .gg-timeline-sub{background:color-mix(in srgb, var(--wi-tint) 14%, var(--surface));}
 .gg-collapse-sub{width:16px;height:16px;}
 .gg-sub-icon{font-size:11px;color:var(--text-muted);flex-shrink:0;line-height:1;}
 .gg-sub-label{
@@ -4053,8 +4061,9 @@ function openRowStatusPopover(anchor, tid){
   }));
   openPopover(anchor, options, v => {
     if(v === cur) return;
-    t.status = v;
-    pushActivity(t, `changed status ${cur} → ${v}`);
+    const r = applyStatusChange(t, v);
+    if(r.statusChanged) pushActivity(t, `changed status ${cur} → ${v}`);
+    if(r.progressChanged) pushActivity(t, `progress auto-set to ${t.progress}%`);
     saveState();
     // If the side panel is open on this task, re-render it too
     if(openPanelTaskId === tid) renderSidePanel();
@@ -4199,8 +4208,8 @@ function renderSidePanel(){
 
         <span class="sp-prop-key">Progress</span>
         <div class="sp-prop-val">
-          <input type="number" id="sp-progress" value="${task.progress != null ? task.progress : ''}" min="0" max="100" step="5" placeholder="auto" ${canWrite?'':'disabled'} style="width:70px"/>
-          <span style="color:var(--text-muted);font-size:12px">% complete</span>
+          <input type="number" id="sp-progress" value="${task.progress != null ? task.progress : statusToProgress(task.status)}" min="0" max="100" step="5" ${canWrite?'':'disabled'} style="width:70px"/>
+          <span style="color:var(--text-muted);font-size:12px">% complete${task.progress == null ? ' · <em style="color:var(--text-dim)">auto from status</em>' : ''}</span>
         </div>
 
         <span class="sp-prop-key">Milestone</span>
@@ -4328,7 +4337,18 @@ function renderSidePanel(){
   const progInput = sp.querySelector('#sp-progress');
   if(progInput) progInput.onchange = e => {
     let v = e.target.value === '' ? null : Math.max(0, Math.min(100, Number(e.target.value)));
-    mutateTaskQuiet(task.id, t => { t.progress = v; pushActivity(t, `set progress to ${v != null ? v + '%' : 'auto'}`); });
+    mutateTask(task.id, t => {
+      const oldStatus = t.status || 'todo';
+      if(v == null){
+        // User cleared the field: revert to "auto" (no manual override)
+        t.progress = null;
+        pushActivity(t, 'progress reset to auto');
+        return;
+      }
+      const r = applyProgressChange(t, v);
+      if(r.progressChanged) pushActivity(t, `set progress to ${v}%`);
+      if(r.statusChanged) pushActivity(t, `status auto-set to ${t.status} (was ${oldStatus})`);
+    });
   };
   const msInput = sp.querySelector('#sp-milestone');
   if(msInput) msInput.onchange = e => {
@@ -4338,7 +4358,12 @@ function renderSidePanel(){
   sp.querySelectorAll('[data-pop]').forEach(btn => {
     btn.onclick = () => {
       const kind = btn.dataset.pop;
-      if(kind === 'status') openPopover(btn, statusOptions.map(s => ({label: fmtStatus(s), value:s, selected:s===st})), v => mutateTask(task.id, t => { const old = t.status; t.status = v; pushActivity(t, `changed status ${old||'todo'} → ${v}`); }));
+      if(kind === 'status') openPopover(btn, statusOptions.map(s => ({label: fmtStatus(s), value:s, selected:s===st})), v => mutateTask(task.id, t => {
+        const old = t.status || 'todo';
+        const r = applyStatusChange(t, v);
+        if(r.statusChanged) pushActivity(t, `changed status ${old} → ${v}`);
+        if(r.progressChanged) pushActivity(t, `progress auto-set to ${t.progress}%`);
+      }));
       else if(kind === 'priority') openPopover(btn, prioOptions.map(s => ({label: s[0].toUpperCase()+s.slice(1), value:s, selected:s===(task.priority||'medium')})), v => mutateTask(task.id, t => { t.priority = v; pushActivity(t, `set priority to ${v}`); }));
       else if(kind === 'type') openPopover(btn, typeOptions.map(s => ({label: fmtType(s), value:s, selected:s===(task.type||'task')})), v => mutateTask(task.id, t => { t.type = v; pushActivity(t, `changed type to ${fmtType(v)}`); }));
       else if(kind === 'assignee'){
@@ -4635,7 +4660,7 @@ function toggleTaskDone(id){
   mutateTask(id, t => {
     const wasDone = t.status === 'done';
     pushActivity(t, wasDone ? 'reopened' : 'completed');
-    t.status = wasDone ? 'todo' : 'done';
+    applyStatusChange(t, wasDone ? 'todo' : 'done');
   });
 }
 function deleteTaskFromPanel(id){
@@ -5422,7 +5447,7 @@ function renderGantt(){
         const isExpanded = ganttViewState.expandedSubGroups.has(sg.key);
         const sgEffDays = (sg.totalEffort / 8).toFixed(1);
         const sgHeader = `
-          <div class="gg-row gg-subrow gg-wi-row" data-gkey="${escHtml(sg.key)}" data-wi="${sg.workItem ? sg.workItem.id : '_none'}">
+          <div class="gg-row gg-subrow gg-wi-row" data-gkey="${escHtml(sg.key)}" data-wi="${sg.workItem ? sg.workItem.id : '_none'}" style="--wi-tint:${sg.color}">
             <div class="gg-side gg-side-subgroup">
               <button class="gg-collapse-btn gg-collapse-sub" data-toggle-sub="${escHtml(sg.key)}" title="${isExpanded ? 'Hide tasks' : 'Show tasks'}">
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" style="transform:rotate(${isExpanded ? 90 : 0}deg);transition:transform .15s">
@@ -5621,7 +5646,17 @@ function renderGantt(){
       inp.addEventListener('change', e => {
         const tid = Number(inp.dataset.tid);
         let val = inp.value === '' ? null : Math.max(0, Math.min(100, Number(inp.value)));
-        mutateTask(tid, t => { t.progress = val; pushActivity(t, `set progress to ${val != null ? val + '%' : 'auto'}`); });
+        mutateTask(tid, t => {
+          const oldStatus = t.status || 'todo';
+          if(val == null){
+            t.progress = null;
+            pushActivity(t, 'progress reset to auto');
+            return;
+          }
+          const r = applyProgressChange(t, val);
+          if(r.progressChanged) pushActivity(t, `set progress to ${val}%`);
+          if(r.statusChanged) pushActivity(t, `status auto-set to ${t.status} (was ${oldStatus})`);
+        });
       });
     });
     // Start date
@@ -5671,7 +5706,12 @@ function renderGantt(){
         const t = state.tasks.find(x => x.id === tid);
         const cur = t.status || 'todo';
         const opts = ['todo','doing','review','blocked','done'].map(s => ({label: fmtStatus(s), value: s, selected: s === cur}));
-        openPopover(btn, opts, v => mutateTask(tid, t => { const old = t.status; t.status = v; pushActivity(t, `changed status ${old||'todo'} → ${v}`); }));
+        openPopover(btn, opts, v => mutateTask(tid, t => {
+          const old = t.status || 'todo';
+          const r = applyStatusChange(t, v);
+          if(r.statusChanged) pushActivity(t, `changed status ${old} → ${v}`);
+          if(r.progressChanged) pushActivity(t, `progress auto-set to ${t.progress}%`);
+        }));
       });
     });
   }
@@ -5818,6 +5858,45 @@ function statusToProgress(status){
     blocked: 25,
     done: 100,
   })[status] || 0;
+}
+
+// Two-way binding between status and progress. Both helpers MUTATE the task
+// in place — call them inside a mutateTask(...) callback. They return the
+// fields that were actually changed so callers can include them in activity logs.
+//
+// Rules (status → progress):
+//   - todo  → progress = 0
+//   - done  → progress = 100
+//   - doing / review / blocked → leave progress alone (manual field stays)
+//
+// Rules (progress → status):
+//   - 0    → status = todo
+//   - 100  → status = done
+//   - 1-99 → if status is already doing/review/blocked, keep it (user picked a flavor);
+//            otherwise default to doing
+function applyStatusChange(t, newStatus){
+  const oldStatus = t.status || 'todo';
+  const oldProg = t.progress;
+  t.status = newStatus;
+  if(newStatus === 'todo') t.progress = 0;
+  else if(newStatus === 'done') t.progress = 100;
+  // For doing/review/blocked: leave t.progress as it was (could be null = auto)
+  return { statusChanged: oldStatus !== newStatus, progressChanged: oldProg !== t.progress };
+}
+function applyProgressChange(t, newProgress){
+  const oldStatus = t.status || 'todo';
+  const oldProg = t.progress;
+  t.progress = newProgress;
+  let newStatus = oldStatus;
+  if(newProgress === 0) newStatus = 'todo';
+  else if(newProgress === 100) newStatus = 'done';
+  else if(newProgress != null && newProgress > 0 && newProgress < 100){
+    // Only auto-shift to 'doing' if the current status doesn't already reflect
+    // an in-progress state the user picked
+    if(!['doing','review','blocked'].includes(oldStatus)) newStatus = 'doing';
+  }
+  t.status = newStatus;
+  return { statusChanged: oldStatus !== newStatus, progressChanged: oldProg !== t.progress };
 }
 function statusBarColor(status){
   return ({
@@ -6466,8 +6545,9 @@ function renderKanban(){
       } else {
         if(t.status === targetK){ draggingId = null; return; }
         const old = t.status || 'todo';
-        t.status = targetK;
+        const r = applyStatusChange(t, targetK);
         pushActivity(t, `moved ${old} → ${targetK}`);
+        if(r.progressChanged) pushActivity(t, `progress auto-set to ${t.progress}%`);
       }
       saveState();
       draggingId = null;
