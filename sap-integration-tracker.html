@@ -901,23 +901,25 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 /* Number-input cells: right-aligned, mono — match other mono cells exactly */
 .gg-input-eff,.gg-input-prog{text-align:right;font-family:var(--mono) !important;font-size:11.5px !important;}
 
-/* Date inputs: mono font matches the side-grid date columns */
-.gg-input-date{font-family:var(--mono) !important;font-size:11px !important;cursor:pointer;}
-/* Hide the native calendar icon — keep the cell as plain text only.
-   The whole cell is still clickable to open the picker via showPicker(). */
-.gg-input-date::-webkit-calendar-picker-indicator{
-  display:none;-webkit-appearance:none;appearance:none;
+/* Date cells: display-button shows the dd/mm/yyyy formatted text, hidden native input
+   serves as the actual picker (triggered via showPicker() on button click).
+   This avoids the browser-locale issue where US systems show mm/dd/yyyy. */
+.gg-date-wrap{
+  position:relative;display:flex;align-items:center;
+  padding:0;
 }
-.gg-input-date::-webkit-inner-spin-button,
-.gg-input-date::-webkit-clear-button{display:none;}
-/* Remove the reserved padding/margin that Webkit gives the date-edit field by default,
-   otherwise the date text can be visually clipped on narrow cells. */
-.gg-input-date::-webkit-datetime-edit{padding:0;}
-.gg-input-date::-webkit-datetime-edit-fields-wrapper{padding:0;}
-.gg-input-date::-webkit-datetime-edit-text,
-.gg-input-date::-webkit-datetime-edit-month-field,
-.gg-input-date::-webkit-datetime-edit-day-field,
-.gg-input-date::-webkit-datetime-edit-year-field{padding:0;}
+.gg-date-display{
+  font-family:var(--mono) !important;font-size:11px !important;
+  color:var(--text-muted);
+  width:100%;justify-content:flex-start;
+}
+.gg-date-hidden{
+  /* Native input takes zero visual space but still works as the picker source.
+     We can't use display:none because some browsers reject showPicker() on hidden inputs;
+     position:absolute + opacity:0 keeps it interactive while invisible. */
+  position:absolute;left:0;top:0;width:0;height:0;
+  opacity:0;pointer-events:none;border:none;padding:0;margin:0;
+}
 
 /* Status button (popover trigger): same treatment as inputs */
 .gg-cell-btn{
@@ -2481,6 +2483,15 @@ function fmtDate(iso){
   const d = new Date(iso); if(isNaN(d)) return iso;
   const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${m[d.getMonth()]} ${d.getDate()}`;
+}
+// Full dd/mm/yyyy formatter — used wherever we need a complete date that's
+// independent of the browser locale (e.g. the Gantt side grid date cells).
+function fmtDateDMY(iso){
+  if(!iso) return '';
+  const d = new Date(iso); if(isNaN(d)) return iso;
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
 }
 function daysUntil(iso){
   if(!iso) return null;
@@ -5327,8 +5338,13 @@ function renderGantt(){
     const effortDays = (Number(t.estimate) || 0) / 8;
     const startStr = b.start.toISOString().slice(0,10);
     const endStr = b.end.toISOString().slice(0,10);
-    const startLabel = fmtDate(startStr);
-    const endLabel = fmtDate(endStr);
+    // Two formats:
+    //  - Full dd/mm/yyyy for the side-grid date cells (always BE locale, not browser locale)
+    //  - Short "Apr 19" for the rich tooltip (compact)
+    const startLabel = fmtDateDMY(startStr);
+    const endLabel = fmtDateDMY(endStr);
+    const startShort = fmtDate(startStr);
+    const endShort = fmtDate(endStr);
     const overdue = !done && t.due && (new Date(t.due) < today);
 
     const phaseObj = t.phase ? phaseDef(t.phase) : null;
@@ -5341,7 +5357,7 @@ function renderGantt(){
     const tooltipData = JSON.stringify({
       title: t.title || 'Untitled',
       code: t.code || null,
-      range: `${startLabel} → ${endLabel}`,
+      range: `${startShort} → ${endShort}`,
       duration: `${b.days} day${b.days===1?'':'s'}`,
       status: fmtStatus(t.status || 'todo'),
       assignee: t.assignee || null,
@@ -5380,8 +5396,18 @@ function renderGantt(){
       : `<input class="gg-cell gg-cell-eff gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortInputVal}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
     const statusCell = `<button class="gg-cell gg-cell-status gg-cell-btn" data-pop-status="${t.id}" ${canWrite?'':'disabled'}>${stChip}</button>`;
     const progCell = `<input class="gg-cell gg-cell-prog gg-cell-input gg-input-prog" type="number" min="0" max="100" step="5" value="${prog}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
-    const startCell = `<input class="gg-cell gg-cell-start gg-cell-input gg-input-date gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
-    const endCell = `<input class="gg-cell gg-cell-end gg-cell-input gg-input-date gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+    // Date cells: native <input type="date"> shows in browser locale (often mm/dd/yyyy on US systems).
+    // We always want dd/mm/yyyy regardless of OS locale. Solution: a button that shows the formatted
+    // text + a hidden native input used purely as a date picker. Clicking the button calls
+    // showPicker() on the input; the input's change event updates the task.
+    const startCell = `<span class="gg-cell gg-cell-start gg-date-wrap" data-tid="${t.id}">
+      <button class="gg-date-display gg-cell-btn" data-date-target="start-${t.id}" ${canWrite?'':'disabled'}>${escHtml(startLabel)}</button>
+      <input id="start-${t.id}" class="gg-date-hidden gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} tabindex="-1" aria-hidden="true"/>
+    </span>`;
+    const endCell = `<span class="gg-cell gg-cell-end gg-date-wrap" data-tid="${t.id}">
+      <button class="gg-date-display gg-cell-btn" data-date-target="end-${t.id}" ${canWrite?'':'disabled'}>${escHtml(endLabel)}</button>
+      <input id="end-${t.id}" class="gg-date-hidden gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} tabindex="-1" aria-hidden="true"/>
+    </span>`;
 
     const indentClass = indent > 0 ? ` gg-taskrow-indent-${indent}` : '';
     return `<div class="gg-row gg-taskrow${indentClass} ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
@@ -5659,15 +5685,22 @@ function renderGantt(){
         });
       });
     });
-    // Start date
-    cont.querySelectorAll('.gg-input-start').forEach(inp => {
-      inp.addEventListener('click', e => {
+    // Date cells: click on the formatted-display button opens the native picker on the hidden input.
+    // The hidden input's change event handles validation + persistence.
+    cont.querySelectorAll('.gg-date-display').forEach(btn => {
+      btn.addEventListener('click', e => {
         e.stopPropagation();
-        // Calendar icon is hidden — open the picker programmatically on click.
-        // showPicker() is the modern API; some browsers ignore it silently, in which case
-        // the user can still type the date or use keyboard arrows.
-        if(typeof inp.showPicker === 'function'){ try { inp.showPicker(); } catch(_) {} }
+        const targetId = btn.dataset.dateTarget;
+        const inp = document.getElementById(targetId);
+        if(inp && typeof inp.showPicker === 'function'){
+          try { inp.showPicker(); } catch(_) { inp.focus(); }
+        } else if(inp){
+          inp.focus();
+        }
       });
+    });
+    // Start date validation + persistence
+    cont.querySelectorAll('.gg-input-start').forEach(inp => {
       inp.addEventListener('change', e => {
         const tid = Number(inp.dataset.tid);
         const v = inp.value || null;
@@ -5680,12 +5713,8 @@ function renderGantt(){
         mutateTask(tid, t => { t.startDate = v; pushActivity(t, `set start to ${v || 'auto'}`); });
       });
     });
-    // End date (= due)
+    // End date (= due) validation + persistence
     cont.querySelectorAll('.gg-input-end').forEach(inp => {
-      inp.addEventListener('click', e => {
-        e.stopPropagation();
-        if(typeof inp.showPicker === 'function'){ try { inp.showPicker(); } catch(_) {} }
-      });
       inp.addEventListener('change', e => {
         const tid = Number(inp.dataset.tid);
         const v = inp.value || null;
