@@ -5235,7 +5235,7 @@ function renderGantt(){
       return `<div class="gg-row gg-taskrow ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
         <div class="gg-side">
           <span class="gg-row-handle" title="Drag to reorder" data-drag-tid="${t.id}" draggable="${canWrite?'true':'false'}">⋮⋮</span>
-          <span class="gg-cell gg-cell-title" data-open-task="${t.id}">${t.code ? `<span class="gg-code">${escHtml(t.code)}</span>` : ''}<span class="gg-title">${escHtml(t.title || '—')}</span></span>
+          <span class="gg-cell gg-cell-title" data-open-task="${t.id}"><span class="gg-title">${escHtml(t.title || '—')}</span></span>
           ${effortCell}
           ${statusCell}
           ${progCell}
