@@ -921,6 +921,34 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   opacity:0;pointer-events:none;border:none;padding:0;margin:0;
 }
 
+/* Generic dmy-wrap: applied by enhanceDateInputs() to ALL native <input type="date">
+   across the app so they always show dd/mm/yyyy regardless of OS locale. The display
+   button mimics the styling of a normal input; the hidden native input drives the picker. */
+.dmy-wrap{
+  position:relative;display:inline-flex;align-items:center;width:100%;
+}
+.dmy-display{
+  display:inline-flex;align-items:center;
+  width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:7px 10px;font:inherit;color:var(--text);
+  cursor:pointer;transition:border-color .12s, background .12s;
+  min-height:34px;
+  box-sizing:border-box;
+}
+.dmy-display:hover:not(:disabled){border-color:var(--border-strong);}
+.dmy-display:focus-visible:not(:disabled){
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.dmy-display:disabled{opacity:.55;cursor:default;}
+.dmy-display.dmy-empty{color:var(--text-dim);font-style:italic;font-size:13px;}
+.dmy-hidden-input{
+  /* Native picker source — kept interactive but visually invisible */
+  position:absolute;left:0;top:0;width:0;height:0;
+  opacity:0;pointer-events:none;border:none;padding:0;margin:0;
+}
+
 /* Status button (popover trigger): same treatment as inputs */
 .gg-cell-btn{
   border:none;background:transparent;
@@ -2505,6 +2533,60 @@ function isoDateLocal(d){
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
 }
+
+// Wrap every native <input type="date"> inside `rootEl` in a dd/mm/yyyy display button
+// while keeping the native input as the actual picker source. This is needed because
+// native date inputs render in the OS locale and there's no API to override the format.
+//
+// How it works:
+// - Wrap the original input in <span class="dmy-wrap">
+// - Add a sibling <button class="dmy-display"> with the formatted text
+// - Hide the native input visually but keep it functional (zero-size, opacity 0)
+// - Click on button → showPicker() on the input
+// - Listen to input's `input`/`change` events to refresh the button label
+// - When form code reads the input's `.value` it still gets the ISO date as before,
+//   so callers don't need to change anything — the wrapping is purely visual.
+//
+// Idempotent: skips inputs that are already wrapped.
+function enhanceDateInputs(rootEl){
+  if(!rootEl) return;
+  const inputs = rootEl.querySelectorAll('input[type="date"]:not([data-dmy-enhanced]):not([data-dmy-skip])');
+  inputs.forEach(inp => {
+    inp.dataset.dmyEnhanced = '1';
+    // Create wrapper + display button
+    const wrap = document.createElement('span');
+    wrap.className = 'dmy-wrap';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dmy-display';
+    btn.tabIndex = 0;
+    const refresh = () => {
+      const v = inp.value;
+      btn.textContent = v ? fmtDateDMY(v) : (inp.placeholder || 'dd/mm/yyyy');
+      btn.classList.toggle('dmy-empty', !v);
+    };
+    refresh();
+    if(inp.disabled) btn.disabled = true;
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      if(inp.disabled) return;
+      if(typeof inp.showPicker === 'function'){
+        try { inp.showPicker(); } catch(_) { inp.focus(); }
+      } else {
+        inp.focus();
+      }
+    });
+    inp.addEventListener('input', refresh);
+    inp.addEventListener('change', refresh);
+    // Insert: original input gets wrapped, button placed before it inside the wrap
+    const parent = inp.parentNode;
+    parent.insertBefore(wrap, inp);
+    wrap.appendChild(btn);
+    wrap.appendChild(inp);
+    inp.classList.add('dmy-hidden-input');
+  });
+}
 function daysUntil(iso){
   if(!iso) return null;
   const d = new Date(iso); if(isNaN(d)) return null;
@@ -2937,6 +3019,9 @@ function renderAll(){
     console.error(e);
     content.innerHTML = `<div class="empty-screen"><div class="empty-screen-icon">!</div><h3>Something broke</h3><p>${escHtml(e.message)}</p></div>`;
   }
+  // Enhance any new <input type="date"> with the dd/mm/yyyy display button.
+  // Idempotent — already-enhanced inputs are skipped via the [data-dmy-enhanced] attr.
+  enhanceDateInputs(document.body);
 }
 function setTopbar(title, sub, actions){
   document.getElementById('topbarTitle').innerHTML = title;
@@ -4435,6 +4520,8 @@ function renderSidePanel(){
       }
     };
   });
+  // Apply dd/mm/yyyy display to any date inputs in the side panel
+  enhanceDateInputs(document.querySelector('.side-panel'));
 }
 
 function renderSubItem(s){
@@ -4866,6 +4953,7 @@ function openWorkItemModal(opts){
   const o = document.getElementById('wiOverlay');
   requestAnimationFrame(() => o.classList.add('visible'));
   o.addEventListener('click', e => { if(e.target === o) closeWiModal(); });
+  enhanceDateInputs(o);
   setTimeout(() => {
     const el = document.getElementById('wi-title');
     if(el){
@@ -5013,6 +5101,7 @@ function openNewTaskModal(prefilledWorkItemId){
   const o = document.getElementById('taskOverlay');
   requestAnimationFrame(() => o.classList.add('visible'));
   o.addEventListener('click', e => { if(e.target === o) closeTaskModal(); });
+  enhanceDateInputs(o);
 
   // Live phase hint: when a phase is selected, show its configured date range
   const phaseSel = document.getElementById('t-phase');
@@ -5414,11 +5503,11 @@ function renderGantt(){
     // showPicker() on the input; the input's change event updates the task.
     const startCell = `<span class="gg-cell gg-cell-start gg-date-wrap" data-tid="${t.id}">
       <button class="gg-date-display gg-cell-btn" data-date-target="start-${t.id}" ${canWrite?'':'disabled'}>${escHtml(startLabel)}</button>
-      <input id="start-${t.id}" class="gg-date-hidden gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} tabindex="-1" aria-hidden="true"/>
+      <input id="start-${t.id}" class="gg-date-hidden gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" data-dmy-skip ${canWrite?'':'disabled'} tabindex="-1" aria-hidden="true"/>
     </span>`;
     const endCell = `<span class="gg-cell gg-cell-end gg-date-wrap" data-tid="${t.id}">
       <button class="gg-date-display gg-cell-btn" data-date-target="end-${t.id}" ${canWrite?'':'disabled'}>${escHtml(endLabel)}</button>
-      <input id="end-${t.id}" class="gg-date-hidden gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'} tabindex="-1" aria-hidden="true"/>
+      <input id="end-${t.id}" class="gg-date-hidden gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" data-dmy-skip ${canWrite?'':'disabled'} tabindex="-1" aria-hidden="true"/>
     </span>`;
 
     const indentClass = indent > 0 ? ` gg-taskrow-indent-${indent}` : '';
@@ -6136,6 +6225,7 @@ function openPhasePlanningModal(){
   const o = document.getElementById('phasePlanOverlay');
   requestAnimationFrame(() => o.classList.add('visible'));
   o.addEventListener('click', e => { if(e.target === o) closePhasePlanningModal(); });
+  enhanceDateInputs(o);
   // Wire clear buttons
   o.querySelectorAll('[data-clear]').forEach(btn => {
     btn.onclick = () => {
