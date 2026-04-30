@@ -990,6 +990,52 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   background:color-mix(in srgb, var(--accent) 18%, var(--surface-2));
   box-shadow:inset 4px 0 0 var(--accent);
 }
+
+/* Work-item sub-group rows (level 2): lighter background, slight indent on the side label
+   so the visual hierarchy is clear: phase header (heaviest) → wi subrow (medium) → task (lightest) */
+.gg-subrow{
+  background:var(--surface);min-height:34px;cursor:pointer;
+  border-bottom:1px solid var(--border);
+}
+.gg-subrow:hover{background:var(--surface-2);}
+.gg-subrow .gg-side{
+  background:var(--surface);
+  display:flex;align-items:center;gap:7px;padding:0 12px 0 28px;
+  grid-template-columns:none;
+}
+.gg-subrow:hover .gg-side{background:var(--surface-2);}
+.gg-subrow .gg-timeline-sub{background:var(--surface);position:relative;}
+.gg-subrow:hover .gg-timeline-sub{background:var(--surface-2);}
+.gg-collapse-sub{width:16px;height:16px;}
+.gg-sub-icon{font-size:11px;color:var(--text-muted);flex-shrink:0;line-height:1;}
+.gg-sub-label{
+  font-weight:500;font-size:12.5px;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.gg-sub-meta{
+  font-family:var(--mono);font-size:10.5px;color:var(--text-muted);
+  margin-left:auto;padding-right:4px;flex-shrink:0;
+}
+/* Rollup bar: thin, semi-transparent strip showing the work-item's date span
+   without showing individual tasks */
+.gg-rollup-bar{
+  position:absolute;top:50%;transform:translateY(-50%);
+  height:8px;border-radius:3px;pointer-events:none;
+}
+
+/* Indented task rows under a work-item subgroup */
+.gg-taskrow-indent-1 .gg-side{
+  /* Push the side content to the right to indicate nesting */
+  padding-left:16px;
+}
+.gg-taskrow-indent-1 .gg-cell-title{
+  position:relative;
+}
+.gg-taskrow-indent-1 .gg-cell-title::before{
+  /* Subtle vertical guide line indicating the task belongs to a parent */
+  content:'';position:absolute;left:-12px;top:0;bottom:0;
+  width:1px;background:var(--border);
+}
 .gg-row.drop-before{box-shadow:inset 0 2px 0 0 var(--accent);}
 .gg-row.drop-after{box-shadow:inset 0 -2px 0 0 var(--accent);}
 .gg-row.row-dragging{opacity:.4;}
@@ -3438,7 +3484,7 @@ function renderDashboard(){
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
 let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:false };
-let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set() };
+let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set(), expandedSubGroups: new Set() };
 let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 
 function renderTasks(){ renderWorkView({kindFilter: null}); }
@@ -5076,40 +5122,144 @@ function renderGantt(){
   const todayX = dayToX(today);
   const showToday = todayX >= 0 && todayX <= timelineWidth;
 
-  // ─── Group tasks by phase or workitem ────────────────────
+  // ─── Group tasks: phase → work item → tasks (3-level hierarchy) ────
+  // For groupBy='phase' (the default), each phase contains work-item sub-groups
+  // and each work-item contains its tasks. Tasks are initially collapsed under
+  // their work item — the user expands the work item to reveal them.
+  // For groupBy='workitem' we keep the flat 2-level structure (just work items).
   const groupBy = ganttViewState.groupBy;
-  let groups = []; // [{ key, label, color?, tasks: [bars], totalEffort, doneCount }]
+  let groups = []; // [{ key, label, color?, type: 'phase'|'workitem', subGroups?, tasks?, totalEffort, doneCount }]
   if(groupBy === 'phase'){
     PHASES.forEach(p => {
-      const groupBars = bars.filter(b => (b.task.phase || '_no') === p.k);
-      if(!groupBars.length && !getProjectPhase(pid, p.k)) return;
+      const phaseBars = bars.filter(b => (b.task.phase || '_no') === p.k);
+      if(!phaseBars.length && !getProjectPhase(pid, p.k)) return;
+      // Bucket tasks by work item under this phase
+      const wiBuckets = new Map();
+      const noWi = [];
+      phaseBars.forEach(b => {
+        const wid = b.task.workItemId;
+        if(!wid){ noWi.push(b); return; }
+        if(!wiBuckets.has(wid)) wiBuckets.set(wid, []);
+        wiBuckets.get(wid).push(b);
+      });
+      const subGroups = [];
+      // Order work items by their first task's start date so the sub-groups
+      // appear in chronological order within the phase
+      const wiEntries = [...wiBuckets.entries()].map(([wid, barsList]) => {
+        const wi = workItems.find(w => w.id === wid);
+        const firstStart = barsList.reduce((min, b) => b.start < min ? b.start : min, barsList[0].start);
+        return { wid, wi, bars: barsList, firstStart };
+      }).sort((a, b) => a.firstStart - b.firstStart);
+      wiEntries.forEach(({ wid, wi, bars: barsList }) => {
+        const totalEffort = barsList.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0);
+        const doneCount = barsList.filter(b => b.task.status === 'done').length;
+        subGroups.push({
+          key: `phase:${p.k}:wi:${wid}`,
+          type: 'workitem',
+          label: wi ? (wi.title || wi.code || 'Untitled') : 'Untitled',
+          code: wi?.code || null,
+          color: '#0f7a4b',
+          workItem: wi,
+          tasks: barsList,
+          totalEffort,
+          doneCount,
+          // Span: earliest start to latest end across all tasks in this work item
+          spanStart: barsList.reduce((min, b) => b.start < min ? b.start : min, barsList[0].start),
+          spanEnd: barsList.reduce((max, b) => b.end > max ? b.end : max, barsList[0].end),
+        });
+      });
+      // Tasks without a work item under this phase: render as a synthetic "Loose tasks" sub-group
+      if(noWi.length){
+        subGroups.push({
+          key: `phase:${p.k}:wi:_none`,
+          type: 'workitem',
+          label: 'Loose tasks',
+          code: null,
+          color: '#9aa39c',
+          workItem: null,
+          tasks: noWi,
+          totalEffort: noWi.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+          doneCount: noWi.filter(b => b.task.status === 'done').length,
+          spanStart: noWi.reduce((min, b) => b.start < min ? b.start : min, noWi[0].start),
+          spanEnd: noWi.reduce((max, b) => b.end > max ? b.end : max, noWi[0].end),
+        });
+      }
       groups.push({
         key: 'phase:' + p.k,
+        type: 'phase',
         label: p.label,
         color: p.color,
         phase: p,
-        tasks: groupBars,
-        totalEffort: groupBars.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
-        doneCount: groupBars.filter(b => b.task.status === 'done').length,
+        subGroups,
+        // Aggregate totals across all sub-groups for the phase header label
+        tasks: phaseBars,
+        totalEffort: phaseBars.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+        doneCount: phaseBars.filter(b => b.task.status === 'done').length,
       });
     });
+    // Tasks without a phase at all → a synthetic "No phase" group
     const noPhase = bars.filter(b => !b.task.phase);
     if(noPhase.length){
+      // Same nested structure: bucket by work item
+      const wiBuckets = new Map();
+      const noWi = [];
+      noPhase.forEach(b => {
+        const wid = b.task.workItemId;
+        if(!wid){ noWi.push(b); return; }
+        if(!wiBuckets.has(wid)) wiBuckets.set(wid, []);
+        wiBuckets.get(wid).push(b);
+      });
+      const subGroups = [];
+      [...wiBuckets.entries()].forEach(([wid, barsList]) => {
+        const wi = workItems.find(w => w.id === wid);
+        subGroups.push({
+          key: `phase:_none:wi:${wid}`,
+          type: 'workitem',
+          label: wi ? (wi.title || wi.code || 'Untitled') : 'Untitled',
+          code: wi?.code || null,
+          color: '#9aa39c',
+          workItem: wi,
+          tasks: barsList,
+          totalEffort: barsList.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+          doneCount: barsList.filter(b => b.task.status === 'done').length,
+          spanStart: barsList.reduce((min, b) => b.start < min ? b.start : min, barsList[0].start),
+          spanEnd: barsList.reduce((max, b) => b.end > max ? b.end : max, barsList[0].end),
+        });
+      });
+      if(noWi.length){
+        subGroups.push({
+          key: 'phase:_none:wi:_none',
+          type: 'workitem',
+          label: 'Loose tasks',
+          code: null,
+          color: '#9aa39c',
+          workItem: null,
+          tasks: noWi,
+          totalEffort: noWi.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+          doneCount: noWi.filter(b => b.task.status === 'done').length,
+          spanStart: noWi.reduce((min, b) => b.start < min ? b.start : min, noWi[0].start),
+          spanEnd: noWi.reduce((max, b) => b.end > max ? b.end : max, noWi[0].end),
+        });
+      }
       groups.push({
         key: 'phase:_none',
+        type: 'phase',
         label: 'No phase',
         color: '#9aa39c',
+        subGroups,
         tasks: noPhase,
         totalEffort: noPhase.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
         doneCount: noPhase.filter(b => b.task.status === 'done').length,
       });
     }
   } else {
+    // Flat 2-level grouping when user picks "By work item"
     workItems.forEach(wi => {
       const groupBars = bars.filter(b => b.task.workItemId === wi.id);
       if(!groupBars.length) return;
       groups.push({
         key: 'wi:' + wi.id,
+        type: 'workitem-flat',
         label: `${wi.code ? wi.code + ' · ' : ''}${wi.title || ''}`,
         color: '#0f7a4b',
         workItem: wi,
@@ -5120,15 +5270,17 @@ function renderGantt(){
     });
   }
 
-  // Sort tasks within group by start date, but allow manual order to override
+  // Sort tasks within each leaf group by start date (with manual order override)
+  const sortTasksByStart = list => list.sort((a, b) => {
+    const ao = a.task.order, bo = b.task.order;
+    if(ao !== undefined && bo !== undefined) return ao - bo;
+    if(ao !== undefined) return -1;
+    if(bo !== undefined) return 1;
+    return a.start - b.start;
+  });
   groups.forEach(g => {
-    g.tasks.sort((a, b) => {
-      const ao = a.task.order, bo = b.task.order;
-      if(ao !== undefined && bo !== undefined) return ao - bo;
-      if(ao !== undefined) return -1;
-      if(bo !== undefined) return 1;
-      return a.start - b.start;
-    });
+    if(g.subGroups) g.subGroups.forEach(sg => sortTasksByStart(sg.tasks));
+    else if(g.tasks) sortTasksByStart(g.tasks);
   });
 
   // ─── Build HTML ─────────────────────────────────────────
@@ -5140,11 +5292,165 @@ function renderGantt(){
     <div class="gg-h-start">Start</div>
     <div class="gg-h-end">End</div>`;
 
+  // Helper: render one task row. `indent` adds left padding via a CSS class so
+  // tasks under a work-item subgroup are visually nested.
+  const renderTaskRow = (b, indent) => {
+    const t = b.task;
+    const done = t.status === 'done';
+    const prog = t.progress != null ? Number(t.progress) : statusToProgress(t.status);
+    const stChip = statusChip(t.status);
+    const effortDays = (Number(t.estimate) || 0) / 8;
+    const startStr = b.start.toISOString().slice(0,10);
+    const endStr = b.end.toISOString().slice(0,10);
+    const startLabel = fmtDate(startStr);
+    const endLabel = fmtDate(endStr);
+    const overdue = !done && t.due && (new Date(t.due) < today);
+
+    const phaseObj = t.phase ? phaseDef(t.phase) : null;
+    const phaseColor = phaseObj ? phaseObj.color : '#9aa39c';
+    const barOpacity = done ? 0.45 : 1;
+
+    const wi = workItems.find(w => w.id === t.workItemId);
+    const actual = sumActualHours(t.id);
+    const remaining = Math.max(0, (Number(t.estimate) || 0) - actual);
+    const tooltipData = JSON.stringify({
+      title: t.title || 'Untitled',
+      code: t.code || null,
+      range: `${startLabel} → ${endLabel}`,
+      duration: `${b.days} day${b.days===1?'':'s'}`,
+      status: fmtStatus(t.status || 'todo'),
+      assignee: t.assignee || null,
+      phase: t.phase ? fmtPhase(t.phase) : null,
+      workItem: wi ? `${wi.code ? wi.code + ' · ' : ''}${wi.title || ''}` : null,
+      estimate: Number(t.estimate) || 0,
+      actual: actual,
+      remaining: remaining,
+      overrun: actual > (Number(t.estimate) || 0) && (Number(t.estimate) || 0) > 0,
+      warning: null,
+    });
+
+    let barEl;
+    if(t.isMilestone){
+      const barX = dayToX(b.start);
+      barEl = `<div class="gg-bar gg-milestone" style="left:${barX + dayPx/2 - 9}px;opacity:${barOpacity}" data-tid="${t.id}" data-tooltip='${escHtml(tooltipData)}'>
+           <svg width="18" height="18" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z" fill="${phaseColor}" stroke="${phaseColor}" stroke-width="1"/></svg>
+         </div>`;
+    } else {
+      const segments = splitIntoWeekSegments(b.start, b.end);
+      const SEG_GAP = 2;
+      barEl = segments.map((seg, idx) => {
+        let segX = dayToX(seg.start);
+        let segW = Math.max(dayPx, dayToX(seg.end) + dayPx - segX);
+        if(idx > 0){ segX += SEG_GAP; segW -= SEG_GAP; }
+        const isFirst = idx === 0;
+        return `<div class="gg-bar ${overdue?'gg-overdue':''}${isFirst?'':' gg-bar-segment'}" data-tid="${t.id}"${isFirst?` data-tooltip='${escHtml(tooltipData)}'`:''} draggable="${(canWrite && isFirst)?'true':'false'}" style="left:${segX}px;width:${segW}px;background:${phaseColor};opacity:${barOpacity}"></div>`;
+      }).join('');
+    }
+
+    const todayLineInRow = showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : '';
+
+    const effortInputVal = t.isMilestone ? '' : (effortDays > 0 ? effortDays.toFixed(1) : '');
+    const effortCell = t.isMilestone
+      ? `<span class="gg-cell gg-cell-eff gg-cell-milestone-mark" title="Milestone">◆</span>`
+      : `<input class="gg-cell gg-cell-eff gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortInputVal}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+    const statusCell = `<button class="gg-cell gg-cell-status gg-cell-btn" data-pop-status="${t.id}" ${canWrite?'':'disabled'}>${stChip}</button>`;
+    const progCell = `<input class="gg-cell gg-cell-prog gg-cell-input gg-input-prog" type="number" min="0" max="100" step="5" value="${prog}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+    const startCell = `<input class="gg-cell gg-cell-start gg-cell-input gg-input-date gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+    const endCell = `<input class="gg-cell gg-cell-end gg-cell-input gg-input-date gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+
+    const indentClass = indent > 0 ? ` gg-taskrow-indent-${indent}` : '';
+    return `<div class="gg-row gg-taskrow${indentClass} ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
+      <div class="gg-side">
+        <span class="gg-row-handle" title="Drag to reorder" data-drag-tid="${t.id}" draggable="${canWrite?'true':'false'}">⋮⋮</span>
+        <span class="gg-cell gg-cell-title" data-open-task="${t.id}"><span class="gg-title">${escHtml(t.title || '—')}</span></span>
+        ${effortCell}
+        ${statusCell}
+        ${progCell}
+        ${startCell}
+        ${endCell}
+      </div>
+      <div class="gg-timeline" style="width:${timelineWidth}px">
+        ${todayLineInRow}
+        ${barEl}
+      </div>
+    </div>`;
+  };
+
+  // Helper: render the rollup bar for a work-item subgroup. It spans from the
+  // earliest task start to the latest task end; gives a quick "this work item
+  // covers weeks 18-22" glance without expanding the children.
+  const renderWiRollupBar = (sg) => {
+    if(!sg.tasks.length) return '';
+    const segments = splitIntoWeekSegments(sg.spanStart, sg.spanEnd);
+    const SEG_GAP = 2;
+    return segments.map((seg, idx) => {
+      let segX = dayToX(seg.start);
+      let segW = Math.max(dayPx, dayToX(seg.end) + dayPx - segX);
+      if(idx > 0){ segX += SEG_GAP; segW -= SEG_GAP; }
+      return `<div class="gg-bar gg-rollup-bar${idx > 0 ? ' gg-bar-segment' : ''}" style="left:${segX}px;width:${segW}px;background:${sg.color};opacity:.4"></div>`;
+    }).join('');
+  };
+
   const groupRowsHtml = groups.map(g => {
+    if(g.type === 'phase'){
+      // 3-level: phase → work-item subgroups → tasks
+      const phaseCollapsed = ganttViewState.collapsedGroups.has(g.key);
+      const effDays = (g.totalEffort / 8).toFixed(1);
+      const phaseHeader = `
+        <div class="gg-row gg-grouprow gg-phase-row" data-gkey="${escHtml(g.key)}" data-phase="${g.phase ? g.phase.k : '_none'}">
+          <div class="gg-side gg-side-group">
+            <button class="gg-collapse-btn" data-toggle="${escHtml(g.key)}" title="${phaseCollapsed ? 'Expand' : 'Collapse'}">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" style="transform:rotate(${phaseCollapsed ? 0 : 90}deg);transition:transform .15s">
+                <path d="M3 2 L7 5 L3 8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <span class="gg-group-dot" style="background:${g.color}"></span>
+            <span class="gg-group-label">${escHtml(g.label)}</span>
+            <span class="gg-group-meta">${g.tasks.length} task${g.tasks.length===1?'':'s'} · ${effDays}d</span>
+          </div>
+          <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px"></div>
+        </div>`;
+
+      if(phaseCollapsed) return phaseHeader;
+
+      const subGroupsHtml = g.subGroups.map(sg => {
+        // Work-item subgroups are EXPANDED by default; user explicitly opens to see tasks
+        const wiOpen = ganttViewState.collapsedGroups.has(sg.key) ? false : false; // tasks closed by default
+        // We invert: track explicitly-opened subgroups via collapsedGroups
+        // (a key in the set means "expanded" for subgroups, the OPPOSITE of phases)
+        // — but to keep things simple and avoid two sets, we use a separate Set.
+        const isExpanded = ganttViewState.expandedSubGroups.has(sg.key);
+        const sgEffDays = (sg.totalEffort / 8).toFixed(1);
+        const sgHeader = `
+          <div class="gg-row gg-subrow gg-wi-row" data-gkey="${escHtml(sg.key)}" data-wi="${sg.workItem ? sg.workItem.id : '_none'}">
+            <div class="gg-side gg-side-subgroup">
+              <button class="gg-collapse-btn gg-collapse-sub" data-toggle-sub="${escHtml(sg.key)}" title="${isExpanded ? 'Hide tasks' : 'Show tasks'}">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" style="transform:rotate(${isExpanded ? 90 : 0}deg);transition:transform .15s">
+                  <path d="M3 2 L7 5 L3 8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <span class="gg-sub-icon">⊞</span>
+              <span class="gg-sub-label">${escHtml(sg.label)}</span>
+              <span class="gg-sub-meta">${sg.tasks.length} · ${sgEffDays}d</span>
+            </div>
+            <div class="gg-timeline gg-timeline-sub" style="width:${timelineWidth}px">
+              ${renderWiRollupBar(sg)}
+            </div>
+          </div>`;
+
+        if(!isExpanded) return sgHeader;
+        const taskRows = sg.tasks.map(b => renderTaskRow(b, 1)).join('');
+        return sgHeader + taskRows;
+      }).join('');
+
+      return phaseHeader + subGroupsHtml;
+    }
+
+    // Flat 2-level (workitem-only mode)
     const collapsed = ganttViewState.collapsedGroups.has(g.key);
     const effDays = (g.totalEffort / 8).toFixed(1);
     const groupHeader = `
-      <div class="gg-row gg-grouprow" data-gkey="${escHtml(g.key)}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (g.phase ? g.phase.k : '_none') : (g.workItem ? g.workItem.id : '')}">
+      <div class="gg-row gg-grouprow" data-gkey="${escHtml(g.key)}" data-wi="${g.workItem ? g.workItem.id : ''}">
         <div class="gg-side gg-side-group">
           <button class="gg-collapse-btn" data-toggle="${escHtml(g.key)}" title="${collapsed ? 'Expand' : 'Collapse'}">
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" style="transform:rotate(${collapsed ? 0 : 90}deg);transition:transform .15s">
@@ -5157,98 +5463,8 @@ function renderGantt(){
         </div>
         <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px"></div>
       </div>`;
-
     if(collapsed) return groupHeader;
-
-    const taskRows = g.tasks.map(b => {
-      const t = b.task;
-      const done = t.status === 'done';
-      const prog = t.progress != null ? Number(t.progress) : statusToProgress(t.status);
-      const stChip = statusChip(t.status);
-      const effortDays = (Number(t.estimate) || 0) / 8;
-      const effortStr = t.isMilestone ? '◆' : (effortDays > 0 ? effortDays.toFixed(1) + 'd' : '—');
-      const startStr = b.start.toISOString().slice(0,10);
-      const endStr = b.end.toISOString().slice(0,10);
-      const startLabel = fmtDate(startStr);
-      const endLabel = fmtDate(endStr);
-      const overdue = !done && t.due && (new Date(t.due) < today);
-
-      // Bar color comes from the PHASE (not status). Done tasks render with lower opacity.
-      const phaseObj = t.phase ? phaseDef(t.phase) : null;
-      const phaseColor = phaseObj ? phaseObj.color : '#9aa39c';
-      const barOpacity = done ? 0.45 : 1;
-
-      // Tooltip
-      const wi = workItems.find(w => w.id === t.workItemId);
-      const actual = sumActualHours(t.id);
-      const remaining = Math.max(0, (Number(t.estimate) || 0) - actual);
-      const tooltipData = JSON.stringify({
-        title: t.title || 'Untitled',
-        code: t.code || null,
-        range: `${startLabel} → ${endLabel}`,
-        duration: `${b.days} day${b.days===1?'':'s'}`,
-        status: fmtStatus(t.status || 'todo'),
-        assignee: t.assignee || null,
-        phase: t.phase ? fmtPhase(t.phase) : null,
-        workItem: wi ? `${wi.code ? wi.code + ' · ' : ''}${wi.title || ''}` : null,
-        estimate: Number(t.estimate) || 0,
-        actual: actual,
-        remaining: remaining,
-        overrun: actual > (Number(t.estimate) || 0) && (Number(t.estimate) || 0) > 0,
-        warning: null,
-      });
-
-      let barEl;
-      if(t.isMilestone){
-        const barX = dayToX(b.start);
-        barEl = `<div class="gg-bar gg-milestone" style="left:${barX + dayPx/2 - 9}px;opacity:${barOpacity}" data-tid="${t.id}" data-tooltip='${escHtml(tooltipData)}'>
-             <svg width="18" height="18" viewBox="0 0 14 14"><path d="M7 1 L13 7 L7 13 L1 7 Z" fill="${phaseColor}" stroke="${phaseColor}" stroke-width="1"/></svg>
-           </div>`;
-      } else {
-        // One solid bar per week-segment, phase-colored. No progress overlay; no border.
-        const segments = splitIntoWeekSegments(b.start, b.end);
-        const SEG_GAP = 2; // px visual gap between segments
-        barEl = segments.map((seg, idx) => {
-          let segX = dayToX(seg.start);
-          let segW = Math.max(dayPx, dayToX(seg.end) + dayPx - segX);
-          if(idx > 0){
-            segX += SEG_GAP;
-            segW -= SEG_GAP;
-          }
-          const isFirst = idx === 0;
-          return `<div class="gg-bar ${overdue?'gg-overdue':''}${isFirst?'':' gg-bar-segment'}" data-tid="${t.id}"${isFirst?` data-tooltip='${escHtml(tooltipData)}'`:''} draggable="${(canWrite && isFirst)?'true':'false'}" style="left:${segX}px;width:${segW}px;background:${phaseColor};opacity:${barOpacity}"></div>`;
-        }).join('');
-      }
-
-      const todayLineInRow = showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : '';
-
-      // Editable cells: clickable inputs/buttons that update task on change
-      const effortInputVal = t.isMilestone ? '' : (effortDays > 0 ? effortDays.toFixed(1) : '');
-      const effortCell = t.isMilestone
-        ? `<span class="gg-cell gg-cell-eff gg-cell-milestone-mark" title="Milestone">◆</span>`
-        : `<input class="gg-cell gg-cell-eff gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortInputVal}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
-      const statusCell = `<button class="gg-cell gg-cell-status gg-cell-btn" data-pop-status="${t.id}" ${canWrite?'':'disabled'}>${stChip}</button>`;
-      const progCell = `<input class="gg-cell gg-cell-prog gg-cell-input gg-input-prog" type="number" min="0" max="100" step="5" value="${prog}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
-      const startCell = `<input class="gg-cell gg-cell-start gg-cell-input gg-input-date gg-input-start" type="date" value="${startStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
-      const endCell = `<input class="gg-cell gg-cell-end gg-cell-input gg-input-date gg-input-end" type="date" value="${endStr}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
-
-      return `<div class="gg-row gg-taskrow ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
-        <div class="gg-side">
-          <span class="gg-row-handle" title="Drag to reorder" data-drag-tid="${t.id}" draggable="${canWrite?'true':'false'}">⋮⋮</span>
-          <span class="gg-cell gg-cell-title" data-open-task="${t.id}"><span class="gg-title">${escHtml(t.title || '—')}</span></span>
-          ${effortCell}
-          ${statusCell}
-          ${progCell}
-          ${startCell}
-          ${endCell}
-        </div>
-        <div class="gg-timeline" style="width:${timelineWidth}px">
-          ${todayLineInRow}
-          ${barEl}
-        </div>
-      </div>`;
-    }).join('');
-
+    const taskRows = g.tasks.map(b => renderTaskRow(b, 0)).join('');
     return groupHeader + taskRows;
   }).join('');
 
@@ -5309,15 +5525,22 @@ function renderGantt(){
   };
   document.getElementById('ganttCollapseAll').onclick = () => {
     groups.forEach(g => ganttViewState.collapsedGroups.add(g.key));
+    ganttViewState.expandedSubGroups.clear();
     renderGantt();
   };
   document.getElementById('ganttExpandAll').onclick = () => {
     ganttViewState.collapsedGroups.clear();
+    // Also expand all work-item subgroups so the user sees everything
+    groups.forEach(g => {
+      if(g.subGroups){
+        g.subGroups.forEach(sg => ganttViewState.expandedSubGroups.add(sg.key));
+      }
+    });
     renderGantt();
   };
 
-  // Group collapse toggle
-  cont.querySelectorAll('.gg-collapse-btn').forEach(btn => {
+  // Phase collapse toggle (chevron in phase header)
+  cont.querySelectorAll('.gg-collapse-btn[data-toggle]').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const key = btn.dataset.toggle;
@@ -5327,13 +5550,35 @@ function renderGantt(){
     });
   });
 
-  // Click on group row (anywhere except button) also toggles
+  // Work-item subgroup toggle (chevron in work-item header) — uses expandedSubGroups
+  cont.querySelectorAll('.gg-collapse-btn[data-toggle-sub]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = btn.dataset.toggleSub;
+      if(ganttViewState.expandedSubGroups.has(key)) ganttViewState.expandedSubGroups.delete(key);
+      else ganttViewState.expandedSubGroups.add(key);
+      renderGantt();
+    });
+  });
+
+  // Click anywhere on a phase row toggles it
   cont.querySelectorAll('.gg-grouprow').forEach(row => {
     row.addEventListener('click', e => {
       if(e.target.closest('button')) return;
       const key = row.dataset.gkey;
       if(ganttViewState.collapsedGroups.has(key)) ganttViewState.collapsedGroups.delete(key);
       else ganttViewState.collapsedGroups.add(key);
+      renderGantt();
+    });
+  });
+
+  // Click anywhere on a work-item subgroup row toggles its tasks
+  cont.querySelectorAll('.gg-subrow').forEach(row => {
+    row.addEventListener('click', e => {
+      if(e.target.closest('button')) return;
+      const key = row.dataset.gkey;
+      if(ganttViewState.expandedSubGroups.has(key)) ganttViewState.expandedSubGroups.delete(key);
+      else ganttViewState.expandedSubGroups.add(key);
       renderGantt();
     });
   });
