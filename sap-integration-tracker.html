@@ -5190,7 +5190,9 @@ function renderGantt(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Gantt', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
+     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
+     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
   const content = document.getElementById('content');
   if(!allTasks.length){
@@ -6288,7 +6290,9 @@ function renderTimeline(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Timeline', `${VIEW_DESCRIPTIONS.timeline} · ${allTasks.length} task${allTasks.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
+     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
+     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
   const content = document.getElementById('content');
   if(!allTasks.length){
@@ -6574,7 +6578,9 @@ function renderKanban(){
 
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${VIEW_DESCRIPTIONS.kanban} · ${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
+     <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
+     <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
   const colBy = kanbanViewState.columnBy;
   let cols;
