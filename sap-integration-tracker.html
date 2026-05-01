@@ -1606,6 +1606,32 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .card-list{grid-column:span 4;}
 .card-team{grid-column:span 4;}
 .card-avail{grid-column:span 4;}
+.card-load{grid-column:span 4;}
+
+/* Team-load list: avatar + name + count, one row per person.
+   The top assignee gets a slight emphasis on the count. */
+.team-load-list{display:flex;flex-direction:column;}
+.team-load-row{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 4px;border-bottom:1px solid var(--border);
+  transition:background .12s;
+}
+.team-load-row:last-child{border-bottom:none;}
+.team-load-row:hover{background:var(--surface-2);}
+.team-load-name{
+  flex:1;min-width:0;
+  font-size:13px;color:var(--text);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.team-load-count{
+  font-family:var(--mono);font-size:13px;font-weight:600;
+  color:var(--text-muted);
+  padding:3px 10px;border-radius:12px;
+  background:var(--surface-2);min-width:34px;text-align:center;
+}
+.team-load-count.is-peak{
+  color:var(--accent-deep);background:var(--accent-soft);
+}
 .chart-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:10px;}
 .chart-head h3{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;}
 .chart-head p{color:var(--text-muted);font-size:12px;margin-top:2px;}
@@ -3352,16 +3378,6 @@ function renderDashboard(){
   const people = Object.keys(openByPerson).sort((a,b) => openByPerson[b] - openByPerson[a]).slice(0, 7);
   const totalOpen = Object.values(openByPerson).reduce((s, n) => s + n, 0);
   const maxOpen = people.length ? Math.max(...people.map(p => openByPerson[p])) : 1;
-  const barsHtml = people.length ? people.map(p => {
-    const n = openByPerson[p], hPct = Math.round(n/maxOpen*100);
-    const isPeak = n === maxOpen;
-    return `<div class="bar-col" style="height:100%"><div style="flex:1;display:flex;align-items:flex-end;width:100%;justify-content:center">
-      <div class="bar ${isPeak?'active':''}" style="height:${Math.max(hPct,4)}%;width:36px">
-        ${isPeak ? `<div class="bar-peak">${n}</div>` : ''}
-      </div></div>
-      <div class="bar-label">${escHtml(p.split(' ')[0])}</div>
-    </div>`;
-  }).join('') : `<div class="empty-screen" style="padding:20px;width:100%"><p>No open tasks assigned.</p></div>`;
 
   const groups = [
     {k:'todo',    label:'Todo',    dot:'var(--text-dim)'},
@@ -3572,6 +3588,26 @@ function renderDashboard(){
         <div class="pipeline">${pipeCols}</div>
       </div>
 
+      <div class="card card-load">
+        <div class="list-head">
+          <div>
+            <h3>Open tasks per person</h3>
+            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">${totalOpen} open · across all assignees</p>
+          </div>
+        </div>
+        <div class="team-load-list">
+          ${people.length ? people.map(p => {
+            const n = openByPerson[p];
+            const isPeak = n === maxOpen;
+            return `<div class="team-load-row">
+              ${avatarEl(p, 28)}
+              <div class="team-load-name">${escHtml(p)}</div>
+              <div class="team-load-count ${isPeak ? 'is-peak' : ''}">${n}</div>
+            </div>`;
+          }).join('') : `<div style="padding:14px;color:var(--text-dim);font-size:12.5px">No open tasks assigned.</div>`}
+        </div>
+      </div>
+
       <div class="card card-team">
         <div class="list-head"><h3>Recent activity</h3></div>
         ${teamHtml}
@@ -3590,13 +3626,6 @@ function renderDashboard(){
       <div class="card card-list">
         <div class="list-head"><h3>Up next</h3></div>
         ${upcomingHtml}
-      </div>
-
-      <div class="card card-chart">
-        <div class="chart-head">
-          <div><h3>Open tasks per person</h3><p>Non-done tasks assigned · ${totalOpen} open</p></div>
-        </div>
-        <div class="bars">${barsHtml}</div>
       </div>
     </div>`;
 }
