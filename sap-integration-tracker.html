@@ -1526,10 +1526,10 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .stat-sub{font-size:12px;color:var(--text-muted);}
 .card-hero .stat-sub{color:rgba(255,255,255,.8);}
 [data-theme="dark"] .card-hero .stat-sub{color:rgba(10,18,13,.75);}
-.card-chart{grid-column:span 9;min-height:200px;}
-.card-progress{grid-column:span 3;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.card-chart{grid-column:span 12;min-height:160px;}
+.card-progress{grid-column:span 4;display:flex;flex-direction:column;align-items:center;text-align:center;}
 .card-pipeline{grid-column:span 12;display:flex;flex-direction:column;}
-.card-phases{grid-column:span 12;display:flex;flex-direction:column;}
+.card-phases{grid-column:span 8;display:flex;flex-direction:column;}
 
 /* Project health card */
 .card-health{
@@ -2307,8 +2307,8 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
       <nav class="nav" id="navPrimary">
         <a data-view="dashboard" class="active" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
         <a data-view="gantt" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
+        <a data-view="schedule" title="My schedule"><span class="ico">▤</span><span>My schedule</span></a>
         <a data-view="timelog" title="Time log"><span class="ico">◷</span><span>Time log</span></a>
-        <a data-view="schedule" title="Schedule"><span class="ico">▤</span><span>Schedule</span></a>
       </nav>
     </div>
 
@@ -3343,20 +3343,25 @@ function renderDashboard(){
     `Here's what's moving on ${proj ? escHtml(proj.name) : 'your project'}.`
   );
 
-  const byPerson = {};
-  logs.forEach(l => { byPerson[l.person] = (byPerson[l.person]||0) + (Number(l.hours)||0); });
-  const people = Object.keys(byPerson).sort((a,b) => byPerson[b] - byPerson[a]).slice(0, 7);
-  const maxH = people.length ? Math.max(...people.map(p => byPerson[p])) : 1;
+  // Open tasks per person — count of non-done tasks assigned to each user.
+  // "Open" means: not done, not unassigned. Both parent tasks and subtasks count.
+  const openByPerson = {};
+  tasks.filter(t => t.status !== 'done' && t.assignee).forEach(t => {
+    openByPerson[t.assignee] = (openByPerson[t.assignee] || 0) + 1;
+  });
+  const people = Object.keys(openByPerson).sort((a,b) => openByPerson[b] - openByPerson[a]).slice(0, 7);
+  const totalOpen = Object.values(openByPerson).reduce((s, n) => s + n, 0);
+  const maxOpen = people.length ? Math.max(...people.map(p => openByPerson[p])) : 1;
   const barsHtml = people.length ? people.map(p => {
-    const h = byPerson[p], hPct = Math.round(h/maxH*100);
-    const isPeak = h === maxH;
+    const n = openByPerson[p], hPct = Math.round(n/maxOpen*100);
+    const isPeak = n === maxOpen;
     return `<div class="bar-col" style="height:100%"><div style="flex:1;display:flex;align-items:flex-end;width:100%;justify-content:center">
       <div class="bar ${isPeak?'active':''}" style="height:${Math.max(hPct,4)}%;width:36px">
-        ${isPeak ? `<div class="bar-peak">${h.toFixed(1)}h</div>` : ''}
+        ${isPeak ? `<div class="bar-peak">${n}</div>` : ''}
       </div></div>
       <div class="bar-label">${escHtml(p.split(' ')[0])}</div>
     </div>`;
-  }).join('') : `<div class="empty-screen" style="padding:20px;width:100%"><p>No hours logged yet.</p></div>`;
+  }).join('') : `<div class="empty-screen" style="padding:20px;width:100%"><p>No open tasks assigned.</p></div>`;
 
   const groups = [
     {k:'todo',    label:'Todo',    dot:'var(--text-dim)'},
@@ -3472,9 +3477,9 @@ function renderDashboard(){
   document.getElementById('content').innerHTML = `
     <div class="bento">
       <div class="card card-hero">
-        <div class="stat-label">This project</div>
-        <div class="stat-value">${totalH.toFixed(1)}</div>
-        <div class="stat-sub">hours logged · ${logs.length} ${logs.length===1?'entry':'entries'}</div>
+        <div class="stat-label">Project completion</div>
+        <div class="stat-value">${pct}%</div>
+        <div class="stat-sub">${doneTasks} of ${parents.length} tasks done</div>
       </div>
       <div class="card" style="grid-column:span 3">
         <div class="stat-label">Work items ${ifaces.length?`<span class="chip chip-accent">${ifaces.length} process${ifaces.length===1?'':'es'}</span>`:''}</div>
@@ -3487,9 +3492,9 @@ function renderDashboard(){
         <div class="stat-sub">${doing} in progress · ${inReview} in review · ${todo} todo</div>
       </div>
       <div class="card" style="grid-column:span 3">
-        <div class="stat-label">Completion</div>
-        <div class="stat-value">${pct}%</div>
-        <div class="stat-sub">${doneTasks} of ${parents.length} tasks done</div>
+        <div class="stat-label">Hours logged</div>
+        <div class="stat-value">${totalH.toFixed(1)}</div>
+        <div class="stat-sub">${logs.length} ${logs.length===1?'entry':'entries'} this project</div>
       </div>
 
       <div class="card card-health health-${healthStatus}" style="grid-column:span 12">
@@ -3504,13 +3509,6 @@ function renderDashboard(){
           <div class="health-score">${healthScore}<span class="health-score-max">/100</span></div>
           <div class="health-reasons">${healthReasons.map(r => `<span class="health-reason">${escHtml(r)}</span>`).join('')}</div>
         </div>
-      </div>
-
-      <div class="card card-chart">
-        <div class="chart-head">
-          <div><h3>Hours by teammate</h3><p>Across this project · ${totalH.toFixed(1)}h total</p></div>
-        </div>
-        <div class="bars">${barsHtml}</div>
       </div>
 
       <div class="card card-progress">
@@ -3593,13 +3591,20 @@ function renderDashboard(){
         <div class="list-head"><h3>Up next</h3></div>
         ${upcomingHtml}
       </div>
+
+      <div class="card card-chart">
+        <div class="chart-head">
+          <div><h3>Open tasks per person</h3><p>Non-done tasks assigned · ${totalOpen} open</p></div>
+        </div>
+        <div class="bars">${barsHtml}</div>
+      </div>
     </div>`;
 }
 
 /* ════════════════════════════════════════════════════════
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
-let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:false };
+let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:true };
 let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set(), expandedSubGroups: new Set() };
 let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 
@@ -6920,7 +6925,7 @@ let scheduleViewState = { monthOffset: 0 }; // 0 = current month, -1 = previous,
 function renderSchedule(){
   const canWrite = canWriteView('schedule');
 
-  setTopbar('Schedule', 'Weekly customer pattern — repeats every week unless adjusted');
+  setTopbar('My schedule', 'Weekly customer pattern — repeats every week unless adjusted');
 
   // Place "+ Customer" button into the right-anchored slot so it sits 5px left of the bell.
   // refreshTopbarViewSwitcher() runs from renderAll() and would normally clear this slot for
