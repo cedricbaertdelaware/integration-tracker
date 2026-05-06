@@ -308,6 +308,42 @@ input,select,textarea{font-family:inherit;}
 }
 .notif-bell:hover{color:var(--text);border-color:var(--border-strong);background:var(--surface-2);}
 .notif-bell svg{pointer-events:none;}
+
+/* Auto-save indicator — three states (saved / saving / pending), shows in topbar.
+   Only one icon is visible at a time depending on the state class on the parent. */
+.save-indicator{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 10px;border-radius:8px;
+  font-size:11.5px;font-weight:500;
+  border:1px solid transparent;
+  user-select:none;flex-shrink:0;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.save-indicator .save-ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;
+}
+.save-indicator svg{display:none;}
+/* Saved (default) */
+.save-saved{color:var(--text-dim);}
+.save-saved .save-ico-saved{display:block;}
+.save-saved .save-label{color:var(--text-dim);}
+/* Saving */
+.save-saving{
+  color:var(--accent-deep);background:var(--accent-soft);
+  border-color:color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.save-saving .save-ico-saving{display:block;animation:save-spin 1s linear infinite;}
+@keyframes save-spin{ to { transform:rotate(360deg); } }
+/* Pending / error (offline or save failed) */
+.save-pending{
+  color:#b66c00;background:color-mix(in srgb, #b66c00 10%, transparent);
+  border-color:color-mix(in srgb, #b66c00 30%, transparent);
+}
+.save-pending .save-ico-pending{display:block;}
+@media (max-width: 720px){
+  .save-indicator .save-label{display:none;}
+}
 .notif-badge{
   position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;
   background:var(--danger);color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;
@@ -1444,6 +1480,24 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   padding:9px 12px;color:var(--text);resize:none;min-height:50px;outline:none;font-size:13px;
 }
 .cmt-input textarea:focus{border-color:var(--accent);background:var(--surface);}
+
+/* @-mention autocomplete popover — appears below comment textareas while typing */
+.mention-pop{
+  background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.12);
+  z-index:10000;overflow:hidden;
+  max-height:200px;overflow-y:auto;
+  font-size:13px;
+}
+.mention-pop-item{
+  padding:8px 12px;cursor:pointer;color:var(--text);
+  transition:background .08s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mention-pop-item:hover,
+.mention-pop-item.active{
+  background:var(--accent-soft);color:var(--accent-deep);
+}
 .cmt-submit{padding:7px 14px;font-size:12px;}
 
 .act{display:flex;gap:8px;padding:5px 0;font-size:12px;color:var(--text-muted);align-items:center;}
@@ -1938,6 +1992,140 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .sched-month-meta{
   font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:6px 0 14px;
 }
+/* ──── RACI matrix ──── */
+.raci-wrap{padding:0 4px;}
+.raci-legend{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:10px 14px;margin-bottom:14px;
+  background:var(--surface-2);border-radius:var(--radius);
+  font-size:12px;color:var(--text-muted);
+}
+.raci-legend-item{display:inline-flex;align-items:center;gap:6px;}
+.raci-legend-dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  font-family:var(--mono);font-weight:700;font-size:11px;
+  color:#fff;
+}
+.raci-legend-R .raci-legend-dot{background:#2d8e60;}
+.raci-legend-A .raci-legend-dot{background:#3279c0;}
+.raci-legend-C .raci-legend-dot{background:#d8951c;}
+.raci-legend-I .raci-legend-dot{background:#9aa39c;}
+.raci-legend-note{margin-left:auto;font-size:11px;color:var(--text-dim);font-style:italic;}
+.raci-table-scroll{
+  overflow-x:auto;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+.raci-table{
+  border-collapse:separate;border-spacing:0;width:100%;
+}
+.raci-col-head{
+  background:var(--surface-2);
+  font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.04em;
+  color:var(--text-muted);
+  padding:10px 8px;text-align:center;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:1;
+}
+.raci-col-head:first-child{
+  text-align:left;padding-left:14px;min-width:240px;
+  position:sticky;left:0;z-index:2;
+}
+.raci-col-name{display:inline-block;}
+.raci-rowhead{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:var(--surface);position:sticky;left:0;
+  display:flex;align-items:center;gap:8px;
+  min-width:240px;
+}
+.raci-code{
+  font:600 10.5px var(--mono);color:var(--text-dim);
+  background:var(--surface-2);padding:2px 6px;border-radius:4px;
+}
+.raci-title{font-size:13px;color:var(--text);font-weight:500;}
+.raci-cell{
+  padding:6px;border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.raci-btn{
+  width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--border);background:transparent;
+  font-family:var(--mono);font-weight:700;font-size:13px;
+  color:var(--text-dim);cursor:pointer;
+  transition:.12s;
+}
+.raci-btn:hover:not(:disabled){border-color:var(--text-muted);background:var(--surface-2);}
+.raci-btn:disabled{cursor:default;opacity:.6;}
+.raci-btn.has-R{background:#2d8e60;color:#fff;border-color:#2d8e60;}
+.raci-btn.has-A{background:#3279c0;color:#fff;border-color:#3279c0;}
+.raci-btn.has-C{background:#d8951c;color:#fff;border-color:#d8951c;}
+.raci-btn.has-I{background:#9aa39c;color:#fff;border-color:#9aa39c;}
+.raci-cell.has-R{background:color-mix(in srgb, #2d8e60 6%, transparent);}
+.raci-cell.has-A{background:color-mix(in srgb, #3279c0 6%, transparent);}
+.raci-cell.has-C{background:color-mix(in srgb, #d8951c 6%, transparent);}
+.raci-cell.has-I{background:color-mix(in srgb, #9aa39c 6%, transparent);}
+
+/* ──── Today / Focus view ──── */
+.focus-wrap{display:flex;flex-direction:column;gap:18px;max-width:760px;margin:0 auto;}
+.focus-section{}
+.focus-section-head{
+  font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-muted);padding:0 4px 8px;
+  display:flex;align-items:center;gap:8px;
+}
+.focus-section-overdue .focus-section-head{color:var(--danger, #c44a4a);}
+.focus-section-today .focus-section-head{color:var(--accent);}
+.focus-section-count{
+  font:500 11px var(--mono);color:var(--text-dim);
+  background:var(--surface-2);padding:2px 8px;border-radius:10px;
+}
+.focus-section-body{display:flex;flex-direction:column;gap:6px;}
+.focus-task{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:0;transition:border-color .12s, transform .12s;
+}
+.focus-task:hover{border-color:var(--border-strong);}
+.focus-section-overdue .focus-task{
+  border-left:3px solid var(--danger, #c44a4a);
+}
+.focus-section-today .focus-task{
+  border-left:3px solid var(--accent);
+}
+.focus-task-main{
+  display:flex;align-items:center;gap:10px;padding:11px 13px;
+}
+.focus-check{
+  width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-strong);
+  background:transparent;cursor:pointer;flex-shrink:0;
+  transition:.12s;
+}
+.focus-check:hover{border-color:var(--accent);background:color-mix(in srgb, var(--accent) 12%, transparent);}
+.focus-task-text{flex:1;min-width:0;}
+.focus-task-title{
+  font-size:14px;color:var(--text);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.focus-task-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--text-muted);margin-top:3px;
+}
+.focus-meta-chip{
+  font-family:var(--mono);font-weight:600;font-size:10.5px;
+  background:var(--surface-2);padding:2px 6px;border-radius:4px;
+  color:var(--text-muted);
+}
+.focus-meta-wi{color:var(--text-muted);}
+.focus-meta-due{font-family:var(--mono);}
+.focus-meta-due.overdue{color:var(--danger, #c44a4a);font-weight:600;}
+.focus-meta-prio{color:var(--danger, #c44a4a);font-weight:600;font-size:11px;}
+.focus-meta-phase{font-size:14px;line-height:0;}
+.focus-open{
+  background:transparent;border:none;color:var(--text-dim);font-size:18px;
+  cursor:pointer;padding:4px 6px;border-radius:5px;flex-shrink:0;
+  transition:.12s;
+}
+.focus-open:hover{color:var(--text);background:var(--surface-2);}
+
 /* Two-column layout: bar chart + donut chart side by side */
 .sched-charts{
   display:grid;grid-template-columns:1fr 1fr;gap:14px;
@@ -2359,8 +2547,10 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
     <div>
       <div class="nav-label">Workspace</div>
       <nav class="nav" id="navPrimary">
+        <a data-view="focus" title="Today — your tasks for the day"><span class="ico">◉</span><span>Today</span></a>
         <a data-view="dashboard" class="active" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
         <a data-view="gantt" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
+        <a data-view="raci" title="RACI matrix"><span class="ico">▦</span><span>RACI</span></a>
         <a data-view="schedule" title="My schedule"><span class="ico">▤</span><span>My schedule</span></a>
         <a data-view="timelog" title="Time log"><span class="ico">◷</span><span>Time log</span></a>
       </nav>
@@ -2400,6 +2590,14 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
       </div>
       <div class="topbar-right" id="topbarActions"></div>
       <div class="topbar-viewswitcher" id="topbarViewSwitcher"></div>
+      <div class="save-indicator save-saved" id="saveIndicator" title="All changes saved">
+        <span class="save-ico" aria-hidden="true">
+          <svg class="save-ico-saved" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg class="save-ico-saving" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-opacity=".25"/><path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"/></svg>
+          <svg class="save-ico-pending" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        </span>
+        <span class="save-label" id="saveIndicatorLabel">Saved</span>
+      </div>
       <button id="notifBellBtn" class="notif-bell" onclick="openNotifPanel()" title="Notifications">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span id="notifBadge" class="notif-badge" style="display:none">0</span>
@@ -2641,6 +2839,111 @@ function enhanceDateInputs(rootEl){
     inp.classList.add('dmy-hidden-input');
   });
 }
+
+// Attach an @-mention autocomplete to a textarea. When the user types '@' followed
+// by characters, a small popover appears with matching active users; arrow keys
+// navigate, Enter/Tab inserts the selected name. The popover is positioned
+// absolutely under the textarea (simple — not at the cursor position; good enough
+// since comment textareas are short).
+//
+// Idempotent — sets a marker on the textarea to avoid double-attach.
+function attachMentionAutocomplete(textarea){
+  if(!textarea || textarea.dataset.mentionAttached) return;
+  textarea.dataset.mentionAttached = '1';
+
+  let popover = null;
+  let activeIndex = 0;
+  let matches = [];
+  let triggerStart = -1; // index of '@' in the textarea value
+
+  const close = () => {
+    if(popover){ popover.remove(); popover = null; }
+    matches = [];
+    triggerStart = -1;
+  };
+
+  const updatePopover = () => {
+    if(!popover){
+      popover = document.createElement('div');
+      popover.className = 'mention-pop';
+      // Position relative to textarea
+      const rect = textarea.getBoundingClientRect();
+      popover.style.position = 'fixed';
+      popover.style.left = rect.left + 'px';
+      popover.style.top = (rect.bottom + 2) + 'px';
+      popover.style.minWidth = Math.max(180, rect.width / 2) + 'px';
+      document.body.appendChild(popover);
+    }
+    if(!matches.length){ close(); return; }
+    popover.innerHTML = matches.map((u, i) =>
+      `<div class="mention-pop-item ${i===activeIndex?'active':''}" data-i="${i}">${escHtml(u.name)}</div>`
+    ).join('');
+    popover.querySelectorAll('.mention-pop-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        activeIndex = Number(el.dataset.i);
+        commit();
+      });
+    });
+  };
+
+  const commit = () => {
+    const u = matches[activeIndex];
+    if(!u) return;
+    const before = textarea.value.slice(0, triggerStart);
+    const after = textarea.value.slice(textarea.selectionStart);
+    const insert = '@' + u.name + ' ';
+    textarea.value = before + insert + after;
+    const newCursor = before.length + insert.length;
+    textarea.setSelectionRange(newCursor, newCursor);
+    close();
+    textarea.focus();
+  };
+
+  textarea.addEventListener('input', () => {
+    const val = textarea.value;
+    const cursor = textarea.selectionStart;
+    // Find the most recent '@' before the cursor (no whitespace between @ and cursor)
+    let i = cursor - 1;
+    let trigger = -1;
+    while(i >= 0){
+      const c = val[i];
+      if(c === '@'){ trigger = i; break; }
+      // Stop if whitespace, newline, or another @ appears (not in a token)
+      if(/\s/.test(c)) break;
+      i--;
+    }
+    if(trigger < 0){ close(); return; }
+    // The @ must be at start of textarea or preceded by whitespace
+    if(trigger > 0 && !/\s/.test(val[trigger - 1])){ close(); return; }
+    const query = val.slice(trigger + 1, cursor).toLowerCase();
+    triggerStart = trigger;
+    const users = state.users.filter(u => u.active !== false && u.name !== currentUser.name);
+    // Match on word-start (more intuitive than substring): typing "C" matches "Cédric"
+    // and "John Carter" but not "Aaouich". Each word in the user's name is tested.
+    matches = users
+      .filter(u => {
+        const words = u.name.toLowerCase().split(/\s+/);
+        return words.some(w => w.startsWith(query));
+      })
+      .slice(0, 6);
+    activeIndex = 0;
+    updatePopover();
+  });
+
+  textarea.addEventListener('keydown', e => {
+    if(!popover || !matches.length) return;
+    if(e.key === 'ArrowDown'){ e.preventDefault(); activeIndex = (activeIndex + 1) % matches.length; updatePopover(); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); activeIndex = (activeIndex - 1 + matches.length) % matches.length; updatePopover(); }
+    else if(e.key === 'Enter' || e.key === 'Tab'){ e.preventDefault(); commit(); }
+    else if(e.key === 'Escape'){ e.preventDefault(); close(); }
+  });
+
+  textarea.addEventListener('blur', () => {
+    // Delay close so click on popover items can fire first (mousedown handler also calls preventDefault)
+    setTimeout(close, 150);
+  });
+}
 function daysUntil(iso){
   if(!iso) return null;
   const d = new Date(iso); if(isNaN(d)) return null;
@@ -2657,14 +2960,14 @@ function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
    STATE + FIREBASE
    ════════════════════════════════════════════════════════ */
 const ROLE_DEFAULTS = {
-  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
-  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
-  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:1},schedule:{r:1,w:1},templates:{r:0,w:0},users:{r:0,w:0}},
-  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:0},schedule:{r:1,w:1},templates:{r:0,w:0},users:{r:0,w:0}},
+  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
+  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
+  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
   custom:    {dashboard:{r:0,w:0},tasks:{r:0,w:0},workitems:{r:0,w:0},interfaces:{r:0,w:0},timelog:{r:0,w:0},schedule:{r:0,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
 };
 const ADMIN_VIEWS = ['templates','users'];
-const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','timelog','schedule','templates','users'];
+const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','timelog','schedule','focus','raci','templates','users'];
 
 const DEFAULT_DIF_TEMPLATES = [
   {id:1, code:'TF000', name:'External Connections', ver:'2.0.1', short:'Reusable external connection configs.', desc:'', dir:'N/A', proc:'N/A', proto:'HTTPS/SFTP/AMQP'},
@@ -2768,16 +3071,49 @@ function ensureDefaults(){
 // While this is true, saveState() does nothing, so demo edits don't persist anywhere.
 let previewMode = false;
 
+// Show the auto-save indicator in one of three states: 'saved' | 'saving' | 'pending'.
+// Setting 'saving' or 'pending' is immediate; 'saved' has a brief debounce so
+// the user actually sees the spinner flash on quick edits.
+let _savedTimer = null;
+function setSaveState(kind){
+  const el = document.getElementById('saveIndicator');
+  if(!el) return;
+  if(_savedTimer){ clearTimeout(_savedTimer); _savedTimer = null; }
+  el.classList.remove('save-saved','save-saving','save-pending');
+  el.classList.add('save-' + kind);
+  const lbl = document.getElementById('saveIndicatorLabel');
+  if(lbl) lbl.textContent = kind === 'saving' ? 'Saving…' : kind === 'pending' ? 'Pending' : 'Saved';
+  const titles = { saved:'All changes saved', saving:'Saving to cloud…', pending:'Changes pending — connection issue' };
+  el.title = titles[kind] || '';
+}
+
 function saveState(){
   if(previewMode) return; // sandbox: never persist
   try{
     const clean = JSON.parse(JSON.stringify(state));
     delete clean.activeProject; delete clean.activeView;
+    // Always store locally first — that's never a network operation
+    try{ localStorage.setItem(LS_STATE, JSON.stringify(state)); }catch(_){}
     if(useFirebase){
-      db.collection('appdata').doc('v2').set(clean).catch(e => console.error('Firebase save error', e));
+      setSaveState('saving');
+      db.collection('appdata').doc('v2').set(clean)
+        .then(() => {
+          // Brief delay so the spinner is actually visible on fast networks
+          if(_savedTimer) clearTimeout(_savedTimer);
+          _savedTimer = setTimeout(() => setSaveState('saved'), 250);
+        })
+        .catch(e => {
+          console.error('Firebase save error', e);
+          setSaveState('pending');
+        });
+    } else {
+      // No Firebase configured — local-only. Treat as saved (localStorage is sync).
+      setSaveState('saved');
     }
-    localStorage.setItem(LS_STATE, JSON.stringify(state));
-  }catch(e){ console.error('Save error', e); }
+  }catch(e){
+    console.error('Save error', e);
+    setSaveState('pending');
+  }
 }
 function startRealtimeSync(){
   if(previewMode) return; // sandbox: no live updates
@@ -3043,7 +3379,7 @@ function renderAll(){
   refreshTopbarViewSwitcher();
   const content = document.getElementById('content');
   const v = state.activeView;
-  if(!state.activeProject && v !== 'users' && v !== 'templates' && v !== 'schedule'){
+  if(!state.activeProject && v !== 'users' && v !== 'templates' && v !== 'schedule' && v !== 'focus' && v !== 'raci'){
     setTopbar('Welcome', 'Create or pick a project from the sidebar.');
     const isAdmin = currentUser.role === 'admin';
     content.innerHTML = `<div class="empty-screen"><div class="empty-screen-icon">◈</div>
@@ -3063,6 +3399,8 @@ function renderAll(){
     else if(v === 'interfaces') renderInterfacesView();
     else if(v === 'timelog') renderTimeLog();
     else if(v === 'schedule') renderSchedule();
+    else if(v === 'focus') renderFocus();
+    else if(v === 'raci') renderRaci();
     else if(v === 'templates') renderTemplatesView();
     else if(v === 'users') renderUsersView();
     else if(v === 'fulltask') renderFullTask();
@@ -3104,6 +3442,8 @@ const VIEW_DESCRIPTIONS = {
   kanban:   'Workflow status overview',
   gantt:    'Planning, deadlines and dependencies',
   timeline: 'Chronological project milestones',
+  focus:    'Today — your tasks for the day',
+  raci:     'Responsibility matrix per work item',
 };
 
 /* ════════════════════════════════════════════════════════
@@ -4409,7 +4749,7 @@ function renderSidePanel(){
             }
           }
           const opts = ['<option value="">— None —</option>']
-            .concat(siblings.map(t => `<option value="${t.id}" ${t.id === reqId ? 'selected' : ''}>${escHtml(t.code ? t.code + ' · ' : '')}${escHtml(t.title || 'Untitled')}</option>`))
+            .concat(siblings.map(t => `<option value="${t.id}" ${t.id === reqId ? 'selected' : ''}>${escHtml(t.title || 'Untitled')}</option>`))
             .join('');
           return `<span class="sp-prop-key">Prerequisite</span>
             <div class="sp-prop-val sp-prop-val-col">
@@ -4637,6 +4977,9 @@ function renderSidePanel(){
   });
   // Apply dd/mm/yyyy display to any date inputs in the side panel
   enhanceDateInputs(document.querySelector('.side-panel'));
+  // Wire @-mention autocomplete on the comment textarea
+  const cmtInput = sp.querySelector('#cmt-input');
+  if(cmtInput) attachMentionAutocomplete(cmtInput);
 }
 
 function renderSubItem(s){
@@ -5272,7 +5615,7 @@ function openNewTaskModal(prefilledWorkItemId){
     ) : [];
     const prevValue = reqSel.value;
     reqSel.innerHTML = '<option value="">— None —</option>' + siblings.map(t =>
-      `<option value="${t.id}">${escHtml(t.code ? t.code + ' · ' : '')}${escHtml(t.title || 'Untitled')}</option>`
+      `<option value="${t.id}">${escHtml(t.title || 'Untitled')}</option>`
     ).join('');
     // Keep previous value if still valid
     if(prevValue && siblings.some(t => String(t.id) === prevValue)) reqSel.value = prevValue;
@@ -5719,7 +6062,9 @@ function renderGantt(){
             <span class="gg-group-label">${escHtml(g.label)}</span>
             <span class="gg-group-meta">${g.tasks.length} task${g.tasks.length===1?'':'s'} · ${effDays}d</span>
           </div>
-          <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px"></div>
+          <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px">
+            ${showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : ''}
+          </div>
         </div>`;
 
       if(phaseCollapsed) return phaseHeader;
@@ -5745,6 +6090,7 @@ function renderGantt(){
               <span class="gg-sub-meta">${sg.tasks.length} · ${sgEffDays}d</span>
             </div>
             <div class="gg-timeline gg-timeline-sub" style="width:${timelineWidth}px">
+              ${showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : ''}
               ${renderWiRollupBar(sg)}
             </div>
           </div>`;
@@ -5772,7 +6118,9 @@ function renderGantt(){
           <span class="gg-group-label">${escHtml(g.label)}</span>
           <span class="gg-group-meta">${g.tasks.length} task${g.tasks.length===1?'':'s'} · ${effDays}d</span>
         </div>
-        <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px"></div>
+        <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px">
+          ${showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : ''}
+        </div>
       </div>`;
     if(collapsed) return groupHeader;
     const taskRows = g.tasks.map(b => renderTaskRow(b, 0)).join('');
@@ -6963,6 +7311,9 @@ function renderFullTask(){
     if(!v){ e.target.value = task.title || ''; return; }
     mutateTaskLite(task.id, t => { const old = t.title; t.title = v; pushActivity(t, `renamed from "${old}"`); });
   };
+  // Wire @-mention autocomplete on the comment textarea (full task view)
+  const ftCmtInput = document.getElementById('cmt-input');
+  if(ftCmtInput) attachMentionAutocomplete(ftCmtInput);
 }
 function mutateTaskLite(id, fn){
   const t = state.tasks.find(x => x.id === id);
@@ -7584,6 +7935,197 @@ function clearWholeDay(dayKey){
   state.scheduleTemplate[dayKey].pm = null;
   saveState();
   renderSchedule();
+}
+
+/* ════════════════════════════════════════════════════════
+   RACI MATRIX — Per work-item view of who is Responsible /
+   Accountable / Consulted / Informed. Stored on each work
+   item as a `raci` map: { userName: 'R'|'A'|'C'|'I' }.
+   ════════════════════════════════════════════════════════ */
+const RACI_ROLES = ['R','A','C','I'];
+const RACI_TOOLTIP = {
+  R: 'Responsible — does the work',
+  A: 'Accountable — owns the outcome',
+  C: 'Consulted — provides input',
+  I: 'Informed — kept in the loop',
+};
+
+function renderRaci(){
+  const pid = state.activeProject;
+  const proj = state.projects.find(p => p.id === pid);
+  if(!pid || !proj){
+    setTopbar('RACI', 'Pick a project first');
+    document.getElementById('content').innerHTML = `<div class="empty-screen"><div class="empty-screen-icon">▦</div><h3>No project selected</h3><p>Pick a project to view its responsibility matrix.</p></div>`;
+    return;
+  }
+  const workItems = state.workItems.filter(w => w.projectId === pid);
+  const canWrite = canWriteView('raci');
+  // Users to show in columns: project members if defined, else all active users
+  const allActive = state.users.filter(u => u.active !== false);
+  const memberSet = (proj.members || []).map(m => typeof m === 'string' ? m : m.name);
+  const users = memberSet.length
+    ? allActive.filter(u => memberSet.includes(u.name))
+    : allActive;
+
+  setTopbar('RACI matrix', `${workItems.length} work item${workItems.length===1?'':'s'} · ${users.length} member${users.length===1?'':'s'}`);
+
+  const content = document.getElementById('content');
+  if(!workItems.length){
+    content.innerHTML = `<div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▦</div><h3>No work items yet</h3><p>Create a work item to fill in its RACI.</p></div>`;
+    return;
+  }
+  if(!users.length){
+    content.innerHTML = `<div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">▦</div><h3>No team members</h3><p>Add active users (or set project members) to start filling the matrix.</p></div>`;
+    return;
+  }
+
+  // Each cell is a button that cycles through R → A → C → I → empty when clicked
+  const rows = workItems.map(wi => `
+    <tr data-wid="${wi.id}">
+      <td class="raci-rowhead">
+        ${wi.code ? `<span class="raci-code">${escHtml(wi.code)}</span>` : ''}
+        <span class="raci-title">${escHtml(wi.title || 'Untitled')}</span>
+      </td>
+      ${users.map(u => {
+        const raci = (wi.raci || {})[u.name] || '';
+        return `<td class="raci-cell ${raci ? 'has-' + raci : ''}">
+          <button class="raci-btn ${raci ? 'has-' + raci : ''}" data-wid="${wi.id}" data-uname="${escHtml(u.name)}" data-curr="${raci}" ${canWrite?'':'disabled'} title="${raci ? RACI_TOOLTIP[raci] : 'Click to set'}">${raci || '·'}</button>
+        </td>`;
+      }).join('')}
+    </tr>`).join('');
+
+  content.innerHTML = `
+    <div class="raci-wrap">
+      <div class="raci-legend">
+        ${RACI_ROLES.map(r => `<span class="raci-legend-item raci-legend-${r}"><span class="raci-legend-dot">${r}</span>${RACI_TOOLTIP[r].split(' — ')[1]}</span>`).join('')}
+        <span class="raci-legend-note">Click a cell to cycle: R → A → C → I → blank</span>
+      </div>
+      <div class="raci-table-scroll">
+        <table class="raci-table">
+          <thead>
+            <tr>
+              <th class="raci-col-head"></th>
+              ${users.map(u => `<th class="raci-col-head"><span class="raci-col-name">${escHtml(u.name.split(' ')[0])}</span></th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  // Cycle handler
+  content.querySelectorAll('.raci-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const wid = Number(btn.dataset.wid);
+      const uname = btn.dataset.uname;
+      const curr = btn.dataset.curr;
+      const next = curr === '' ? 'R' : curr === 'R' ? 'A' : curr === 'A' ? 'C' : curr === 'C' ? 'I' : '';
+      const wi = state.workItems.find(w => w.id === wid);
+      if(!wi) return;
+      wi.raci = wi.raci || {};
+      if(next === '') delete wi.raci[uname];
+      else wi.raci[uname] = next;
+      saveState();
+      renderRaci();
+    });
+  });
+}
+
+/* ════════════════════════════════════════════════════════
+   TODAY / FOCUS VIEW — minimal "what do I do today?" page.
+   Shows: tasks assigned to me, prioritised by due date, then
+   priority, then status. No project context — cross-project view.
+   ════════════════════════════════════════════════════════ */
+function renderFocus(){
+  if(!currentUser){
+    document.getElementById('content').innerHTML = `<div class="empty-screen"><h3>Not signed in</h3></div>`;
+    return;
+  }
+  const me = currentUser.name;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  const inAWeek = new Date(today); inAWeek.setDate(inAWeek.getDate() + 7);
+
+  // Mine, not done, sorted: overdue first, then today, then this week, then later, then no date
+  const mine = state.tasks.filter(t => t.assignee === me && t.status !== 'done' && !t.parentTaskId);
+  // Bucketise
+  const buckets = {
+    overdue: [],
+    today: [],
+    week: [],
+    later: [],
+    nodate: [],
+  };
+  mine.forEach(t => {
+    const due = t.due ? new Date(t.due) : null;
+    if(!due){ buckets.nodate.push(t); return; }
+    due.setHours(0,0,0,0);
+    if(due < today) buckets.overdue.push(t);
+    else if(due.getTime() === today.getTime()) buckets.today.push(t);
+    else if(due < inAWeek) buckets.week.push(t);
+    else buckets.later.push(t);
+  });
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  Object.keys(buckets).forEach(k => {
+    buckets[k].sort((a, b) => {
+      const pa = priorityOrder[a.priority || 'medium'] ?? 1;
+      const pb = priorityOrder[b.priority || 'medium'] ?? 1;
+      if(pa !== pb) return pa - pb;
+      const da = a.due ? new Date(a.due).getTime() : Infinity;
+      const db = b.due ? new Date(b.due).getTime() : Infinity;
+      return da - db;
+    });
+  });
+
+  const total = mine.length;
+  setTopbar('Today', `${total} open task${total===1?'':'s'} assigned to you`);
+
+  const content = document.getElementById('content');
+  if(!total){
+    content.innerHTML = `<div class="empty-screen" style="padding:60px"><div class="empty-screen-icon">◉</div><h3>You're all caught up</h3><p>No open tasks assigned to you right now.</p></div>`;
+    return;
+  }
+
+  const renderTaskCard = (t) => {
+    const proj = state.projects.find(p => p.id === t.projectId);
+    const wi = state.workItems.find(w => w.id === t.workItemId);
+    const due = t.due ? fmtDateDMY(t.due) : '';
+    const overdue = t.due && new Date(t.due) < today;
+    return `<div class="focus-task" data-tid="${t.id}">
+      <div class="focus-task-main">
+        <button class="focus-check" onclick="event.stopPropagation();toggleTaskDone(${t.id})" title="Mark done"></button>
+        <div class="focus-task-text">
+          <div class="focus-task-title">${escHtml(t.title || 'Untitled')}</div>
+          <div class="focus-task-meta">
+            ${proj ? `<span class="focus-meta-chip">${escHtml(proj.code || proj.name)}</span>` : ''}
+            ${wi ? `<span class="focus-meta-wi">${escHtml(wi.title || wi.code || '')}</span>` : ''}
+            ${t.phase ? `<span class="focus-meta-phase" style="color:${phaseDef(t.phase)?.color || '#888'}">●</span>` : ''}
+            ${due ? `<span class="focus-meta-due ${overdue?'overdue':''}">${due}</span>` : ''}
+            ${t.priority === 'high' ? '<span class="focus-meta-prio">⬆ high</span>' : ''}
+          </div>
+        </div>
+        <button class="focus-open" onclick="event.stopPropagation();openSidePanel(${t.id})" title="Open task">→</button>
+      </div>
+    </div>`;
+  };
+
+  const section = (title, items, accent) => {
+    if(!items.length) return '';
+    return `<div class="focus-section ${accent ? 'focus-section-' + accent : ''}">
+      <div class="focus-section-head">${title} <span class="focus-section-count">${items.length}</span></div>
+      <div class="focus-section-body">${items.map(renderTaskCard).join('')}</div>
+    </div>`;
+  };
+
+  content.innerHTML = `
+    <div class="focus-wrap">
+      ${section('Overdue', buckets.overdue, 'overdue')}
+      ${section('Today', buckets.today, 'today')}
+      ${section('This week', buckets.week)}
+      ${section('Later', buckets.later)}
+      ${section('No due date', buckets.nodate)}
+    </div>`;
 }
 
 /* ════════════════════════════════════════════════════════
