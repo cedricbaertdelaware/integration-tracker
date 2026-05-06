@@ -2033,19 +2033,30 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .raci-col-name{display:inline-block;}
 .raci-rowhead{
-  padding:10px 14px;border-bottom:1px solid var(--border);
-  background:var(--surface);position:sticky;left:0;
-  display:flex;align-items:center;gap:8px;
+  padding:0;border-bottom:1px solid var(--border);
+  background:var(--surface);position:sticky;left:0;z-index:1;
   min-width:240px;
+  vertical-align:middle;
+}
+.raci-rowhead-inner{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;
+  min-height:44px;
 }
 .raci-code{
   font:600 10.5px var(--mono);color:var(--text-dim);
   background:var(--surface-2);padding:2px 6px;border-radius:4px;
+  flex-shrink:0;
 }
-.raci-title{font-size:13px;color:var(--text);font-weight:500;}
+.raci-title{
+  font-size:13px;color:var(--text);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  min-width:0;flex:1;
+}
 .raci-cell{
   padding:6px;border-bottom:1px solid var(--border);
   text-align:center;
+  vertical-align:middle;
 }
 .raci-btn{
   width:32px;height:32px;border-radius:50%;
@@ -7983,8 +7994,10 @@ function renderRaci(){
   const rows = workItems.map(wi => `
     <tr data-wid="${wi.id}">
       <td class="raci-rowhead">
-        ${wi.code ? `<span class="raci-code">${escHtml(wi.code)}</span>` : ''}
-        <span class="raci-title">${escHtml(wi.title || 'Untitled')}</span>
+        <div class="raci-rowhead-inner">
+          ${wi.code ? `<span class="raci-code">${escHtml(wi.code)}</span>` : ''}
+          <span class="raci-title">${escHtml(wi.title || 'Untitled')}</span>
+        </div>
       </td>
       ${users.map(u => {
         const raci = (wi.raci || {})[u.name] || '';
