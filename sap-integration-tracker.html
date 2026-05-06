@@ -1336,6 +1336,20 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   font:500 11px var(--mono);color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;
 }
 .sp-prop-val{display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap;}
+.sp-prop-val-col{flex-direction:column;align-items:stretch;gap:6px;}
+.sp-prop-val select{
+  padding:4px 8px;font-size:13px;border-radius:7px;
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-family:inherit;width:100%;
+}
+.sp-prop-val select:hover:not(:disabled){border-color:var(--border-strong);}
+.sp-prop-val select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);}
+.sp-req-warn{
+  font-size:11.5px;color:var(--warn, #b66c00);
+  background:color-mix(in srgb, var(--warn, #b66c00) 10%, transparent);
+  border:1px solid color-mix(in srgb, var(--warn, #b66c00) 30%, transparent);
+  padding:5px 9px;border-radius:6px;line-height:1.35;
+}
 .sp-prop-val .pill-btn{
   background:transparent;border:1px solid transparent;color:var(--text);font:inherit;cursor:pointer;
   padding:4px 9px;border-radius:7px;transition:.1s;display:inline-flex;align-items:center;gap:6px;
@@ -4373,6 +4387,39 @@ function renderSidePanel(){
           </label>
         </div>
 
+        ${(() => {
+          // Requisite picker: only tasks within the same work-item, excluding self.
+          // No work item → no requisite possible (the picker is only meaningful for sibling tasks).
+          if(!task.workItemId) return '';
+          const siblings = state.tasks.filter(t =>
+            t.projectId === task.projectId &&
+            t.workItemId === task.workItemId &&
+            t.id !== task.id &&
+            !t.parentTaskId
+          );
+          const reqId = task.requisiteTaskId;
+          const reqTask = reqId ? siblings.find(t => t.id === reqId) || state.tasks.find(t => t.id === reqId) : null;
+          // Late warning: task starts before prerequisite ends
+          let warn = '';
+          if(reqTask){
+            const reqEnd = reqTask.due || reqTask.startDate;
+            const myStart = task.startDate || task.due;
+            if(reqEnd && myStart && new Date(myStart) < new Date(reqEnd)){
+              warn = `<div class="sp-req-warn">⚠ Starts before prerequisite ends (${fmtDateDMY(reqEnd)})</div>`;
+            }
+          }
+          const opts = ['<option value="">— None —</option>']
+            .concat(siblings.map(t => `<option value="${t.id}" ${t.id === reqId ? 'selected' : ''}>${escHtml(t.code ? t.code + ' · ' : '')}${escHtml(t.title || 'Untitled')}</option>`))
+            .join('');
+          return `<span class="sp-prop-key">Prerequisite</span>
+            <div class="sp-prop-val sp-prop-val-col">
+              ${siblings.length
+                ? `<select id="sp-requisite" ${canWrite?'':'disabled'}>${opts}</select>`
+                : '<span style="color:var(--text-dim);font-size:12px">No other tasks in this work item</span>'}
+              ${warn}
+            </div>`;
+        })()}
+
         ${wi ? `<span class="sp-prop-key">Parent</span>
           <div class="sp-prop-val">
             ${task.parentTaskId
@@ -4458,6 +4505,9 @@ function renderSidePanel(){
     if(!v){ e.target.value = task.title || ''; return; }
     mutateTaskQuiet(task.id, t => { const old = t.title; t.title = v; pushActivity(t, `renamed from "${old}"`); });
   };
+  // Helper: warn (non-blocking) when this task's new dates conflict with its requisite.
+  const checkRequisiteConflict = () => checkRequisiteWarning(task.id);
+
   const startInput = sp.querySelector('#sp-start');
   if(startInput) startInput.onchange = e => {
     const v = e.target.value || null;
@@ -4471,6 +4521,7 @@ function renderSidePanel(){
       }
     }
     mutateTaskQuiet(task.id, t => { t.startDate = v; pushActivity(t, `set start to ${t.startDate || 'auto'}`); });
+    checkRequisiteConflict();
   };
   const dueInput = sp.querySelector('#sp-due');
   if(dueInput) dueInput.onchange = e => {
@@ -4484,6 +4535,7 @@ function renderSidePanel(){
       }
     }
     mutateTaskQuiet(task.id, t => { t.due = v; pushActivity(t, `set end to ${t.due || 'none'}`); });
+    checkRequisiteConflict();
   };
   const estInput = sp.querySelector('#sp-estimate');
   if(estInput) estInput.onchange = e => { mutateTaskQuiet(task.id, t => { t.estimate = e.target.value ? Number(e.target.value) : null; pushActivity(t, `set estimate to ${t.estimate||'—'}h`); }); };
@@ -4506,6 +4558,24 @@ function renderSidePanel(){
   const msInput = sp.querySelector('#sp-milestone');
   if(msInput) msInput.onchange = e => {
     mutateTask(task.id, t => { t.isMilestone = e.target.checked; pushActivity(t, e.target.checked ? 'marked as milestone' : 'unmarked as milestone'); });
+  };
+  const reqSelect = sp.querySelector('#sp-requisite');
+  if(reqSelect) reqSelect.onchange = e => {
+    const newReqId = e.target.value ? Number(e.target.value) : null;
+    mutateTask(task.id, t => {
+      const oldId = t.requisiteTaskId;
+      t.requisiteTaskId = newReqId;
+      const reqTask = newReqId ? state.tasks.find(x => x.id === newReqId) : null;
+      pushActivity(t, newReqId ? `set prerequisite → ${reqTask?.code || reqTask?.title || '#' + newReqId}` : 'cleared prerequisite');
+      // Show warning if dates are inconsistent
+      if(reqTask){
+        const reqEnd = reqTask.due || reqTask.startDate;
+        const myStart = t.startDate || t.due;
+        if(reqEnd && myStart && new Date(myStart) < new Date(reqEnd)){
+          toast(`Heads up: this task starts before its prerequisite ends (${fmtDateDMY(reqEnd)})`, 'warn');
+        }
+      }
+    });
   };
 
   sp.querySelectorAll('[data-pop]').forEach(btn => {
@@ -5135,6 +5205,14 @@ function openNewTaskModal(prefilledWorkItemId){
           </div>
         </div>
         <div class="form-row">
+          <div class="form-group">
+            <label>Prerequisite task <span style="color:var(--text-dim);font-weight:400;font-size:11px">(optional · must finish before this one starts)</span></label>
+            <select id="t-requisite">
+              <option value="">— None —</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-group"><label>Description</label><textarea id="t-desc" rows="3"></textarea></div>
         </div>
         <div class="modal-actions">
@@ -5180,6 +5258,28 @@ function openNewTaskModal(prefilledWorkItemId){
   }
   if(dueInput) dueInput.addEventListener('change', updatePhaseHint);
 
+  // Requisite picker: populate with sibling tasks of the selected work item.
+  // Repopulates whenever the work-item dropdown changes.
+  const wiSel = document.getElementById('t-wi');
+  const reqSel = document.getElementById('t-requisite');
+  const refreshRequisiteOptions = () => {
+    if(!reqSel) return;
+    const wid = wiSel.value ? Number(wiSel.value) : null;
+    const siblings = wid ? state.tasks.filter(t =>
+      t.projectId === state.activeProject &&
+      t.workItemId === wid &&
+      !t.parentTaskId
+    ) : [];
+    const prevValue = reqSel.value;
+    reqSel.innerHTML = '<option value="">— None —</option>' + siblings.map(t =>
+      `<option value="${t.id}">${escHtml(t.code ? t.code + ' · ' : '')}${escHtml(t.title || 'Untitled')}</option>`
+    ).join('');
+    // Keep previous value if still valid
+    if(prevValue && siblings.some(t => String(t.id) === prevValue)) reqSel.value = prevValue;
+  };
+  if(wiSel) wiSel.addEventListener('change', refreshRequisiteOptions);
+  refreshRequisiteOptions();
+
   setTimeout(() => { const el = document.getElementById('t-title'); if(el) el.focus(); }, 50);
 }
 function closeTaskModal(){
@@ -5197,6 +5297,8 @@ function saveNewTask(){
   if(startVal && dueVal && new Date(startVal) > new Date(dueVal)){
     toast('Start date cannot be after end date', 'error'); return;
   }
+  const reqVal = document.getElementById('t-requisite')?.value;
+  const requisiteTaskId = reqVal ? Number(reqVal) : null;
   const t = {
     id: uid(), projectId: state.activeProject, workItemId: wiId, parentTaskId: null,
     code: 'TSK-'+String(uid()).slice(-4), title, type: document.getElementById('t-type').value,
@@ -5207,6 +5309,7 @@ function saveNewTask(){
     due: dueVal,
     estimate: document.getElementById('t-estimate').value ? Number(document.getElementById('t-estimate').value) : null,
     phase: document.getElementById('t-phase').value || null,
+    requisiteTaskId,
     description: document.getElementById('t-desc').value.trim(),
     comments: [], activity: [{id:uid(), by:currentUser.name, text:'created task', at:new Date().toISOString()}],
     createdAt: new Date().toISOString(), createdBy: currentUser.name,
@@ -5215,6 +5318,15 @@ function saveNewTask(){
   saveState();
   closeTaskModal();
   toast('Task created', 'success');
+  // Warn if the new task starts before its requisite ends
+  if(requisiteTaskId){
+    const reqTask = state.tasks.find(x => x.id === requisiteTaskId);
+    const reqEnd = reqTask?.due || reqTask?.startDate;
+    const myStart = startVal || dueVal;
+    if(reqTask && reqEnd && myStart && new Date(myStart) < new Date(reqEnd)){
+      toast(`Heads up: this task starts before its prerequisite ends (${fmtDateDMY(reqEnd)})`, 'warn');
+    }
+  }
   tasksViewState.openGroups.add('wi:'+wiId);
   renderAll();
 }
@@ -5859,6 +5971,7 @@ function renderGantt(){
           return;
         }
         mutateTask(tid, t => { t.startDate = v; pushActivity(t, `set start to ${v || 'auto'}`); });
+        checkRequisiteWarning(tid);
       });
     });
     // End date (= due) validation + persistence
@@ -5873,6 +5986,9 @@ function renderGantt(){
           return;
         }
         mutateTask(tid, t => { t.due = v; pushActivity(t, `set end to ${v || 'none'}`); });
+        checkRequisiteWarning(tid);
+        // Also check tasks that have THIS task as a requisite — they may now be late too
+        state.tasks.filter(x => x.requisiteTaskId === tid).forEach(downstream => checkRequisiteWarning(downstream.id));
       });
     });
     // Status popover trigger
@@ -6074,6 +6190,20 @@ function applyProgressChange(t, newProgress){
   }
   t.status = newStatus;
   return { statusChanged: oldStatus !== newStatus, progressChanged: oldProg !== t.progress };
+}
+
+// Show a non-blocking warning toast when a task's start is before its requisite's end.
+// Called after any date mutation; safe no-op if there's no requisite or no conflict.
+function checkRequisiteWarning(taskId){
+  const t = state.tasks.find(x => x.id === taskId);
+  if(!t || !t.requisiteTaskId) return;
+  const reqTask = state.tasks.find(x => x.id === t.requisiteTaskId);
+  if(!reqTask) return;
+  const reqEnd = reqTask.due || reqTask.startDate;
+  const myStart = t.startDate || t.due;
+  if(reqEnd && myStart && new Date(myStart) < new Date(reqEnd)){
+    toast(`Heads up: ${t.code || t.title} starts before its prerequisite ends (${fmtDateDMY(reqEnd)})`, 'warn');
+  }
 }
 function statusBarColor(status){
   return ({
