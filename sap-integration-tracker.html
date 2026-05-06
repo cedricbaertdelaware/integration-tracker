@@ -169,7 +169,11 @@ input,select,textarea{font-family:inherit;}
 [data-theme="dark"] .nav a.active{color:#0a120d;}
 .nav a.locked{opacity:.35;cursor:not-allowed;}
 .nav a.locked:hover{background:transparent;color:var(--text-muted);}
-.nav a .ico{width:16px;flex-shrink:0;text-align:center;font-size:14px;}
+.nav a .ico{
+  width:16px;height:16px;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.nav a .ico svg{display:block;}
 .nav-count{
   margin-left:auto;font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:999px;
   background:var(--surface-3);color:var(--text-muted);
@@ -2558,20 +2562,19 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
     <div>
       <div class="nav-label">Workspace</div>
       <nav class="nav" id="navPrimary">
-        <a data-view="focus" title="Today — your tasks for the day"><span class="ico">◉</span><span>Today</span></a>
-        <a data-view="dashboard" class="active" title="Dashboard"><span class="ico">◈</span><span>Dashboard</span></a>
-        <a data-view="gantt" title="Tasks"><span class="ico">☰</span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
-        <a data-view="raci" title="RACI matrix"><span class="ico">▦</span><span>RACI</span></a>
-        <a data-view="schedule" title="My schedule"><span class="ico">▤</span><span>My schedule</span></a>
-        <a data-view="timelog" title="Time log"><span class="ico">◷</span><span>Time log</span></a>
+        <a data-view="focus" title="Today — your tasks for the day"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span>Today</span></a>
+        <a data-view="dashboard" class="active" title="Dashboard"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span>Dashboard</span></a>
+        <a data-view="gantt" title="Tasks"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
+        <a data-view="schedule" title="My schedule"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h13a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M4 8h2"/><path d="M4 12h2"/><path d="M4 16h2"/><line x1="9" y1="8" x2="16" y2="8"/><line x1="9" y1="12" x2="16" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span><span>My schedule</span></a>
+        <a data-view="timelog" title="Time log"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 2.5"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 4 3 11 10 11"/></svg></span><span>Time log</span></a>
       </nav>
     </div>
 
     <div>
       <div class="nav-label">Admin</div>
       <nav class="nav" id="navAdmin">
-        <a data-view="templates" title="dIF templates"><span class="ico">⊞</span><span>dIF templates</span></a>
-        <a data-view="users" title="Team"><span class="ico">⊙</span><span>Team</span> <span class="nav-count" id="navReqCount" style="display:none"></span></a>
+        <a data-view="templates" title="dIF templates"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span><span>dIF templates</span></a>
+        <a data-view="users" title="Team"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>Team</span> <span class="nav-count" id="navReqCount" style="display:none"></span></a>
       </nav>
     </div>
 
@@ -3390,7 +3393,7 @@ function renderAll(){
   refreshTopbarViewSwitcher();
   const content = document.getElementById('content');
   const v = state.activeView;
-  if(!state.activeProject && v !== 'users' && v !== 'templates' && v !== 'schedule' && v !== 'focus' && v !== 'raci'){
+  if(!state.activeProject && v !== 'users' && v !== 'templates' && v !== 'schedule' && v !== 'focus'){
     setTopbar('Welcome', 'Create or pick a project from the sidebar.');
     const isAdmin = currentUser.role === 'admin';
     content.innerHTML = `<div class="empty-screen"><div class="empty-screen-icon">◈</div>
@@ -3662,6 +3665,7 @@ function viewSwitcher(active){
     { k: 'tasks',    label: 'List',     icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6"  r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>' },
     { k: 'kanban',   label: 'Board',    icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3"  y="3" width="6" height="14" rx="1"/><rect x="11" y="3" width="6" height="9"  rx="1"/><rect x="19" y="3" width="2" height="6"  rx="1"/></svg>' },
     { k: 'timeline', label: 'Timeline', icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18"/><circle cx="6"  cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></svg>' },
+    { k: 'raci',     label: 'RACI',     icon: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>' },
   ];
   return `<div class="view-switcher">
     ${opts.map(o => `<button class="vs-btn ${active===o.k?'active':''}" onclick="setView('${o.k}')" title="${o.label} \u2014 ${VIEW_DESCRIPTIONS[o.k]||''}">
@@ -3671,13 +3675,13 @@ function viewSwitcher(active){
 }
 
 // Refresh the fixed view-switcher slot in the topbar. Shown only for project-scoped task views
-// (tasks/kanban/gantt/timeline). Stays in a fixed position (right of actions, left of the bell)
+// (tasks/kanban/gantt/timeline/raci). Stays in a fixed position (right of actions, left of the bell)
 // regardless of the active view, so the buttons don't visually shift when switching views.
 function refreshTopbarViewSwitcher(){
   const slot = document.getElementById('topbarViewSwitcher');
   if(!slot) return;
   const v = state.activeView;
-  const taskViews = ['tasks', 'kanban', 'gantt', 'timeline'];
+  const taskViews = ['tasks', 'kanban', 'gantt', 'timeline', 'raci'];
   if(state.activeProject && taskViews.includes(v)){
     slot.innerHTML = viewSwitcher(v);
     slot.style.display = '';
