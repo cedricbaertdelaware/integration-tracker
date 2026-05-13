@@ -313,23 +313,36 @@ input,select,textarea{font-family:inherit;}
 .notif-bell:hover{color:var(--text);border-color:var(--border-strong);background:var(--surface-2);}
 .notif-bell svg{pointer-events:none;}
 
-/* Auto-save indicator — three states (saved / saving / pending), shows in topbar.
-   Only one icon is visible at a time depending on the state class on the parent. */
+/* Auto-save indicator — floating in bottom-right corner.
+   Convention: only shown when active (saving or pending). The "saved" state
+   appears briefly after a save then fades out so it doesn't permanently clutter the UI. */
 .save-indicator{
   display:inline-flex;align-items:center;gap:6px;
   padding:6px 10px;border-radius:8px;
   font-size:11.5px;font-weight:500;
   border:1px solid transparent;
   user-select:none;flex-shrink:0;
-  transition:background .15s, color .15s, border-color .15s;
-  margin-left:14px;
+  transition:background .15s, color .15s, border-color .15s, opacity .25s, transform .25s;
+}
+.save-indicator-floating{
+  position:fixed;bottom:18px;right:18px;z-index:500;
+  background:var(--surface);
+  border-color:var(--border);
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+  opacity:0;transform:translateY(8px);pointer-events:none;
+}
+/* Show only when actively saving or in pending/error state. */
+.save-indicator-floating.save-saving,
+.save-indicator-floating.save-pending,
+.save-indicator-floating.save-just-saved{
+  opacity:1;transform:translateY(0);pointer-events:auto;
 }
 .save-indicator .save-ico{
   display:inline-flex;align-items:center;justify-content:center;
   width:14px;height:14px;
 }
 .save-indicator svg{display:none;}
-/* Saved (default) */
+/* Saved (default state — invisible unless triggered with .save-just-saved class) */
 .save-saved{color:var(--text-dim);}
 .save-saved .save-ico-saved{display:block;}
 .save-saved .save-label{color:var(--text-dim);}
@@ -347,6 +360,7 @@ input,select,textarea{font-family:inherit;}
 }
 .save-pending .save-ico-pending{display:block;}
 @media (max-width: 720px){
+  .save-indicator-floating{bottom:14px;right:14px;}
   .save-indicator .save-label{display:none;}
 }
 .notif-badge{
@@ -853,12 +867,15 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
    GANTT GRID — Rafael-style (table left + bars right)
    ════════════════════════════════════════════════════════ */
 .gg-container{
-  --gg-side-w:608px;
-  --col-task:1.6fr;
+  --col-handle:24px;
+  --col-task:270px;
   --col-eff:50px;
   --col-status:78px;
   --col-prog:50px;
   --col-date:110px;
+  /* Total side-grid width = sum of all column widths.
+     Computed via calc() so changing --col-task instantly resizes everything. */
+  --gg-side-w:calc(var(--col-handle) + var(--col-task) + var(--col-eff) + var(--col-status) + var(--col-prog) + var(--col-date) + var(--col-date));
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   overflow:auto;max-height:calc(100vh - 240px);
   position:relative;
@@ -872,7 +889,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   flex-shrink:0;border-right:1px solid var(--border);
   background:var(--surface);
   position:sticky;left:0;z-index:4;
-  display:grid;grid-template-columns:24px var(--col-task) var(--col-eff) var(--col-status) var(--col-prog) var(--col-date) var(--col-date);
+  display:grid;grid-template-columns:var(--col-handle) var(--col-task) var(--col-eff) var(--col-status) var(--col-prog) var(--col-date) var(--col-date);
   align-items:center;gap:0;
 }
 .gg-side-head{
@@ -882,12 +899,32 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 }
 .gg-side-head > div{padding:10px 8px;}
 .gg-side-head > div:first-of-type{padding-left:10px;}
-.gg-h-task{grid-column:2;}
+.gg-h-task{grid-column:2;position:relative;}
 .gg-h-eff{grid-column:3;text-align:right;}
 .gg-h-status{grid-column:4;}
 .gg-h-prog{grid-column:5;text-align:right;}
 .gg-h-start{grid-column:6;}
 .gg-h-end{grid-column:7;}
+
+/* Resize handle on the Task column header — drag horizontally to grow/shrink the column.
+   Tall thin strip at the right edge; subtle until hovered. */
+.gg-col-resizer{
+  position:absolute;top:0;bottom:0;right:-3px;
+  width:6px;cursor:col-resize;z-index:6;
+  background:transparent;transition:background .12s;
+}
+.gg-col-resizer::after{
+  content:'';position:absolute;top:25%;bottom:25%;left:50%;width:2px;
+  background:var(--border-strong);transform:translateX(-50%);opacity:0;
+  transition:opacity .12s;
+  border-radius:2px;
+}
+.gg-col-resizer:hover::after,
+.gg-col-resizer.is-resizing::after{
+  opacity:.8;background:var(--accent);
+}
+body.gg-resizing{cursor:col-resize !important;user-select:none;}
+body.gg-resizing *{cursor:col-resize !important;}
 
 .gg-row-handle{
   grid-column:1;justify-self:center;
@@ -907,7 +944,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   flex-shrink:0;
 }
 .gg-cell-title .gg-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
-.gg-cell-eff{grid-column:3;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
+.gg-cell-eff{grid-column:3;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;padding-right:8px;}
 .gg-cell-status{grid-column:4;}
 .gg-cell-prog{grid-column:5;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
 .gg-cell-start{grid-column:6;font-family:var(--mono);font-size:11px;color:var(--text-muted);}
@@ -1057,6 +1094,13 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   font-family:var(--mono);font-size:11px;color:var(--text-muted);
   margin-left:auto;padding-right:4px;
 }
+/* Phase row side-cell uses flex (not grid like task rows) so the meta + add button
+   can sit naturally with margin-left:auto pushing the meta to the right. */
+.gg-side-group{
+  display:flex !important;align-items:center;gap:7px;
+  grid-template-columns:none !important;
+  padding:0 10px 0 12px;
+}
 .gg-grouprow.drop-target .gg-side{
   background:color-mix(in srgb, var(--accent) 18%, var(--surface-2));
   box-shadow:inset 4px 0 0 var(--accent);
@@ -1094,6 +1138,29 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .gg-sub-meta{
   font-family:var(--mono);font-size:10.5px;color:var(--text-muted);
   margin-left:auto;padding-right:4px;flex-shrink:0;
+}
+
+/* + button on phase / work-item rows to add a new task in that group.
+   Hidden by default; revealed on row hover so it stays out of the way.
+   Sits at the far right of the side-grid label area. */
+.gg-add-task-btn{
+  width:22px;height:22px;flex-shrink:0;
+  border:1px solid var(--border);background:var(--surface);color:var(--text-muted);
+  border-radius:6px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:600;line-height:1;
+  opacity:0;transition:opacity .15s, background .12s, color .12s, border-color .12s, transform .12s;
+  margin-left:6px;margin-right:4px;
+}
+.gg-phase-row:hover .gg-add-task-btn,
+.gg-wi-row:hover .gg-add-task-btn,
+.gg-add-task-btn:focus{
+  opacity:1;
+}
+.gg-add-task-btn:hover{
+  background:var(--accent-soft);color:var(--accent-deep);
+  border-color:color-mix(in srgb, var(--accent) 40%, var(--border));
+  transform:scale(1.08);
 }
 /* Rollup bar: thin, semi-transparent strip showing the work-item's date span
    without showing individual tasks */
@@ -1577,7 +1644,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   padding:20px;position:relative;overflow:hidden;
 }
 .card-hero{
-  grid-column:span 3;
+  grid-column:span 4;
   background:linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
   color:#fff;border:none;box-shadow:0 8px 24px color-mix(in srgb, var(--accent) 25%, transparent);
 }
@@ -2567,7 +2634,6 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
         <a data-view="dashboard" class="active" title="Dashboard"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span>Dashboard</span></a>
         <a data-view="gantt" title="Tasks"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
         <a data-view="schedule" title="My schedule"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h13a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M4 8h2"/><path d="M4 12h2"/><path d="M4 16h2"/><line x1="9" y1="8" x2="16" y2="8"/><line x1="9" y1="12" x2="16" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span><span>My schedule</span></a>
-        <a data-view="timelog" title="Time log"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 2.5"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 4 3 11 10 11"/></svg></span><span>Time log</span></a>
       </nav>
     </div>
 
@@ -2603,20 +2669,23 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
         <div class="greeting" id="topbarTitle">—</div>
         <div class="greeting-sub" id="topbarSub">—</div>
       </div>
-      <div class="save-indicator save-saved" id="saveIndicator" title="All changes saved">
-        <span class="save-ico" aria-hidden="true">
-          <svg class="save-ico-saved" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          <svg class="save-ico-saving" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-opacity=".25"/><path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"/></svg>
-          <svg class="save-ico-pending" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-        </span>
-        <span class="save-label" id="saveIndicatorLabel">Saved</span>
-      </div>
       <div class="topbar-right" id="topbarActions"></div>
       <div class="topbar-viewswitcher" id="topbarViewSwitcher"></div>
       <button id="notifBellBtn" class="notif-bell" onclick="openNotifPanel()" title="Notifications">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span id="notifBadge" class="notif-badge" style="display:none">0</span>
       </button>
+    </div>
+
+    <!-- Floating save indicator: bottom-right corner, fades in only when state changes.
+         Convention from Google Docs / Notion / Figma — discreet, never blocks other UI. -->
+    <div class="save-indicator save-indicator-floating save-saved" id="saveIndicator" title="All changes saved">
+      <span class="save-ico" aria-hidden="true">
+        <svg class="save-ico-saved" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg class="save-ico-saving" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-opacity=".25"/><path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"/></svg>
+        <svg class="save-ico-pending" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      </span>
+      <span class="save-label" id="saveIndicatorLabel">Saved</span>
     </div>
 
     <div class="content" id="content">
@@ -2975,14 +3044,14 @@ function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
    STATE + FIREBASE
    ════════════════════════════════════════════════════════ */
 const ROLE_DEFAULTS = {
-  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
-  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},timelog:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
-  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
-  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},timelog:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
-  custom:    {dashboard:{r:0,w:0},tasks:{r:0,w:0},workitems:{r:0,w:0},interfaces:{r:0,w:0},timelog:{r:0,w:0},schedule:{r:0,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
+  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
+  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  custom:    {dashboard:{r:0,w:0},tasks:{r:0,w:0},workitems:{r:0,w:0},interfaces:{r:0,w:0},schedule:{r:0,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
 };
 const ADMIN_VIEWS = ['templates','users'];
-const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','timelog','schedule','focus','raci','templates','users'];
+const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','schedule','focus','raci','templates','users'];
 
 const DEFAULT_DIF_TEMPLATES = [
   {id:1, code:'TF000', name:'External Connections', ver:'2.0.1', short:'Reusable external connection configs.', desc:'', dir:'N/A', proc:'N/A', proto:'HTTPS/SFTP/AMQP'},
@@ -3087,19 +3156,29 @@ function ensureDefaults(){
 let previewMode = false;
 
 // Show the auto-save indicator in one of three states: 'saved' | 'saving' | 'pending'.
-// Setting 'saving' or 'pending' is immediate; 'saved' has a brief debounce so
-// the user actually sees the spinner flash on quick edits.
+// Floating bottom-right corner. The 'saved' state briefly shows a confirmation
+// then auto-hides after ~1.5s so the indicator doesn't clutter the UI when idle.
 let _savedTimer = null;
+let _justSavedTimer = null;
 function setSaveState(kind){
   const el = document.getElementById('saveIndicator');
   if(!el) return;
   if(_savedTimer){ clearTimeout(_savedTimer); _savedTimer = null; }
-  el.classList.remove('save-saved','save-saving','save-pending');
+  if(_justSavedTimer){ clearTimeout(_justSavedTimer); _justSavedTimer = null; }
+  el.classList.remove('save-saved','save-saving','save-pending','save-just-saved');
   el.classList.add('save-' + kind);
   const lbl = document.getElementById('saveIndicatorLabel');
   if(lbl) lbl.textContent = kind === 'saving' ? 'Saving…' : kind === 'pending' ? 'Pending' : 'Saved';
   const titles = { saved:'All changes saved', saving:'Saving to cloud…', pending:'Changes pending — connection issue' };
   el.title = titles[kind] || '';
+  // For 'saved': flash the confirmation visible for ~1.5s then fade out
+  if(kind === 'saved'){
+    el.classList.add('save-just-saved');
+    _justSavedTimer = setTimeout(() => {
+      el.classList.remove('save-just-saved');
+      _justSavedTimer = null;
+    }, 1500);
+  }
 }
 
 function saveState(){
@@ -3289,6 +3368,11 @@ function bootApp(){
   document.getElementById('cuRole').textContent = currentUser.role;
   const col = avatarColor(currentUser.name);
   document.getElementById('cuAvatar').outerHTML = avatarEl(currentUser.name, 32).replace('<div class="avatar"', '<div class="avatar" id="cuAvatar"');
+  // Restore the Gantt task-column width chosen by the user in a previous session
+  try{
+    const w = Number(localStorage.getItem('ggTaskColW'));
+    if(w >= 200 && w <= 500) ganttViewState.taskColW = w;
+  }catch(_){}
   applyRBAC();
   if(!state.activeProject && state.projects.length) state.activeProject = state.projects[0].id;
   renderProjectList();
@@ -3412,7 +3496,6 @@ function renderAll(){
     else if(v === 'timeline') renderTimeline();
     else if(v === 'workitems') renderWorkItemsView();
     else if(v === 'interfaces') renderInterfacesView();
-    else if(v === 'timelog') renderTimeLog();
     else if(v === 'schedule') renderSchedule();
     else if(v === 'focus') renderFocus();
     else if(v === 'raci') renderRaci();
@@ -3702,8 +3785,6 @@ function renderDashboard(){
   const ifaces = workItems.filter(w => w.kind === 'interface');
   const tasks  = state.tasks.filter(t => t.projectId === pid);
   const parents = tasks.filter(t => !t.parentTaskId);
-  const logs = state.timeLogs.filter(l => l.projectId === pid);
-  const totalH = logs.reduce((s,l) => s + (Number(l.hours)||0), 0);
   const doneTasks = parents.filter(t => t.status === 'done').length;
   const blockedTasks = parents.filter(t => t.status === 'blocked').length;
   const inReview = parents.filter(t => t.status === 'review').length;
@@ -3881,20 +3962,15 @@ function renderDashboard(){
         <div class="stat-value">${pct}%</div>
         <div class="stat-sub">${doneTasks} of ${parents.length} tasks done</div>
       </div>
-      <div class="card" style="grid-column:span 3">
+      <div class="card" style="grid-column:span 4">
         <div class="stat-label">Work items ${ifaces.length?`<span class="chip chip-accent">${ifaces.length} process${ifaces.length===1?'':'es'}</span>`:''}</div>
         <div class="stat-value">${workItems.length}</div>
         <div class="stat-sub">${workItems.filter(w=>w.kind==='work').length} generic · ${ifaces.length} process${ifaces.length===1?'':'es'}</div>
       </div>
-      <div class="card" style="grid-column:span 3">
+      <div class="card" style="grid-column:span 4">
         <div class="stat-label">Open tasks ${blockedTasks?`<span class="chip chip-danger">${blockedTasks} blocked</span>`:''}</div>
         <div class="stat-value">${parents.length - doneTasks}</div>
         <div class="stat-sub">${doing} in progress · ${inReview} in review · ${todo} todo</div>
-      </div>
-      <div class="card" style="grid-column:span 3">
-        <div class="stat-label">Hours logged</div>
-        <div class="stat-value">${totalH.toFixed(1)}</div>
-        <div class="stat-sub">${logs.length} ${logs.length===1?'entry':'entries'} this project</div>
       </div>
 
       <div class="card card-health health-${healthStatus}" style="grid-column:span 12">
@@ -4015,7 +4091,7 @@ function renderDashboard(){
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
 let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:true };
-let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set(), expandedSubGroups: new Set() };
+let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set(), expandedSubGroups: new Set(), taskColW: 270 };
 let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 
 function renderTasks(){ renderWorkView({kindFilter: null}); }
@@ -4368,9 +4444,6 @@ function renderTaskRow(t, workItems, subs){
   const dueDays = t.due ? daysUntil(t.due) : null;
   const dueClass = dueDays !== null && st !== 'done' ? (dueDays < 0 ? 'overdue' : dueDays <= 3 ? 'soon' : '') : '';
   const dueLabel = t.due ? fmtDate(t.due) : '—';
-  const logs = state.timeLogs.filter(l => l.taskId === t.id);
-  const loggedH = logs.reduce((s,l) => s + (Number(l.hours)||0), 0);
-  const hoursLabel = loggedH ? (t.estimate ? `<b>${loggedH.toFixed(1)}</b>/${t.estimate}h` : `<b>${loggedH.toFixed(1)}</b>h`) : (t.estimate ? `${t.estimate}h` : '—');
 
   const mainRow = `<div class="task-row ${done?'done':''}" data-tid="${t.id}" data-parent-wi="${t.workItemId}" draggable="true">
     <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
@@ -4383,7 +4456,6 @@ function renderTaskRow(t, workItems, subs){
     <button class="tc-assignee as-btn" data-pop-assignee="${t.id}" title="Click to change assignee">${t.assignee?avatarEl(t.assignee, 22)+`<span class="tc-assignee-name">${escHtml(t.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">— assign</span>'}</button>
     ${prioChip}
     <span class="tc-due ${dueClass}">${dueLabel}</span>
-    <span class="tc-hours">${hoursLabel}</span>
     <div class="tc-actions">
       <button data-open="${t.id}" title="Open">${ICONS.open}</button>
       ${currentUser.role==='admin'?`<button class="danger" data-del-task="${t.id}" title="Delete">${ICONS.trash}</button>`:''}
@@ -4656,8 +4728,6 @@ function renderSidePanel(){
   if(!task){ closeSidePanel(); return; }
   const wi = state.workItems.find(w => w.id === task.workItemId);
   const subs = state.tasks.filter(t => t.parentTaskId === task.id);
-  const logs = state.timeLogs.filter(l => l.taskId === task.id);
-  const loggedH = logs.reduce((s,l) => s + (Number(l.hours)||0), 0);
   const mainEl = document.querySelector('.main');
 
   const oldBd = mainEl.querySelector('.panel-backdrop');
@@ -4724,10 +4794,6 @@ function renderSidePanel(){
 
         <span class="sp-prop-key">End</span>
         <div class="sp-prop-val"><input type="date" id="sp-due" value="${task.due||''}" ${canWrite?'':'disabled'}/></div>
-
-        <span class="sp-prop-key">Estimate</span>
-        <div class="sp-prop-val"><input type="number" id="sp-estimate" value="${task.estimate||''}" min="0" step="0.5" ${canWrite?'':'disabled'}/>
-          <span style="color:var(--text-muted);font-size:12px">h · ${loggedH.toFixed(1)}h logged</span></div>
 
         <span class="sp-prop-key">Progress</span>
         <div class="sp-prop-val">
@@ -4799,24 +4865,6 @@ function renderSidePanel(){
           ${subs.map(s => renderSubItem(s)).join('') || '<div style="color:var(--text-dim);font-size:12px;padding:6px 8px">No subtasks.</div>'}
           ${canWrite?`<div class="sub-add" onclick="addSubtaskInline()">+ Add subtask</div>`:''}
         </div>
-      </div>
-
-      <div class="sp-section">
-        <h4>Time logged <span>· ${loggedH.toFixed(1)}h total</span></h4>
-        <div class="tlog-list">
-          ${logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(l => `<div class="tlog-item">
-            <span class="tlog-date">${fmtDate(l.date)}</span>
-            <span class="tlog-note"><span class="tlog-person">${escHtml(l.person)}</span>${l.note?' · '+escHtml(l.note):''}</span>
-            <span class="tlog-hrs">${Number(l.hours).toFixed(1)}h</span>
-            ${canWrite && (currentUser.role==='admin' || l.person===currentUser.name) ? `<button class="tlog-del" onclick="deleteTimeLog(${l.id})">✕</button>` : '<span></span>'}
-          </div>`).join('') || '<div style="color:var(--text-dim);font-size:12px;padding:6px 8px">No time logged yet.</div>'}
-        </div>
-        ${canWrite?`<div class="tlog-add" style="margin-top:8px">
-          <input type="date" id="tl-date" value="${new Date().toISOString().slice(0,10)}"/>
-          <input type="text" id="tl-note" placeholder="What was done…"/>
-          <input type="number" id="tl-hours" placeholder="0" min="0.25" step="0.25" style="width:60px"/>
-          <button class="btn btn-primary btn-sm" onclick="logTime(${task.id})">Log</button>
-        </div>`:''}
       </div>
 
       <div class="sp-section">
@@ -4893,8 +4941,6 @@ function renderSidePanel(){
     mutateTaskQuiet(task.id, t => { t.due = v; pushActivity(t, `set end to ${t.due || 'none'}`); });
     checkRequisiteConflict();
   };
-  const estInput = sp.querySelector('#sp-estimate');
-  if(estInput) estInput.onchange = e => { mutateTaskQuiet(task.id, t => { t.estimate = e.target.value ? Number(e.target.value) : null; pushActivity(t, `set estimate to ${t.estimate||'—'}h`); }); };
   const progInput = sp.querySelector('#sp-progress');
   if(progInput) progInput.onchange = e => {
     let v = e.target.value === '' ? null : Math.max(0, Math.min(100, Number(e.target.value)));
@@ -5317,27 +5363,6 @@ function addSubtaskInline(){
   openSidePanel(sub.id);
   setTimeout(() => { const el = document.getElementById('sp-title-input'); if(el){ el.focus(); el.select(); } }, 100);
 }
-function logTime(taskId){
-  const d = document.getElementById('tl-date').value;
-  const h = parseFloat(document.getElementById('tl-hours').value);
-  const n = document.getElementById('tl-note').value.trim();
-  if(!h || h <= 0){ toast('Enter hours > 0', 'error'); return; }
-  if(!d){ toast('Pick a date', 'error'); return; }
-  state.timeLogs.push({
-    id: uid(), projectId: state.activeProject, taskId, person: currentUser.name,
-    date: d, hours: h, note: n, createdAt: new Date().toISOString(),
-  });
-  mutateTask(taskId, t => pushActivity(t, `logged ${h}h`));
-}
-function deleteTimeLog(id){
-  const l = state.timeLogs.find(x => x.id === id);
-  if(!l) return;
-  state.timeLogs = state.timeLogs.filter(x => x.id !== id);
-  saveState();
-  renderSidePanel();
-  if(state.activeView === 'timelog') renderTimeLog();
-  toast('Time entry removed', 'success');
-}
 
 function toggleSpDesc(){
   const task = state.tasks.find(t => t.id === openPanelTaskId);
@@ -5517,7 +5542,7 @@ function deleteWorkItem(id){
   });
 }
 
-function openNewTaskModal(prefilledWorkItemId){
+function openNewTaskModal(prefilledWorkItemId, prefilledPhase){
   const workItems = state.workItems.filter(w => w.projectId === state.activeProject);
   if(!workItems.length){ toast('Create a work item or interface first', 'warning'); return; }
   const root = document.getElementById('modalRoot');
@@ -5544,8 +5569,7 @@ function openNewTaskModal(prefilledWorkItemId){
           <div class="form-group"><label>Start</label><input id="t-start" type="date"/></div>
           <div class="form-group"><label>End</label><input id="t-due" type="date"/></div>
         </div>
-        <div class="form-row cols-3">
-          <div class="form-group"><label>Estimate (hours)</label><input id="t-estimate" type="number" min="0" step="0.5" placeholder="0"/></div>
+        <div class="form-row cols-2">
           <div class="form-group"><label>Status</label><select id="t-status">
             <option value="todo" selected>Todo</option><option value="doing">In progress</option><option value="review">Review</option><option value="blocked">Blocked</option><option value="done">Done</option>
           </select></div>
@@ -5558,7 +5582,7 @@ function openNewTaskModal(prefilledWorkItemId){
             <label>SAP Activate phase</label>
             <select id="t-phase">
               <option value="">— Not set —</option>
-              ${PHASES.map(p => `<option value="${p.k}">${p.label} — ${p.desc}</option>`).join('')}
+              ${PHASES.map(p => `<option value="${p.k}" ${p.k===prefilledPhase?'selected':''}>${p.label} — ${p.desc}</option>`).join('')}
             </select>
             <div id="t-phase-hint" style="font-size:11.5px;color:var(--text-muted);margin-top:6px;display:none"></div>
           </div>
@@ -5666,7 +5690,6 @@ function saveNewTask(){
     assignee: document.getElementById('t-assignee').value || null,
     startDate: startVal,
     due: dueVal,
-    estimate: document.getElementById('t-estimate').value ? Number(document.getElementById('t-estimate').value) : null,
     phase: document.getElementById('t-phase').value || null,
     requisiteTaskId,
     description: document.getElementById('t-desc').value.trim(),
@@ -5806,7 +5829,7 @@ function renderGantt(){
         return { wid, wi, bars: barsList, firstStart };
       }).sort((a, b) => a.firstStart - b.firstStart);
       wiEntries.forEach(({ wid, wi, bars: barsList }) => {
-        const totalEffort = barsList.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0);
+        const totalEffort = barsList.reduce((s, b) => s + (b.days || 0) * 8, 0);
         const doneCount = barsList.filter(b => b.task.status === 'done').length;
         subGroups.push({
           key: `phase:${p.k}:wi:${wid}`,
@@ -5833,7 +5856,7 @@ function renderGantt(){
           color: p.color,
           workItem: null,
           tasks: noWi,
-          totalEffort: noWi.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+          totalEffort: noWi.reduce((s, b) => s + (b.days || 0) * 8, 0),
           doneCount: noWi.filter(b => b.task.status === 'done').length,
           spanStart: noWi.reduce((min, b) => b.start < min ? b.start : min, noWi[0].start),
           spanEnd: noWi.reduce((max, b) => b.end > max ? b.end : max, noWi[0].end),
@@ -5848,7 +5871,7 @@ function renderGantt(){
         subGroups,
         // Aggregate totals across all sub-groups for the phase header label
         tasks: phaseBars,
-        totalEffort: phaseBars.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+        totalEffort: phaseBars.reduce((s, b) => s + (b.days || 0) * 8, 0),
         doneCount: phaseBars.filter(b => b.task.status === 'done').length,
       });
     });
@@ -5875,7 +5898,7 @@ function renderGantt(){
           color: '#9aa39c',
           workItem: wi,
           tasks: barsList,
-          totalEffort: barsList.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+          totalEffort: barsList.reduce((s, b) => s + (b.days || 0) * 8, 0),
           doneCount: barsList.filter(b => b.task.status === 'done').length,
           spanStart: barsList.reduce((min, b) => b.start < min ? b.start : min, barsList[0].start),
           spanEnd: barsList.reduce((max, b) => b.end > max ? b.end : max, barsList[0].end),
@@ -5890,7 +5913,7 @@ function renderGantt(){
           color: '#9aa39c',
           workItem: null,
           tasks: noWi,
-          totalEffort: noWi.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+          totalEffort: noWi.reduce((s, b) => s + (b.days || 0) * 8, 0),
           doneCount: noWi.filter(b => b.task.status === 'done').length,
           spanStart: noWi.reduce((min, b) => b.start < min ? b.start : min, noWi[0].start),
           spanEnd: noWi.reduce((max, b) => b.end > max ? b.end : max, noWi[0].end),
@@ -5903,7 +5926,7 @@ function renderGantt(){
         color: '#9aa39c',
         subGroups,
         tasks: noPhase,
-        totalEffort: noPhase.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+        totalEffort: noPhase.reduce((s, b) => s + (b.days || 0) * 8, 0),
         doneCount: noPhase.filter(b => b.task.status === 'done').length,
       });
     }
@@ -5919,7 +5942,7 @@ function renderGantt(){
         color: '#0f7a4b',
         workItem: wi,
         tasks: groupBars,
-        totalEffort: groupBars.reduce((s, b) => s + (Number(b.task.estimate) || 0), 0),
+        totalEffort: groupBars.reduce((s, b) => s + (b.days || 0) * 8, 0),
         doneCount: groupBars.filter(b => b.task.status === 'done').length,
       });
     });
@@ -5940,8 +5963,8 @@ function renderGantt(){
 
   // ─── Build HTML ─────────────────────────────────────────
   const SIDE_COL_TPL = `
-    <div class="gg-h-task">Task</div>
-    <div class="gg-h-eff">Effort</div>
+    <div class="gg-h-task">Task<span class="gg-col-resizer" id="ggColResizer" title="Drag to resize"></span></div>
+    <div class="gg-h-eff" title="Auto-calculated from Start → End">Days</div>
     <div class="gg-h-status">Status</div>
     <div class="gg-h-prog">%</div>
     <div class="gg-h-start">Start</div>
@@ -5954,7 +5977,8 @@ function renderGantt(){
     const done = t.status === 'done';
     const prog = t.progress != null ? Number(t.progress) : statusToProgress(t.status);
     const stChip = statusChip(t.status);
-    const effortDays = (Number(t.estimate) || 0) / 8;
+    // Effort = calendar days between start and end (inclusive). Auto-derived; no manual estimate field anymore.
+    const effortDays = b.days || 0;
     const startStr = isoDateLocal(b.start);
     const endStr = isoDateLocal(b.end);
     // Two formats:
@@ -6009,10 +6033,10 @@ function renderGantt(){
 
     const todayLineInRow = showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : '';
 
-    const effortInputVal = t.isMilestone ? '' : (effortDays > 0 ? effortDays.toFixed(1) : '');
+    const effortLabel = effortDays > 0 ? `${effortDays}d` : '—';
     const effortCell = t.isMilestone
       ? `<span class="gg-cell gg-cell-eff gg-cell-milestone-mark" title="Milestone">◆</span>`
-      : `<input class="gg-cell gg-cell-eff gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortInputVal}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
+      : `<span class="gg-cell gg-cell-eff" title="${effortDays} day${effortDays===1?'':'s'} (auto-calculated)">${effortLabel}</span>`;
     const statusCell = `<button class="gg-cell gg-cell-status gg-cell-btn" data-pop-status="${t.id}" ${canWrite?'':'disabled'}>${stChip}</button>`;
     const progCell = `<input class="gg-cell gg-cell-prog gg-cell-input gg-input-prog" type="number" min="0" max="100" step="5" value="${prog}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
     // Date cells: native <input type="date"> shows in browser locale (often mm/dd/yyyy on US systems).
@@ -6066,6 +6090,11 @@ function renderGantt(){
       // 3-level: phase → work-item subgroups → tasks
       const phaseCollapsed = ganttViewState.collapsedGroups.has(g.key);
       const effDays = (g.totalEffort / 8).toFixed(1);
+      // The + button on a phase row creates a task pre-filled with this phase.
+      // Disabled when the user has no write permission, hidden until hover via CSS.
+      const phaseAddBtn = canWrite && g.phase
+        ? `<button class="gg-add-task-btn" data-add-phase="${g.phase.k}" title="Add task to ${escHtml(g.label)}" onclick="event.stopPropagation();openNewTaskModal(null,'${g.phase.k}')">＋</button>`
+        : '';
       const phaseHeader = `
         <div class="gg-row gg-grouprow gg-phase-row" data-gkey="${escHtml(g.key)}" data-phase="${g.phase ? g.phase.k : '_none'}">
           <div class="gg-side gg-side-group">
@@ -6077,6 +6106,7 @@ function renderGantt(){
             <span class="gg-group-dot" style="background:${g.color}"></span>
             <span class="gg-group-label">${escHtml(g.label)}</span>
             <span class="gg-group-meta">${g.tasks.length} task${g.tasks.length===1?'':'s'} · ${effDays}d</span>
+            ${phaseAddBtn}
           </div>
           <div class="gg-timeline gg-timeline-group" style="width:${timelineWidth}px">
             ${showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : ''}
@@ -6093,6 +6123,12 @@ function renderGantt(){
         // — but to keep things simple and avoid two sets, we use a separate Set.
         const isExpanded = ganttViewState.expandedSubGroups.has(sg.key);
         const sgEffDays = (sg.totalEffort / 8).toFixed(1);
+        // The + button on a work-item row creates a task pre-filled with this work item
+        // (and the parent phase if the phase is known). Only meaningful for real work items
+        // — the synthetic "Loose tasks" sub-group has no workItem.id, so we skip it.
+        const sgAddBtn = canWrite && sg.workItem
+          ? `<button class="gg-add-task-btn" data-add-wi="${sg.workItem.id}" title="Add task to ${escHtml(sg.label)}" onclick="event.stopPropagation();openNewTaskModal(${sg.workItem.id}${g.phase ? `,'${g.phase.k}'` : ''})">＋</button>`
+          : '';
         const sgHeader = `
           <div class="gg-row gg-subrow gg-wi-row" data-gkey="${escHtml(sg.key)}" data-wi="${sg.workItem ? sg.workItem.id : '_none'}" style="--wi-tint:${sg.color}">
             <div class="gg-side gg-side-subgroup">
@@ -6104,6 +6140,7 @@ function renderGantt(){
               <span class="gg-sub-icon">⊞</span>
               <span class="gg-sub-label">${escHtml(sg.label)}</span>
               <span class="gg-sub-meta">${sg.tasks.length} · ${sgEffDays}d</span>
+              ${sgAddBtn}
             </div>
             <div class="gg-timeline gg-timeline-sub" style="width:${timelineWidth}px">
               ${showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : ''}
@@ -6186,6 +6223,39 @@ function renderGantt(){
 
   // ─── Wire interactions ──────────────────────────────────
   const cont = content.querySelector('.gg-container');
+
+  // Apply the persisted task-column width (resizable via the header handle).
+  // Done as a CSS variable so it cascades to header + every row simultaneously.
+  cont.style.setProperty('--col-task', ganttViewState.taskColW + 'px');
+
+  // Task column resizer — drag the thin strip in the Task header to grow/shrink the column.
+  // Sets ganttViewState.taskColW (200–500px clamped) and updates --col-task live during drag.
+  const resizer = cont.querySelector('#ggColResizer');
+  if(resizer){
+    resizer.addEventListener('mousedown', e => {
+      e.preventDefault();e.stopPropagation();
+      const startX = e.clientX;
+      const startW = ganttViewState.taskColW;
+      resizer.classList.add('is-resizing');
+      document.body.classList.add('gg-resizing');
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX;
+        const next = Math.max(200, Math.min(500, startW + dx));
+        ganttViewState.taskColW = next;
+        cont.style.setProperty('--col-task', next + 'px');
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        resizer.classList.remove('is-resizing');
+        document.body.classList.remove('gg-resizing');
+        // Persist via localStorage so the width sticks across page reloads.
+        try{ localStorage.setItem('ggTaskColW', String(ganttViewState.taskColW)); }catch(_){}
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
 
   // Toolbar
   document.getElementById('ganttGroupBy').onclick = e => {
@@ -6280,16 +6350,6 @@ function renderGantt(){
 
   // Inline editing in the side grid cells
   if(canWrite){
-    // Effort (in days, stored as hours in task.estimate)
-    cont.querySelectorAll('.gg-input-eff').forEach(inp => {
-      inp.addEventListener('click', e => e.stopPropagation());
-      inp.addEventListener('change', e => {
-        const tid = Number(inp.dataset.tid);
-        const val = inp.value === '' ? null : Number(inp.value);
-        const hours = val == null ? null : Math.round(val * 8 * 10) / 10; // days → hours, 1 decimal
-        mutateTask(tid, t => { t.estimate = hours; pushActivity(t, `set estimate to ${hours != null ? hours + 'h' : '—'}`); });
-      });
-    });
     // Progress
     cont.querySelectorAll('.gg-input-prog').forEach(inp => {
       inp.addEventListener('click', e => e.stopPropagation());
@@ -7247,8 +7307,6 @@ function renderFullTask(){
   if(!task){ setView('tasks'); return; }
   const wi = state.workItems.find(w => w.id === task.workItemId);
   const subs = state.tasks.filter(t => t.parentTaskId === task.id);
-  const logs = state.timeLogs.filter(l => l.taskId === task.id);
-  const loggedH = logs.reduce((s,l)=>s+(Number(l.hours)||0),0);
   const canWrite = canWriteView('tasks');
 
   setTopbar('<a style="cursor:pointer;color:var(--text-muted);font-size:14px;font-family:var(--mono)" onclick="setView(\'tasks\')">← Back to tasks</a>', '');
@@ -7309,8 +7367,6 @@ function renderFullTask(){
           <div class="ft-prop"><span class="ft-prop-key">Priority</span><span class="ft-prop-val"><span class="chip chip-${task.priority==='high'?'danger':task.priority==='low'?'muted':'warn'}">${(task.priority||'medium')[0].toUpperCase()+(task.priority||'medium').slice(1)}</span></span></div>
           <div class="ft-prop"><span class="ft-prop-key">Assignee</span><span class="ft-prop-val">${task.assignee?avatarEl(task.assignee,20)+escHtml(task.assignee):'<span style="color:var(--text-dim)">Unassigned</span>'}</span></div>
           <div class="ft-prop"><span class="ft-prop-key">Due</span><span class="ft-prop-val">${task.due?fmtDate(task.due):'—'}</span></div>
-          <div class="ft-prop"><span class="ft-prop-key">Estimate</span><span class="ft-prop-val">${task.estimate||'—'}${task.estimate?'h':''}</span></div>
-          <div class="ft-prop"><span class="ft-prop-key">Logged</span><span class="ft-prop-val">${loggedH.toFixed(1)}h</span></div>
         </div>
         <div class="ft-side-block">
           <h4>Activity</h4>
@@ -7364,68 +7420,6 @@ function addCommentFt(taskId){
   });
 }
 
-/* ════════════════════════════════════════════════════════
-   TIME LOG VIEW
-   ════════════════════════════════════════════════════════ */
-function renderTimeLog(){
-  const pid = state.activeProject;
-  const logs = state.timeLogs.filter(l => l.projectId === pid).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
-  const workItems = state.workItems.filter(w => w.projectId === pid);
-  const totalH = logs.reduce((s,l) => s + (Number(l.hours)||0), 0);
-  const byPerson = {};
-  logs.forEach(l => { byPerson[l.person] = (byPerson[l.person]||0) + (Number(l.hours)||0); });
-
-  setTopbar('Time log', `${totalH.toFixed(1)}h total · ${logs.length} ${logs.length===1?'entry':'entries'}`,
-    `<button class="btn btn-outline btn-sm" onclick="exportTimeLog()">↓ Export CSV</button>`);
-
-  const byPersonHtml = Object.keys(byPerson).sort((a,b) => byPerson[b] - byPerson[a])
-    .map(p => `<span class="chip chip-muted">${escHtml(p)} · ${byPerson[p].toFixed(1)}h</span>`).join(' ');
-
-  const rowsHtml = logs.map(l => {
-    const t = state.tasks.find(x => x.id === l.taskId);
-    const wi = t ? workItems.find(w => w.id === t.workItemId) : null;
-    return `<div class="tl-row">
-      <span class="tlog-date">${fmtDate(l.date)}</span>
-      <div>
-        <div style="font-weight:500">${t?escHtml(t.title):'(deleted task)'}</div>
-        <div style="font-size:12px;color:var(--text-muted);font-family:var(--mono)">${wi?escHtml(wi.code):''} ${l.note?'· '+escHtml(l.note):''}</div>
-      </div>
-      <span>${escHtml(l.person)}</span>
-      <span>${t?fmtType(t.type):'—'}</span>
-      <span class="tlog-hrs">${Number(l.hours).toFixed(1)}h</span>
-      ${(currentUser.role==='admin'||l.person===currentUser.name)?`<button class="tlog-del" onclick="deleteTimeLog(${l.id})">✕</button>`:'<span></span>'}
-    </div>`;
-  }).join('') || '<div class="empty-screen" style="padding:40px"><p>No time logged yet. Go to a task and log time there.</p></div>';
-
-  document.getElementById('content').innerHTML = `
-    ${byPersonHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${byPersonHtml}</div>` : ''}
-    <div class="tl-table">
-      <div class="tl-head-row"><span>Date</span><span>Task</span><span>Person</span><span>Type</span><span>Hours</span><span></span></div>
-      ${rowsHtml}
-    </div>
-  `;
-}
-function exportTimeLog(){
-  const pid = state.activeProject;
-  const proj = state.projects.find(p => p.id === pid);
-  const logs = state.timeLogs.filter(l => l.projectId === pid).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
-  if(!logs.length){ toast('Nothing to export', 'info'); return; }
-  const workItems = state.workItems.filter(w => w.projectId === pid);
-  function esc(v){ v = String(v==null?'':v).replace(/"/g,'""'); return /[",\n]/.test(v) ? '"'+v+'"' : v; }
-  const rows = [['Date','Person','Hours','Note','Task','Parent','Project'].map(esc).join(',')];
-  logs.forEach(l => {
-    const t = state.tasks.find(x => x.id === l.taskId);
-    const wi = t ? workItems.find(w => w.id === t.workItemId) : null;
-    rows.push([l.date, l.person, l.hours, l.note||'', t?t.title:'', wi?wi.code:'', proj?proj.name:''].map(esc).join(','));
-  });
-  const csv = '\uFEFF' + rows.join('\r\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'TimeLog_' + ((proj?proj.code:'export') || 'export') + '_' + new Date().toISOString().slice(0,10) + '.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-}
 
 /* ════════════════════════════════════════════════════════
    SCHEDULE — weekly customer pattern (Mon-Fri × AM/PM)
