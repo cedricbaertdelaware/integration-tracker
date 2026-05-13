@@ -3501,6 +3501,9 @@ function setView(v){
   const permKey = (v === 'kanban' || v === 'fulltask' || v === 'gantt' || v === 'timeline') ? 'tasks' : v;
   if(!canReadView(permKey)) v = 'dashboard';
   if(!canReadView('dashboard') && !canReadView(v)) v = ALL_VIEWS.find(canReadView);
+  // When the user lands on the Gantt from somewhere else, request an auto-scroll to today.
+  // The flag is consumed (and reset) inside renderGantt so re-renders within the view don't re-scroll.
+  if(v === 'gantt' && state.activeView !== 'gantt') _ganttFreshMount = true;
   state.activeView = v;
   // Sidebar active state: the "Tasks" link covers all task views (tasks/kanban/gantt/timeline);
   // other links match their data-view exactly.
@@ -5742,6 +5745,10 @@ function saveNewTask(){
 /* ════════════════════════════════════════════════════════
    GANTT CHART
    ════════════════════════════════════════════════════════ */
+// Set to true when the user switches *to* the Gantt view; consumed in renderGantt
+// to auto-scroll the timeline so today is visible. Re-renders within the view
+// (toggle collapse, edit task, etc.) leave it false → no jump.
+let _ganttFreshMount = true;
 function renderGantt(){
   const pid = state.activeProject;
   const proj = state.projects.find(p => p.id === pid);
@@ -6177,7 +6184,6 @@ function renderGantt(){
                   <path d="M3 2 L7 5 L3 8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <span class="gg-sub-icon">⊞</span>
               <span class="gg-sub-label">${escHtml(sg.label)}</span>
               ${sg.workItem && sg.workItem.owner
                 ? `<span class="gg-sub-owner" title="${escHtml(sg.workItem.owner)}">${avatarEl(sg.workItem.owner, 18)}</span>`
@@ -6302,6 +6308,19 @@ function renderGantt(){
       document.addEventListener('mouseup', onUp);
     });
   }
+
+  // Auto-scroll the timeline horizontally so today is visible — but only on a fresh mount
+  // of the view. Today is positioned ~25% from the left edge of the visible area, so the
+  // user immediately sees more of the future than the past (the more interesting half).
+  if(_ganttFreshMount && showToday){
+    requestAnimationFrame(() => {
+      const sideW = cont.querySelector('.gg-side')?.offsetWidth || 0;
+      const visible = cont.clientWidth - sideW;
+      const target = Math.max(0, todayX - visible * 0.25);
+      cont.scrollLeft = target;
+    });
+  }
+  _ganttFreshMount = false;
 
   // Toolbar
   document.getElementById('ganttGroupBy').onclick = e => {
