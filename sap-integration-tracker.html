@@ -1162,6 +1162,18 @@ body.gg-resizing *{cursor:col-resize !important;}
   font-family:var(--mono);font-size:10.5px;color:var(--text-muted);
   margin-left:auto;padding-right:4px;flex-shrink:0;
 }
+/* Sender → Receiver route chip on interface rows in the Gantt.
+   Sits between the work-item title and the meta count. */
+.gg-sub-route{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:10.5px;
+  color:var(--text-muted);
+  background:var(--surface-2);
+  padding:2px 7px;border-radius:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:200px;flex-shrink:0;
+}
+.gg-sub-route-arrow{color:var(--accent);font-weight:600;}
 
 /* + button on phase / work-item rows to add a new task in that group.
    Hidden by default; revealed on row hover so it stays out of the way.
@@ -6158,6 +6170,9 @@ function renderGantt(){
               </button>
               <span class="gg-sub-icon">⊞</span>
               <span class="gg-sub-label">${escHtml(sg.label)}</span>
+              ${sg.workItem && sg.workItem.kind === 'interface' && (sg.workItem.source || sg.workItem.target)
+                ? `<span class="gg-sub-route" title="${escHtml(sg.workItem.source||'?')} → ${escHtml(sg.workItem.target||'?')}">${escHtml(sg.workItem.source||'?')}<span class="gg-sub-route-arrow">→</span>${escHtml(sg.workItem.target||'?')}</span>`
+                : ''}
               <span class="gg-sub-meta">${sg.tasks.length} · ${sgEffDays}d</span>
               ${sgAddBtn}
             </div>
