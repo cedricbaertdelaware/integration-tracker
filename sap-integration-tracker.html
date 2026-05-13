@@ -945,6 +945,35 @@ body.gg-resizing *{cursor:col-resize !important;}
 }
 .gg-cell-title .gg-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .gg-cell-eff{grid-column:3;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;padding-right:8px;}
+
+/* Effort cell wrapper: contains the input + optional warning marker.
+   Marker appears when today + entered days would exceed the task's end date. */
+.gg-cell-eff-wrap{
+  display:flex;align-items:center;justify-content:flex-end;gap:4px;
+  padding:0;
+}
+.gg-cell-eff-wrap .gg-input-eff{
+  background:transparent;border:none;padding:2px 4px;width:42px;
+  font-family:var(--mono);font-size:11.5px;color:var(--text);
+  text-align:right;border-radius:4px;
+}
+.gg-cell-eff-wrap .gg-input-eff:hover{background:var(--surface-2);}
+.gg-cell-eff-wrap .gg-input-eff:focus{outline:none;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--accent);}
+.gg-cell-eff-wrap .gg-input-eff::-webkit-outer-spin-button,
+.gg-cell-eff-wrap .gg-input-eff::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.gg-eff-warn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;flex-shrink:0;
+  background:var(--danger);color:#fff;
+  border-radius:50%;font-weight:700;font-size:11px;
+  font-family:var(--font);
+  cursor:help;
+  animation:gg-warn-pulse 2s ease-in-out infinite;
+}
+@keyframes gg-warn-pulse{
+  0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--danger) 60%, transparent);}
+  50%{box-shadow:0 0 0 4px color-mix(in srgb, var(--danger) 0%, transparent);}
+}
 .gg-cell-status{grid-column:4;}
 .gg-cell-prog{grid-column:5;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
 .gg-cell-start{grid-column:6;font-family:var(--mono);font-size:11px;color:var(--text-muted);}
@@ -5811,7 +5840,7 @@ function renderGantt(){
         return { wid, wi, bars: barsList, firstStart };
       }).sort((a, b) => a.firstStart - b.firstStart);
       wiEntries.forEach(({ wid, wi, bars: barsList }) => {
-        const totalEffort = barsList.reduce((s, b) => s + (b.days || 0) * 8, 0);
+        const totalEffort = barsList.reduce((s, b) => s + Number(b.task.effortDays) || 0, 0);
         const doneCount = barsList.filter(b => b.task.status === 'done').length;
         subGroups.push({
           key: `phase:${p.k}:wi:${wid}`,
@@ -5838,7 +5867,7 @@ function renderGantt(){
           color: p.color,
           workItem: null,
           tasks: noWi,
-          totalEffort: noWi.reduce((s, b) => s + (b.days || 0) * 8, 0),
+          totalEffort: noWi.reduce((s, b) => s + Number(b.task.effortDays) || 0, 0),
           doneCount: noWi.filter(b => b.task.status === 'done').length,
           spanStart: noWi.reduce((min, b) => b.start < min ? b.start : min, noWi[0].start),
           spanEnd: noWi.reduce((max, b) => b.end > max ? b.end : max, noWi[0].end),
@@ -5853,7 +5882,7 @@ function renderGantt(){
         subGroups,
         // Aggregate totals across all sub-groups for the phase header label
         tasks: phaseBars,
-        totalEffort: phaseBars.reduce((s, b) => s + (b.days || 0) * 8, 0),
+        totalEffort: phaseBars.reduce((s, b) => s + Number(b.task.effortDays) || 0, 0),
         doneCount: phaseBars.filter(b => b.task.status === 'done').length,
       });
     });
@@ -5880,7 +5909,7 @@ function renderGantt(){
           color: '#9aa39c',
           workItem: wi,
           tasks: barsList,
-          totalEffort: barsList.reduce((s, b) => s + (b.days || 0) * 8, 0),
+          totalEffort: barsList.reduce((s, b) => s + Number(b.task.effortDays) || 0, 0),
           doneCount: barsList.filter(b => b.task.status === 'done').length,
           spanStart: barsList.reduce((min, b) => b.start < min ? b.start : min, barsList[0].start),
           spanEnd: barsList.reduce((max, b) => b.end > max ? b.end : max, barsList[0].end),
@@ -5895,7 +5924,7 @@ function renderGantt(){
           color: '#9aa39c',
           workItem: null,
           tasks: noWi,
-          totalEffort: noWi.reduce((s, b) => s + (b.days || 0) * 8, 0),
+          totalEffort: noWi.reduce((s, b) => s + Number(b.task.effortDays) || 0, 0),
           doneCount: noWi.filter(b => b.task.status === 'done').length,
           spanStart: noWi.reduce((min, b) => b.start < min ? b.start : min, noWi[0].start),
           spanEnd: noWi.reduce((max, b) => b.end > max ? b.end : max, noWi[0].end),
@@ -5908,7 +5937,7 @@ function renderGantt(){
         color: '#9aa39c',
         subGroups,
         tasks: noPhase,
-        totalEffort: noPhase.reduce((s, b) => s + (b.days || 0) * 8, 0),
+        totalEffort: noPhase.reduce((s, b) => s + Number(b.task.effortDays) || 0, 0),
         doneCount: noPhase.filter(b => b.task.status === 'done').length,
       });
     }
@@ -5924,7 +5953,7 @@ function renderGantt(){
         color: '#0f7a4b',
         workItem: wi,
         tasks: groupBars,
-        totalEffort: groupBars.reduce((s, b) => s + (b.days || 0) * 8, 0),
+        totalEffort: groupBars.reduce((s, b) => s + Number(b.task.effortDays) || 0, 0),
         doneCount: groupBars.filter(b => b.task.status === 'done').length,
       });
     });
@@ -6015,10 +6044,22 @@ function renderGantt(){
 
     const todayLineInRow = showToday ? `<div class="gg-row-today" style="left:${todayX}px"></div>` : '';
 
-    const effortLabel = effortDays > 0 ? `${effortDays}d` : '—';
+    // Effort: user-entered remaining days. Warning shown when today + effort > end date.
+    const remainingDays = t.effortDays != null ? Number(t.effortDays) : null;
+    let effortWarn = false;
+    if(remainingDays != null && remainingDays > 0 && t.due && !done){
+      const projectedEnd = new Date(today);
+      projectedEnd.setDate(projectedEnd.getDate() + remainingDays);
+      const dueD = new Date(t.due); dueD.setHours(0,0,0,0);
+      if(projectedEnd > dueD) effortWarn = true;
+    }
+    const effortValStr = remainingDays != null && remainingDays !== '' ? remainingDays : '';
     const effortCell = t.isMilestone
       ? `<span class="gg-cell gg-cell-eff gg-cell-milestone-mark" title="Milestone">◆</span>`
-      : `<span class="gg-cell gg-cell-eff" title="${effortDays} day${effortDays===1?'':'s'} (auto-calculated)">${effortLabel}</span>`;
+      : `<span class="gg-cell gg-cell-eff gg-cell-eff-wrap${effortWarn?' has-warn':''}">
+          <input class="gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortValStr}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'} title="Remaining effort in days"/>
+          ${effortWarn ? `<span class="gg-eff-warn" title="Today + ${remainingDays}d exceeds end date (${fmtDateDMY(t.due)})">!</span>` : ''}
+        </span>`;
     const statusCell = `<button class="gg-cell gg-cell-status gg-cell-btn" data-pop-status="${t.id}" ${canWrite?'':'disabled'}>${stChip}</button>`;
     const progCell = `<input class="gg-cell gg-cell-prog gg-cell-input gg-input-prog" type="number" min="0" max="100" step="5" value="${prog}" data-tid="${t.id}" ${canWrite?'':'disabled'}/>`;
     // Date cells: native <input type="date"> shows in browser locale (often mm/dd/yyyy on US systems).
@@ -6071,7 +6112,7 @@ function renderGantt(){
     if(g.type === 'phase'){
       // 3-level: phase → work-item subgroups → tasks
       const phaseCollapsed = ganttViewState.collapsedGroups.has(g.key);
-      const effDays = (g.totalEffort / 8).toFixed(1);
+      const effDays = (g.totalEffort).toFixed(1);
       // The + button on a phase row creates a task pre-filled with this phase.
       // Disabled when the user has no write permission, hidden until hover via CSS.
       const phaseAddBtn = canWrite && g.phase
@@ -6104,7 +6145,7 @@ function renderGantt(){
         // (a key in the set means "expanded" for subgroups, the OPPOSITE of phases)
         // — but to keep things simple and avoid two sets, we use a separate Set.
         const isExpanded = ganttViewState.expandedSubGroups.has(sg.key);
-        const sgEffDays = (sg.totalEffort / 8).toFixed(1);
+        const sgEffDays = (sg.totalEffort).toFixed(1);
         // The + button on a work-item row creates a task pre-filled with this work item
         // (and the parent phase if the phase is known). Only meaningful for real work items
         // — the synthetic "Loose tasks" sub-group has no workItem.id, so we skip it.
@@ -6140,7 +6181,7 @@ function renderGantt(){
 
     // Flat 2-level (workitem-only mode)
     const collapsed = ganttViewState.collapsedGroups.has(g.key);
-    const effDays = (g.totalEffort / 8).toFixed(1);
+    const effDays = (g.totalEffort).toFixed(1);
     const groupHeader = `
       <div class="gg-row gg-grouprow" data-gkey="${escHtml(g.key)}" data-wi="${g.workItem ? g.workItem.id : ''}">
         <div class="gg-side gg-side-group">
@@ -6332,6 +6373,18 @@ function renderGantt(){
 
   // Inline editing in the side grid cells
   if(canWrite){
+    // Effort (remaining days, manual entry)
+    cont.querySelectorAll('.gg-input-eff').forEach(inp => {
+      inp.addEventListener('click', e => e.stopPropagation());
+      inp.addEventListener('change', e => {
+        const tid = Number(inp.dataset.tid);
+        const val = inp.value === '' ? null : Math.max(0, Number(inp.value));
+        mutateTask(tid, t => {
+          t.effortDays = val;
+          pushActivity(t, val == null ? 'cleared effort' : `set effort to ${val}d remaining`);
+        });
+      });
+    });
     // Progress
     cont.querySelectorAll('.gg-input-prog').forEach(inp => {
       inp.addEventListener('click', e => e.stopPropagation());
