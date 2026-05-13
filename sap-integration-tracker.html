@@ -3799,12 +3799,7 @@ function renderDashboard(){
     const d = new Date(t.due); d.setHours(0,0,0,0);
     return d < today;
   });
-  const overrunTasks = parents.filter(t => {
-    const est = Number(t.estimate) || 0;
-    if(!est) return false;
-    const logged = logs.filter(l => l.taskId === t.id).reduce((s,l) => s + (Number(l.hours)||0), 0);
-    return logged > est * 1.2; // 20% overrun threshold
-  });
+  const overrunTasks = [];
   const dueSoon = parents.filter(t => {
     if(t.status === 'done' || !t.due) return false;
     const d = new Date(t.due); d.setHours(0,0,0,0);
@@ -4466,8 +4461,6 @@ function renderTaskRow(t, workItems, subs){
   if(subs.length && subOpen){
     subHtml = subs.map(s => {
       const sDone = s.status === 'done';
-      const sLogs = state.timeLogs.filter(l => l.taskId === s.id);
-      const sH = sLogs.reduce((sm,l) => sm + (Number(l.hours)||0), 0);
       const sSt = s.status || 'todo';
       const sStChipCls = `chip chip-${sSt==='done'?'success':sSt==='doing'?'warn':sSt==='review'?'info':sSt==='blocked'?'danger':'muted'}`;
       const sStChipHtml = `<button class="stat-btn" data-pop-status="${s.id}" title="Click to change status"><span class="${sStChipCls}">${fmtStatus(sSt)}</span></button>`;
@@ -4481,7 +4474,6 @@ function renderTaskRow(t, workItems, subs){
         <button class="tc-assignee as-btn" data-pop-assignee="${s.id}" title="Click to change assignee">${s.assignee?avatarEl(s.assignee, 22)+`<span class="tc-assignee-name">${escHtml(s.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">— assign</span>'}</button>
         <span></span>
         <span class="tc-due ${sDueClass}">${s.due?fmtDate(s.due):'—'}</span>
-        <span class="tc-hours">${sH?`<b>${sH.toFixed(1)}</b>h`:'—'}</span>
         <div class="tc-actions">
           <button data-open="${s.id}" title="Open">${ICONS.open}</button>
           ${currentUser.role==='admin'?`<button class="danger" data-del-task="${s.id}" title="Delete">${ICONS.trash}</button>`:''}
@@ -5305,10 +5297,8 @@ function confirmDeleteTask(id){
   const t = state.tasks.find(x => x.id === id);
   if(!t) return;
   const subs = state.tasks.filter(x => x.parentTaskId === id);
-  const logs = state.timeLogs.filter(l => l.taskId === id || subs.some(s => s.id === l.taskId));
   const extras = [];
   if(subs.length) extras.push(`${subs.length} subtask${subs.length===1?'':'s'}`);
-  if(logs.length) extras.push(`${logs.length} time ${logs.length===1?'entry':'entries'}`);
   const extraLine = extras.length ? `<br><span style="color:var(--text-muted);font-size:12.5px">Also removes ${extras.join(' and ')}.</span>` : '';
   confirmDialog(`Delete <b>${escHtml(t.title)}</b>?${extraLine}<br><br>You can undo this for a few seconds.`).then(ok => {
     if(!ok) return;
@@ -5321,17 +5311,13 @@ function deleteTask(id){
   const t = state.tasks.find(x => x.id === id);
   if(!t) return;
   const subs = state.tasks.filter(x => x.parentTaskId === id);
-  const logs = state.timeLogs.filter(l => l.taskId === id || subs.some(s => s.id === l.taskId));
   const taskCopy = JSON.parse(JSON.stringify(t));
   const subsCopy = JSON.parse(JSON.stringify(subs));
-  const logsCopy = JSON.parse(JSON.stringify(logs));
   state.tasks = state.tasks.filter(x => x.id !== id && x.parentTaskId !== id);
-  state.timeLogs = state.timeLogs.filter(l => l.taskId !== id && !subs.some(s => s.id === l.taskId));
   saveState();
   renderAll();
   toastUndo('Task deleted', () => {
     state.tasks.push(taskCopy, ...subsCopy);
-    state.timeLogs.push(...logsCopy);
     saveState(); renderAll();
   });
 }
@@ -5522,21 +5508,17 @@ function deleteWorkItem(id){
   const wi = state.workItems.find(w => w.id === id);
   if(!wi) return;
   const tasks = state.tasks.filter(t => t.workItemId === id);
-  const logs  = state.timeLogs.filter(l => tasks.some(t => t.id === l.taskId));
-  confirmDialog(`Delete <b>${escHtml(wi.code)} – ${escHtml(wi.title)}</b>?<br><br>Also deletes ${tasks.length} task${tasks.length===1?'':'s'} and ${logs.length} time ${logs.length===1?'entry':'entries'}. Cannot be undone.`).then(ok => {
+  confirmDialog(`Delete <b>${escHtml(wi.code)} – ${escHtml(wi.title)}</b>?<br><br>Also deletes ${tasks.length} task${tasks.length===1?'':'s'}. Cannot be undone.`).then(ok => {
     if(!ok) return;
     const wiCopy = JSON.parse(JSON.stringify(wi));
     const tCopy = JSON.parse(JSON.stringify(tasks));
-    const lCopy = JSON.parse(JSON.stringify(logs));
     state.workItems = state.workItems.filter(w => w.id !== id);
     state.tasks     = state.tasks.filter(t => t.workItemId !== id);
-    state.timeLogs  = state.timeLogs.filter(l => !tasks.some(t => t.id === l.taskId));
     saveState();
     renderAll();
     toastUndo('Work item deleted', () => {
       state.workItems.push(wiCopy);
       state.tasks.push(...tCopy);
-      state.timeLogs.push(...lCopy);
       saveState(); renderAll();
     });
   });
@@ -7154,12 +7136,8 @@ function getTaskDateRange(t){
   return { start, end };
 }
 
-// Sum logged hours for a task (used for actual effort)
-function sumActualHours(taskId){
-  return state.timeLogs
-    .filter(l => l.taskId === taskId)
-    .reduce((s, l) => s + (Number(l.hours) || 0), 0);
-}
+// Legacy stub — time logging removed. Kept to avoid breaking call sites; always 0.
+function sumActualHours(){ return 0; }
 
 
 /* ════════════════════════════════════════════════════════
