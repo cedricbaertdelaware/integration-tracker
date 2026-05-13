@@ -963,16 +963,10 @@ body.gg-resizing *{cursor:col-resize !important;}
 .gg-cell-eff-wrap .gg-input-eff::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .gg-eff-warn{
   display:inline-flex;align-items:center;justify-content:center;
-  width:16px;height:16px;flex-shrink:0;
-  background:var(--danger);color:#fff;
-  border-radius:50%;font-weight:700;font-size:11px;
-  font-family:var(--font);
+  flex-shrink:0;
+  color:var(--danger);
+  font-weight:700;font-size:14px;line-height:1;
   cursor:help;
-  animation:gg-warn-pulse 2s ease-in-out infinite;
-}
-@keyframes gg-warn-pulse{
-  0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--danger) 60%, transparent);}
-  50%{box-shadow:0 0 0 4px color-mix(in srgb, var(--danger) 0%, transparent);}
 }
 .gg-cell-status{grid-column:4;}
 .gg-cell-prog{grid-column:5;font-family:var(--mono);font-size:11.5px;color:var(--text-muted);text-align:right;}
@@ -6056,6 +6050,8 @@ function renderGantt(){
     const effortValStr = remainingDays != null && remainingDays !== '' ? remainingDays : '';
     const effortCell = t.isMilestone
       ? `<span class="gg-cell gg-cell-eff gg-cell-milestone-mark" title="Milestone">◆</span>`
+      : done
+      ? `<span class="gg-cell gg-cell-eff" title="Task is done">—</span>`
       : `<span class="gg-cell gg-cell-eff gg-cell-eff-wrap${effortWarn?' has-warn':''}">
           <input class="gg-cell-input gg-input-eff" type="number" min="0" step="0.5" value="${effortValStr}" placeholder="—" data-tid="${t.id}" ${canWrite?'':'disabled'} title="Remaining effort in days"/>
           ${effortWarn ? `<span class="gg-eff-warn" title="Today + ${remainingDays}d exceeds end date (${fmtDateDMY(t.due)})">!</span>` : ''}
