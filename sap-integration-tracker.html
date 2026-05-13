@@ -1399,10 +1399,17 @@ body.gg-resizing *{cursor:col-resize !important;}
 .tl-card-date{font-family:var(--mono);font-size:10px;fill:var(--text-muted);}
 .tl-card-avatar{font-size:9px;font-weight:600;}
 
-.kanban{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;}
+.kanban{
+  display:flex;gap:12px;
+  overflow-x:auto;overflow-y:hidden;
+  padding-bottom:6px;
+  scroll-snap-type:x proximity;
+}
 .kb-col{
   background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);
   display:flex;flex-direction:column;min-height:460px;
+  flex:0 0 280px;width:280px;
+  scroll-snap-align:start;
 }
 .kb-head{display:flex;align-items:center;gap:8px;padding:14px 14px 10px;}
 .kb-dot{width:8px;height:8px;border-radius:50%;}
