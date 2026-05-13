@@ -1174,6 +1174,15 @@ body.gg-resizing *{cursor:col-resize !important;}
   max-width:200px;flex-shrink:0;
 }
 .gg-sub-route-arrow{color:var(--accent);font-weight:600;}
+/* Owner avatar on interface rows in the Gantt — shows the person's initials,
+   hover reveals the full name via the title attribute. */
+.gg-sub-owner{
+  display:inline-flex;align-items:center;
+  flex-shrink:0;cursor:help;
+}
+.gg-sub-owner .avatar{
+  cursor:help;
+}
 
 /* + button on phase / work-item rows to add a new task in that group.
    Hidden by default; revealed on row hover so it stays out of the way.
@@ -6170,6 +6179,9 @@ function renderGantt(){
               </button>
               <span class="gg-sub-icon">⊞</span>
               <span class="gg-sub-label">${escHtml(sg.label)}</span>
+              ${sg.workItem && sg.workItem.owner
+                ? `<span class="gg-sub-owner" title="${escHtml(sg.workItem.owner)}">${avatarEl(sg.workItem.owner, 18)}</span>`
+                : ''}
               ${sg.workItem && sg.workItem.kind === 'interface' && (sg.workItem.source || sg.workItem.target)
                 ? `<span class="gg-sub-route" title="${escHtml(sg.workItem.source||'?')} → ${escHtml(sg.workItem.target||'?')}">${escHtml(sg.workItem.source||'?')}<span class="gg-sub-route-arrow">→</span>${escHtml(sg.workItem.target||'?')}</span>`
                 : ''}
