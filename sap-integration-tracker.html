@@ -1174,15 +1174,13 @@ body.gg-resizing *{cursor:col-resize !important;}
   max-width:200px;flex-shrink:0;
 }
 .gg-sub-route-arrow{color:var(--accent);font-weight:600;}
-/* Owner avatar on interface rows in the Gantt — shows the person's initials,
+/* Assignee avatar at the right end of the task title cell — shows initials,
    hover reveals the full name via the title attribute. */
-.gg-sub-owner{
+.gg-task-assignee{
   display:inline-flex;align-items:center;
-  flex-shrink:0;cursor:help;
+  flex-shrink:0;cursor:help;margin-left:auto;padding-right:4px;
 }
-.gg-sub-owner .avatar{
-  cursor:help;
-}
+.gg-task-assignee .avatar{cursor:help;}
 
 /* + button on phase / work-item rows to add a new task in that group.
    Hidden by default; revealed on row hover so it stays out of the way.
@@ -3503,7 +3501,10 @@ function setView(v){
   if(!canReadView('dashboard') && !canReadView(v)) v = ALL_VIEWS.find(canReadView);
   // When the user lands on the Gantt from somewhere else, request an auto-scroll to today.
   // The flag is consumed (and reset) inside renderGantt so re-renders within the view don't re-scroll.
-  if(v === 'gantt' && state.activeView !== 'gantt') _ganttFreshMount = true;
+  if(v === 'gantt' && state.activeView !== 'gantt'){
+    _ganttFreshMount = true;
+    _ganttScrollLeft = null;
+  }
   state.activeView = v;
   // Sidebar active state: the "Tasks" link covers all task views (tasks/kanban/gantt/timeline);
   // other links match their data-view exactly.
@@ -5749,6 +5750,9 @@ function saveNewTask(){
 // to auto-scroll the timeline so today is visible. Re-renders within the view
 // (toggle collapse, edit task, etc.) leave it false → no jump.
 let _ganttFreshMount = true;
+// Remembers horizontal scroll position across re-renders within the Gantt view.
+// Captured just before re-render in toggle handlers, then restored after rendering.
+let _ganttScrollLeft = null;
 function renderGantt(){
   const pid = state.activeProject;
   const proj = state.projects.find(p => p.id === pid);
@@ -6103,7 +6107,10 @@ function renderGantt(){
     return `<div class="gg-row gg-taskrow${indentClass} ${done?'gg-done':''}" data-tid="${t.id}" data-${groupBy === 'phase' ? 'phase' : 'wi'}="${groupBy === 'phase' ? (t.phase || '_none') : t.workItemId}">
       <div class="gg-side">
         <span class="gg-row-handle" title="Drag to reorder" data-drag-tid="${t.id}" draggable="${canWrite?'true':'false'}">⋮⋮</span>
-        <span class="gg-cell gg-cell-title" data-open-task="${t.id}"><span class="gg-title">${escHtml(t.title || '—')}</span></span>
+        <span class="gg-cell gg-cell-title" data-open-task="${t.id}">
+          <span class="gg-title">${escHtml(t.title || '—')}</span>
+          ${t.assignee ? `<span class="gg-task-assignee" title="${escHtml(t.assignee)}">${avatarEl(t.assignee, 18)}</span>` : ''}
+        </span>
         ${effortCell}
         ${statusCell}
         ${progCell}
@@ -6185,9 +6192,6 @@ function renderGantt(){
                 </svg>
               </button>
               <span class="gg-sub-label">${escHtml(sg.label)}</span>
-              ${sg.workItem && sg.workItem.owner
-                ? `<span class="gg-sub-owner" title="${escHtml(sg.workItem.owner)}">${avatarEl(sg.workItem.owner, 18)}</span>`
-                : ''}
               ${sg.workItem && sg.workItem.kind === 'interface' && (sg.workItem.source || sg.workItem.target)
                 ? `<span class="gg-sub-route" title="${escHtml(sg.workItem.source||'?')} → ${escHtml(sg.workItem.target||'?')}">${escHtml(sg.workItem.source||'?')}<span class="gg-sub-route-arrow">→</span>${escHtml(sg.workItem.target||'?')}</span>`
                 : ''}
@@ -6309,17 +6313,23 @@ function renderGantt(){
     });
   }
 
-  // Auto-scroll the timeline horizontally so today is visible — but only on a fresh mount
-  // of the view. Today is positioned ~25% from the left edge of the visible area, so the
-  // user immediately sees more of the future than the past (the more interesting half).
+  // Scroll behaviour:
+  //  - Fresh mount (just landed on the Gantt) → scroll so today is ~25% from the left
+  //  - Re-render within the view (toggle expand/collapse, edit, etc.) → restore the
+  //    user's previous horizontal scroll position so the timeline doesn't jump back to 0
   if(_ganttFreshMount && showToday){
     requestAnimationFrame(() => {
       const sideW = cont.querySelector('.gg-side')?.offsetWidth || 0;
       const visible = cont.clientWidth - sideW;
       const target = Math.max(0, todayX - visible * 0.25);
       cont.scrollLeft = target;
+      _ganttScrollLeft = target;
     });
+  } else if(_ganttScrollLeft != null){
+    requestAnimationFrame(() => { cont.scrollLeft = _ganttScrollLeft; });
   }
+  // Track scroll changes so manual scrolling is preserved on subsequent renders
+  cont.addEventListener('scroll', () => { _ganttScrollLeft = cont.scrollLeft; }, { passive: true });
   _ganttFreshMount = false;
 
   // Toolbar
