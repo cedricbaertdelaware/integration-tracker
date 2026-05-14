@@ -1800,6 +1800,57 @@ body.gg-resizing *{cursor:col-resize !important;}
    The section itself spans the full bento width (12 cols); the mini-cards inside
    wrap in their own auto-fit grid so they look balanced regardless of team size. */
 .card-load-section{grid-column:span 12;}
+
+/* Quick links card — grid of project shortcuts with inline edit/delete */
+.ql-grid{
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
+  gap:8px;margin-top:10px;
+}
+.ql-empty{
+  color:var(--text-dim);font-size:12.5px;padding:18px 6px;
+  text-align:center;font-style:italic;
+}
+.ql-item{
+  position:relative;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:8px;
+  transition:border-color .12s, background .12s;
+}
+.ql-item:hover{
+  border-color:var(--border-strong);background:var(--surface);
+}
+.ql-link{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  color:var(--text);text-decoration:none;
+  font-size:13px;font-weight:500;
+  min-height:40px;
+}
+.ql-favicon{
+  width:18px;height:18px;flex-shrink:0;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  border-radius:3px;
+}
+.ql-label{
+  flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ql-actions{
+  position:absolute;top:6px;right:6px;
+  display:flex;gap:2px;
+  opacity:0;transition:opacity .12s;
+}
+.ql-item:hover .ql-actions{opacity:1;}
+.ql-act-btn{
+  width:22px;height:22px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text-muted);font-size:11px;
+  border-radius:4px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:.1s;
+}
+.ql-act-btn:hover{color:var(--text);border-color:var(--border-strong);}
+.ql-act-btn.ql-act-del:hover{color:var(--danger);border-color:var(--danger);}
 .card-load-header{margin-bottom:14px;}
 .card-load-header h3{
   font-family:var(--sans);font-size:14px;font-weight:600;letter-spacing:-.01em;
@@ -3833,6 +3884,71 @@ function refreshTopbarViewSwitcher(){
 /* ════════════════════════════════════════════════════════
    DASHBOARD
    ════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   QUICK LINKS — per-project shortcuts to external tools (BTP, S/4, etc.)
+   Stored on `project.links` as [{ id, label, url }].
+   Inline add / edit / delete on the dashboard card.
+   ════════════════════════════════════════════════════════ */
+function renderQuickLinks(proj){
+  const links = proj.links || [];
+  if(!links.length){
+    return `<div class="ql-empty">No links yet. Click "Add link" to add your first one.</div>`;
+  }
+  return links.map(l => `<div class="ql-item" data-lid="${l.id}">
+    <a class="ql-link" href="${escHtml(l.url)}" target="_blank" rel="noopener noreferrer" title="${escHtml(l.url)}">
+      <span class="ql-favicon" style="background-image:url('https://www.google.com/s2/favicons?domain=${encodeURIComponent(l.url)}&sz=32')"></span>
+      <span class="ql-label">${escHtml(l.label)}</span>
+    </a>
+    <div class="ql-actions">
+      <button class="ql-act-btn" onclick="editQuickLink(${l.id})" title="Edit">✎</button>
+      <button class="ql-act-btn ql-act-del" onclick="deleteQuickLink(${l.id})" title="Remove">✕</button>
+    </div>
+  </div>`).join('');
+}
+
+function addQuickLink(){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj){ toast('No active project', 'error'); return; }
+  const label = prompt('Label (e.g. "S/4HANA Cloud"):');
+  if(!label || !label.trim()) return;
+  const url = prompt('URL (https://…):');
+  if(!url || !url.trim()) return;
+  const cleanUrl = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
+  proj.links = proj.links || [];
+  proj.links.push({ id: uid(), label: label.trim(), url: cleanUrl });
+  saveState();
+  renderDashboard();
+  toast('Link added', 'success');
+}
+
+function editQuickLink(linkId){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj || !proj.links) return;
+  const link = proj.links.find(l => l.id === linkId);
+  if(!link) return;
+  const label = prompt('Label:', link.label);
+  if(!label || !label.trim()) return;
+  const url = prompt('URL:', link.url);
+  if(!url || !url.trim()) return;
+  link.label = label.trim();
+  link.url = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
+  saveState();
+  renderDashboard();
+  toast('Link updated', 'success');
+}
+
+function deleteQuickLink(linkId){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj || !proj.links) return;
+  confirmDialog('Remove this link?').then(ok => {
+    if(!ok) return;
+    proj.links = proj.links.filter(l => l.id !== linkId);
+    saveState();
+    renderDashboard();
+    toast('Link removed', 'success');
+  });
+}
+
 function renderDashboard(){
   const pid = state.activeProject;
   const proj = state.projects.find(p => p.id === pid);
@@ -4113,6 +4229,17 @@ function renderDashboard(){
           <button class="btn btn-ghost btn-sm" onclick="setView('tasks')">Open board →</button>
         </div>
         <div class="pipeline">${pipeCols}</div>
+      </div>
+
+      <div class="card card-quicklinks" style="grid-column:span 12">
+        <div class="list-head">
+          <div>
+            <h3>Quick links</h3>
+            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">Shortcuts to systems and tools for ${escHtml(proj.name)}</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="addQuickLink()">＋ Add link</button>
+        </div>
+        <div class="ql-grid" id="qlGrid">${renderQuickLinks(proj)}</div>
       </div>
 
       <div class="card card-team">
