@@ -4139,7 +4139,7 @@ function renderDashboard(){
         <div class="stat-sub">${doing} in progress · ${inReview} in review · ${todo} todo</div>
       </div>
 
-      <div class="card card-health health-${healthStatus}" style="grid-column:span 12">
+      <div class="card card-health health-${healthStatus}" style="grid-column:span 6">
         <div class="health-head">
           <div class="health-status">
             <span class="health-dot"></span>
@@ -4151,6 +4151,17 @@ function renderDashboard(){
           <div class="health-score">${healthScore}<span class="health-score-max">/100</span></div>
           <div class="health-reasons">${healthReasons.map(r => `<span class="health-reason">${escHtml(r)}</span>`).join('')}</div>
         </div>
+      </div>
+
+      <div class="card card-quicklinks" style="grid-column:span 6">
+        <div class="list-head">
+          <div>
+            <h3>Quick links</h3>
+            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">Shortcuts to systems and tools for ${escHtml(proj.name)}</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="addQuickLink()">＋ Add link</button>
+        </div>
+        <div class="ql-grid" id="qlGrid">${renderQuickLinks(proj)}</div>
       </div>
 
       <div class="card-load-section">
@@ -4229,17 +4240,6 @@ function renderDashboard(){
           <button class="btn btn-ghost btn-sm" onclick="setView('tasks')">Open board →</button>
         </div>
         <div class="pipeline">${pipeCols}</div>
-      </div>
-
-      <div class="card card-quicklinks" style="grid-column:span 12">
-        <div class="list-head">
-          <div>
-            <h3>Quick links</h3>
-            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">Shortcuts to systems and tools for ${escHtml(proj.name)}</p>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="addQuickLink()">＋ Add link</button>
-        </div>
-        <div class="ql-grid" id="qlGrid">${renderQuickLinks(proj)}</div>
       </div>
 
       <div class="card card-team">
