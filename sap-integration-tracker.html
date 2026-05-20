@@ -2537,7 +2537,7 @@ body.gg-resizing *{cursor:col-resize !important;}
    ════════════════════════════════════════════════════════ */
 
 /* Mobile: phones in portrait. Kept narrow so laptops never hit this. */
-@media only screen and (max-width:680px){
+@media only screen and (max-width:720px){
   /* Sidebar becomes an overlay drawer */
   .sidebar{
     position:fixed;z-index:60;top:0;bottom:0;left:0;width:260px;min-width:260px;
@@ -2579,13 +2579,30 @@ body.gg-resizing *{cursor:col-resize !important;}
   .greeting{font-size:22px;}
   .greeting-sub{font-size:12px;}
   .topbar-right{flex-wrap:wrap;gap:6px;}
-  .topbar-right .btn{padding:7px 12px;font-size:12px;}
+  .topbar-right .btn{padding:7px 10px;font-size:11.5px;}
+  /* Hide button labels on mobile to save space — keep only the + symbol where possible.
+     Use a CSS data-attribute approach: buttons starting with + still readable */
+  /* View switcher buttons: condense to icons only, scroll horizontally if needed */
+  .topbar-viewswitcher{overflow-x:auto;flex-shrink:1;max-width:100%;-webkit-overflow-scrolling:touch;}
+  .topbar-viewswitcher .view-switcher{flex-wrap:nowrap;}
+  .topbar-viewswitcher .vs-btn{padding:6px 10px;font-size:11px;flex-shrink:0;}
+  .topbar-viewswitcher .vs-btn span{display:none;}
 
   .content{padding:8px 16px 24px;gap:12px;}
 
   /* Dashboard: stack cards */
-  .bento{grid-template-columns:1fr;gap:10px;}
-  .bento .card{grid-column:span 1 !important;}
+  /* Dashboard mobile — force a clean single column stack regardless of inline span styles */
+  .bento{
+    grid-template-columns:1fr !important;
+    gap:10px;
+    /* Prevent any child from causing horizontal overflow */
+    width:100%;min-width:0;
+  }
+  .bento > *{
+    grid-column:1 / -1 !important;
+    min-width:0;width:100%;max-width:100%;
+    box-sizing:border-box;
+  }
   .card{padding:14px;}
   .card h3{font-size:14px;}
   .stat-label{font-size:11px;letter-spacing:.05em;}
@@ -2598,20 +2615,24 @@ body.gg-resizing *{cursor:col-resize !important;}
   .card-health .health-row{flex-direction:column;align-items:flex-start;gap:8px;}
   .card-health .health-score{font-size:32px;}
   .card-health .health-reasons{flex-wrap:wrap;}
-  /* Per-person mini cards: 3 across max, smaller */
+  /* Per-person mini cards: smaller, fit on narrow screens */
+  .card-load-section .card-load-grid{grid-template-columns:repeat(2, 1fr) !important;gap:6px;}
   .card-load-section .card-person{padding:10px 12px;}
   /* Quick links: smaller padding */
   .card-quicklinks .list-head{flex-direction:column;align-items:flex-start;gap:8px;}
   .card-quicklinks .list-head .btn{align-self:stretch;}
-  .ql-grid{grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;}
+  .ql-grid{grid-template-columns:repeat(2,1fr) !important;gap:6px;margin-top:8px;}
   .ql-link{padding:9px 10px 9px 16px;font-size:12.5px;min-height:36px;}
   .ql-actions{opacity:1;}
+  /* Status pipeline on dashboard: stack vertically */
+  .pipeline,.card-pipeline .pipeline{grid-template-columns:1fr !important;}
+  .pl-col{min-width:0;}
+  /* SAP Activate phases: 2 columns max */
+  .phase-grid{grid-template-columns:1fr 1fr !important;gap:6px;}
   .bars{height:110px;gap:8px;padding:16px 2px 0;}
   .bar{max-width:28px;}
   .donut-wrap{width:130px;height:130px;}
   .donut-pct{font-size:30px;}
-  .pipeline{grid-template-columns:1fr;}
-  .phase-grid{grid-template-columns:1fr 1fr;gap:6px;}
 
   /* View toolbar: wrap but stay horizontal */
   .view-toolbar{padding:8px 10px;gap:8px;flex-wrap:wrap;}
@@ -6132,7 +6153,7 @@ function renderGantt(){
 
   // On phones the horizontal timeline is unusable. Render a simplified card list grouped
   // by phase instead. Same data, much friendlier touch UI.
-  if(window.matchMedia && window.matchMedia('(max-width:680px)').matches){
+  if(window.matchMedia && window.matchMedia('(max-width:720px)').matches){
     return renderGanttMobile(allTasks, workItems);
   }
 
