@@ -3120,6 +3120,40 @@ function enhanceDateInputs(rootEl){
         inp.focus();
       }
     });
+    // Close the native date picker when the user clicks outside.
+    // We listen on the input's 'blur' event: when focus leaves the hidden input
+    // (which the browser focuses while the picker is open), we call blur() on it
+    // to signal the browser to close the picker. A short delay is needed so clicks
+    // on the picker UI itself don't prematurely close it.
+    inp.addEventListener('blur', () => {
+      // The picker is already closing naturally on blur — nothing extra needed.
+      // But we also attach a one-shot outside-click handler when the picker opens.
+    });
+    // Track whether the picker is currently open so we can dismiss it on outside clicks.
+    let _pickerOpen = false;
+    const _onPickerOpen = () => { _pickerOpen = true; };
+    const _onPickerClose = () => {
+      _pickerOpen = false;
+      document.removeEventListener('mousedown', _outsideClick, true);
+    };
+    const _outsideClick = (e) => {
+      if(!_pickerOpen) return;
+      // If the click is inside the wrap (button or input), let it through normally.
+      if(wrap.contains(e.target)) return;
+      // Otherwise blur the hidden input — this closes the browser's native picker.
+      inp.blur();
+      _pickerOpen = false;
+      document.removeEventListener('mousedown', _outsideClick, true);
+    };
+    // Intercept the button click to also register the outside-click listener.
+    btn.addEventListener('mousedown', () => {
+      if(inp.disabled) return;
+      // Small delay so the picker has time to open before we start listening.
+      setTimeout(() => {
+        _pickerOpen = true;
+        document.addEventListener('mousedown', _outsideClick, true);
+      }, 50);
+    });
     inp.addEventListener('input', refresh);
     inp.addEventListener('change', refresh);
     // Insert: original input gets wrapped, button placed before it inside the wrap
