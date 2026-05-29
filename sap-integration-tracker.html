@@ -831,6 +831,10 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .tc-due.soon{color:var(--warn);font-weight:500;}
 .tc-hours{font-family:var(--mono);font-size:12px;color:var(--text-muted);text-align:right;}
 .tc-hours b{color:var(--text);font-weight:500;}
+.tc-prog{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--text-muted);}
+.tc-prog-bar{width:36px;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;flex-shrink:0;}
+.tc-prog-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .3s;}
+.task-row.done .tc-prog-fill{background:var(--accent);opacity:.5;}
 .tc-actions{opacity:.4;display:flex;gap:2px;justify-content:flex-end;transition:opacity .12s;}
 .task-row:hover .tc-actions{opacity:1;}
 .tc-actions button{
@@ -3120,40 +3124,6 @@ function enhanceDateInputs(rootEl){
         inp.focus();
       }
     });
-    // Close the native date picker when the user clicks outside.
-    // We listen on the input's 'blur' event: when focus leaves the hidden input
-    // (which the browser focuses while the picker is open), we call blur() on it
-    // to signal the browser to close the picker. A short delay is needed so clicks
-    // on the picker UI itself don't prematurely close it.
-    inp.addEventListener('blur', () => {
-      // The picker is already closing naturally on blur — nothing extra needed.
-      // But we also attach a one-shot outside-click handler when the picker opens.
-    });
-    // Track whether the picker is currently open so we can dismiss it on outside clicks.
-    let _pickerOpen = false;
-    const _onPickerOpen = () => { _pickerOpen = true; };
-    const _onPickerClose = () => {
-      _pickerOpen = false;
-      document.removeEventListener('mousedown', _outsideClick, true);
-    };
-    const _outsideClick = (e) => {
-      if(!_pickerOpen) return;
-      // If the click is inside the wrap (button or input), let it through normally.
-      if(wrap.contains(e.target)) return;
-      // Otherwise blur the hidden input — this closes the browser's native picker.
-      inp.blur();
-      _pickerOpen = false;
-      document.removeEventListener('mousedown', _outsideClick, true);
-    };
-    // Intercept the button click to also register the outside-click listener.
-    btn.addEventListener('mousedown', () => {
-      if(inp.disabled) return;
-      // Small delay so the picker has time to open before we start listening.
-      setTimeout(() => {
-        _pickerOpen = true;
-        document.addEventListener('mousedown', _outsideClick, true);
-      }, 50);
-    });
     inp.addEventListener('input', refresh);
     inp.addEventListener('change', refresh);
     // Insert: original input gets wrapped, button placed before it inside the wrap
@@ -4824,6 +4794,7 @@ function renderTaskRow(t, workItems, subs){
     <button class="tc-assignee as-btn" data-pop-assignee="${t.id}" title="Click to change assignee">${t.assignee?avatarEl(t.assignee, 22)+`<span class="tc-assignee-name">${escHtml(t.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">— assign</span>'}</button>
     ${prioChip}
     <span class="tc-due ${dueClass}">${dueLabel}</span>
+    <div class="tc-prog"><div class="tc-prog-bar"><div class="tc-prog-fill" style="width:${t.progress != null ? t.progress : statusToProgress(t.status)}%"></div></div><span>${t.progress != null ? t.progress : statusToProgress(t.status)}%</span></div>
     <div class="tc-actions">
       <button data-open="${t.id}" title="Open">${ICONS.open}</button>
       ${currentUser.role==='admin'?`<button class="danger" data-del-task="${t.id}" title="Delete">${ICONS.trash}</button>`:''}
@@ -4847,6 +4818,7 @@ function renderTaskRow(t, workItems, subs){
         <button class="tc-assignee as-btn" data-pop-assignee="${s.id}" title="Click to change assignee">${s.assignee?avatarEl(s.assignee, 22)+`<span class="tc-assignee-name">${escHtml(s.assignee)}</span>`:'<span style="color:var(--text-dim);font-size:12px">— assign</span>'}</button>
         <span></span>
         <span class="tc-due ${sDueClass}">${s.due?fmtDate(s.due):'—'}</span>
+        <div class="tc-prog"><div class="tc-prog-bar"><div class="tc-prog-fill" style="width:${s.progress != null ? s.progress : statusToProgress(s.status)}%"></div></div><span>${s.progress != null ? s.progress : statusToProgress(s.status)}%</span></div>
         <div class="tc-actions">
           <button data-open="${s.id}" title="Open">${ICONS.open}</button>
           ${currentUser.role==='admin'?`<button class="danger" data-del-task="${s.id}" title="Delete">${ICONS.trash}</button>`:''}
@@ -6558,6 +6530,18 @@ function renderGantt(){
       return `<div class="gg-bar gg-rollup-bar${idx > 0 ? ' gg-bar-segment' : ''}" style="left:${segX}px;width:${segW}px;background:${sg.color};opacity:.4"></div>`;
     }).join('');
   };
+
+  // Auto-collapse phases where every task is done on fresh mount.
+  if(_ganttFreshMount){
+    groups.forEach(g => {
+      if(g.type !== 'phase') return;
+      if(!g.tasks.length) return;
+      const allDone = g.tasks.every(b => b.task.status === 'done');
+      if(allDone && !ganttViewState.collapsedGroups.has(g.key)){
+        ganttViewState.collapsedGroups.add(g.key);
+      }
+    });
+  }
 
   const groupRowsHtml = groups.map(g => {
     if(g.type === 'phase'){
