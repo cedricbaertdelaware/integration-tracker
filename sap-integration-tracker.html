@@ -4695,7 +4695,15 @@ function groupByDate(workItems, parents, subs){
 // Returns true when the work item has at least one non-done task with an overdue due date.
 function wiIsOverdue(tasks){
   const today = new Date(); today.setHours(0,0,0,0);
-  return tasks.some(t => t.status !== 'done' && t.due && new Date(t.due) < today);
+  // Only count tasks that are truly overdue: not done, has a due date,
+  // and the due date (parsed as local date, not UTC) is strictly before today.
+  return tasks.some(t => {
+    if(t.status === 'done' || !t.due) return false;
+    // Parse as local date to avoid UTC-shift: "2026-07-03" must stay July 3rd
+    const parts = t.due.split('-');
+    const dueLocal = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+    return dueLocal < today;
+  });
 }
 
 function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
@@ -6606,7 +6614,7 @@ function renderGantt(){
                   <path d="M3 2 L7 5 L3 8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <span class="gg-sub-label${sg.tasks.some(b=>b.task.status!=='done'&&b.task.due&&new Date(b.task.due)<new Date().setHours(0,0,0,0))?' wi-overdue':''}">${escHtml(sg.label)}${sg.tasks.some(b=>b.task.status!=='done'&&b.task.due&&new Date(b.task.due)<new Date().setHours(0,0,0,0))?' <span style="font-size:11px">⚠</span>':''}</span>
+              <span class="gg-sub-label${sg.tasks.some(b=>{if(b.task.status==='done'||!b.task.due)return false;const _p=b.task.due.split('-');return new Date(Number(_p[0]),Number(_p[1])-1,Number(_p[2]))<(()=>{const _t=new Date();_t.setHours(0,0,0,0);return _t;})();})?' wi-overdue':''}">${escHtml(sg.label)}${sg.tasks.some(b=>{if(b.task.status==='done'||!b.task.due)return false;const _p=b.task.due.split('-');return new Date(Number(_p[0]),Number(_p[1])-1,Number(_p[2]))<(()=>{const _t=new Date();_t.setHours(0,0,0,0);return _t;})();})?' <span style="font-size:11px">⚠</span>':''}</span>
               ${sg.workItem && sg.workItem.kind === 'interface' && (sg.workItem.source || sg.workItem.target)
                 ? `<span class="gg-sub-route" title="${escHtml(sg.workItem.source||'?')} → ${escHtml(sg.workItem.target||'?')}">${escHtml(sg.workItem.source||'?')}<span class="gg-sub-route-arrow">→</span>${escHtml(sg.workItem.target||'?')}</span>`
                 : ''}
