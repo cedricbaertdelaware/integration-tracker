@@ -751,6 +751,11 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   background:var(--surface-3);border:1px solid var(--border);white-space:nowrap;
 }
 .gh-title{font-weight:600;font-size:14.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gh-title.wi-overdue{color:var(--danger);}
+.gg-sub-label.wi-overdue{color:var(--danger);}
+.gg-group-label.wi-overdue{color:var(--danger);}
+.kb-iface-title.wi-overdue{color:var(--danger) !important;}
+.kb-iface-code.wi-overdue{color:var(--danger) !important;}
 .gh-progress{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);font-family:var(--mono);flex-shrink:0;}
 .gh-bar{width:80px;height:5px;background:var(--surface-3);border-radius:3px;overflow:hidden;}
 .gh-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s;}
@@ -4687,6 +4692,12 @@ function groupByDate(workItems, parents, subs){
   }).join('') || `<div class="empty-screen" style="padding:40px"><p>No tasks match your filters.</p></div>`;
 }
 
+// Returns true when the work item has at least one non-done task with an overdue due date.
+function wiIsOverdue(tasks){
+  const today = new Date(); today.setHours(0,0,0,0);
+  return tasks.some(t => t.status !== 'done' && t.due && new Date(t.due) < today);
+}
+
 function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
   const doneCount = wTasks.filter(t => t.status === 'done').length;
   const pct = wTasks.length ? Math.round(doneCount/wTasks.length*100) : 0;
@@ -4700,6 +4711,7 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
   const tags = wi.kind === 'work' && wi.tags && wi.tags.length
     ? `<div class="gh-tags">${wi.tags.slice(0,4).map(t => `<span class="gh-tag">${escHtml(t)}</span>`).join('')}</div>`
     : '';
+  const _wiOverdue = wiIsOverdue(wTasks);
   const rowsHtml = wTasks.length
     ? wTasks.map(t => renderTaskRow(t, [wi], subs.filter(s => s.parentTaskId === t.id))).join('') + `<div class="add-task-row" data-add-for="${wi.id}">+ Add task</div>`
     : `<div class="group-body-empty">No tasks yet — <span style="color:var(--accent);cursor:pointer" data-add-for="${wi.id}">add one</span>.</div>`;
@@ -4710,7 +4722,7 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
       <span class="gh-id">${escHtml(wi.code||'—')}</span>
       ${route}
       ${tags}
-      <span class="gh-title">${escHtml(wi.title||'Untitled')}</span>
+      <span class="gh-title${_wiOverdue?' wi-overdue':''}">${escHtml(wi.title||'Untitled')}${_wiOverdue?' <span title="Bevat verlopen taken" style="font-size:11px;margin-left:4px">⚠</span>':''}</span>
       ${statusChip}
       <div class="gh-progress"><div class="gh-bar"><div class="gh-bar-fill" style="width:${pct}%"></div></div><span>${doneCount} / ${wTasks.length}</span></div>
       <div class="gh-actions">
@@ -6531,7 +6543,6 @@ function renderGantt(){
     }).join('');
   };
 
-  // Auto-collapse phases where every task is done on fresh mount.
   if(_ganttFreshMount){
     groups.forEach(g => {
       if(g.type !== 'phase') return;
@@ -6595,7 +6606,7 @@ function renderGantt(){
                   <path d="M3 2 L7 5 L3 8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <span class="gg-sub-label">${escHtml(sg.label)}</span>
+              <span class="gg-sub-label${sg.tasks.some(b=>b.task.status!=='done'&&b.task.due&&new Date(b.task.due)<new Date().setHours(0,0,0,0))?' wi-overdue':''}">${escHtml(sg.label)}${sg.tasks.some(b=>b.task.status!=='done'&&b.task.due&&new Date(b.task.due)<new Date().setHours(0,0,0,0))?' <span style="font-size:11px">⚠</span>':''}</span>
               ${sg.workItem && sg.workItem.kind === 'interface' && (sg.workItem.source || sg.workItem.target)
                 ? `<span class="gg-sub-route" title="${escHtml(sg.workItem.source||'?')} → ${escHtml(sg.workItem.target||'?')}">${escHtml(sg.workItem.source||'?')}<span class="gg-sub-route-arrow">→</span>${escHtml(sg.workItem.target||'?')}</span>`
                 : ''}
@@ -7689,7 +7700,7 @@ function renderKanban(){
       return `<div class="kb-card ${extraClass}" data-tid="${t.id}" draggable="true">
         <div class="kb-card-top">
           <span class="kb-iface" title="${wi?escHtml((wi.code||'') + (wi.title?' · '+wi.title:'')):''}">
-            ${wi?`<span class="kb-iface-code">${escHtml(wi.code||'')}</span>${wi.code&&wi.title?'<span class="kb-iface-sep">·</span>':''}<span class="kb-iface-title">${escHtml(wi.title||'')}</span>`:''}
+            ${wi?`<span class="kb-iface-code${wiIsOverdue(tasks.filter(x=>x.workItemId===wi.id))?' wi-overdue':''}">${escHtml(wi.code||'')}</span>${wi.code&&wi.title?'<span class="kb-iface-sep">·</span>':''}<span class="kb-iface-title${wiIsOverdue(tasks.filter(x=>x.workItemId===wi.id))?' wi-overdue':''}">${escHtml(wi.title||'')}${wiIsOverdue(tasks.filter(x=>x.workItemId===wi.id))?' <span style="font-size:11px">⚠</span>':''}</span>`:''}
           </span>
           <span class="chip chip-${prio==='high'?'danger':prio==='low'?'muted':'warn'}" style="padding:1px 7px;font-size:10px">${prio[0].toUpperCase()+prio.slice(1)}</span>
         </div>
