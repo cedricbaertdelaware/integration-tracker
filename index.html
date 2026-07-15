@@ -226,8 +226,18 @@ input,select,textarea{font-family:inherit;}
 .projects-card h4 button:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
 .proj-item{
   display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text-muted);
-  transition:.12s;border-left:3px solid transparent;
+  transition:.12s;border-left:3px solid transparent;position:relative;
 }
+.proj-drag-handle{
+  color:var(--text-dim);font-size:11px;letter-spacing:-2px;cursor:grab;
+  opacity:0;transition:opacity .12s;user-select:none;flex-shrink:0;padding:0 2px;
+  margin-left:-4px;
+}
+.proj-item:hover .proj-drag-handle{opacity:.6;}
+.proj-item:hover .proj-drag-handle:hover{opacity:1;color:var(--text);}
+.proj-item.proj-dragging{opacity:.4;}
+.proj-item.proj-drop-before{box-shadow:0 -2px 0 0 var(--accent);}
+.proj-item.proj-drop-after{box-shadow:0 2px 0 0 var(--accent);}
 .proj-item:hover{background:var(--surface-3);color:var(--text);}
 .proj-item.active{
   background:var(--surface);box-shadow:var(--shadow-sm);font-weight:600;color:var(--text);
@@ -3649,17 +3659,75 @@ function renderProjectList(){
     list.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text-dim);text-align:center">No projects yet</div>';
     return;
   }
-  list.innerHTML = state.projects.map(p => {
+  list.innerHTML = state.projects.map((p, idx) => {
     const count = state.workItems.filter(w => w.projectId === p.id).length;
     const active = p.id === state.activeProject;
-    return `<div class="proj-item ${active?'active':''}" data-pid="${p.id}">
+    const isDefault = idx === 0;
+    return `<div class="proj-item ${active?'active':''}" data-pid="${p.id}" draggable="true">
+      <span class="proj-drag-handle" title="Drag to reorder">⋮⋮</span>
       <span class="proj-dot" style="background:${p.color||'#0f7a4b'}"></span>
       <span class="proj-name">${escHtml(p.name)}</span>
+      ${isDefault ? '<span title="Default project" style="font-size:9px;color:var(--text-dim);flex-shrink:0">★</span>' : ''}
       <span class="proj-meta">${count}</span>
     </div>`;
   }).join('');
+
+  let draggedPid = null;
+
   list.querySelectorAll('.proj-item').forEach(el => {
-    el.onclick = () => selectProject(Number(el.dataset.pid));
+    // Click to select (only if not dragging)
+    el.addEventListener('click', e => {
+      if(el.classList.contains('proj-dragging')) return;
+      selectProject(Number(el.dataset.pid));
+    });
+
+    // Drag start — only from the handle
+    const handle = el.querySelector('.proj-drag-handle');
+    let armed = false;
+    if(handle){
+      handle.addEventListener('mousedown', () => { armed = true; });
+      document.addEventListener('mouseup', () => { armed = false; }, { once: false });
+    }
+    el.addEventListener('dragstart', e => {
+      if(!armed){ e.preventDefault(); return; }
+      armed = false;
+      draggedPid = Number(el.dataset.pid);
+      el.classList.add('proj-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', String(draggedPid)); } catch(_) {}
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('proj-dragging');
+      list.querySelectorAll('.proj-drop-before,.proj-drop-after').forEach(x => x.classList.remove('proj-drop-before','proj-drop-after'));
+      draggedPid = null;
+    });
+    el.addEventListener('dragover', e => {
+      if(draggedPid === null || Number(el.dataset.pid) === draggedPid) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      list.querySelectorAll('.proj-drop-before,.proj-drop-after').forEach(x => x.classList.remove('proj-drop-before','proj-drop-after'));
+      const r = el.getBoundingClientRect();
+      el.classList.add((e.clientY - r.top) < r.height / 2 ? 'proj-drop-before' : 'proj-drop-after');
+    });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      if(draggedPid === null) return;
+      const targetPid = Number(el.dataset.pid);
+      if(targetPid === draggedPid) return;
+      const r = el.getBoundingClientRect();
+      const above = (e.clientY - r.top) < r.height / 2;
+      const fromIdx = state.projects.findIndex(p => p.id === draggedPid);
+      let toIdx = state.projects.findIndex(p => p.id === targetPid);
+      if(fromIdx < 0 || toIdx < 0) return;
+      const [moved] = state.projects.splice(fromIdx, 1);
+      if(fromIdx < toIdx) toIdx--;
+      state.projects.splice(above ? toIdx : toIdx + 1, 0, moved);
+      saveState();
+      renderProjectList();
+      // If the moved project is now first, set it as default (active) on next boot
+      // but don't change the current active project mid-session
+      toast(`Project volgorde opgeslagen · ${state.projects[0].name} is nu het standaardproject`, 'info');
+    });
   });
 }
 function hexToRgb(hex){
@@ -9094,10 +9162,15 @@ function openManageMembersModal(){
           Team members — ${escHtml(proj.name)}
           <button class="modal-close" onclick="closeManageMembersModal()">×</button>
         </div>
-        <p style="color:var(--text-muted);font-size:12.5px;margin:-6px 0 14px">
-          Assigned members appear on the project dashboard's availability card.
-          If no members are assigned, all active users are shown.
+        <p style="color:var(--text-muted);font-size:12.5px;margin:-6px 0 6px">
+          Klik <strong>＋ Add</strong> om iemand toe te voegen aan dit project.
+          Enkel toegewezen leden verschijnen op het dashboard. Niemand toegewezen = iedereen zichtbaar.
         </p>
+        <div id="memberStatusBanner" style="margin-bottom:12px;padding:8px 12px;border-radius:8px;font-size:12px;background:${proj.members && proj.members.length ? 'var(--accent-soft)' : 'var(--surface-3)'};color:${proj.members && proj.members.length ? 'var(--accent-deep)' : 'var(--text-muted)'};">
+          ${proj.members && proj.members.length
+            ? `<strong>${proj.members.length}</strong> member${proj.members.length===1?'':'s'} toegewezen`
+            : '⚠ Geen members toegewezen — alle gebruikers worden getoond'}
+        </div>
         <div id="memberRows">${renderRows()}</div>
         <div class="modal-actions" style="margin-top:16px;">
           <button class="btn btn-ghost btn-sm" onclick="clearAllProjectMembers()">Clear all</button>
@@ -9137,6 +9210,15 @@ function toggleProjectMember(name){
         </button>
       </div>`;
     }).join('');
+  }
+  // Update the status banner
+  const banner = document.getElementById('memberStatusBanner');
+  if(banner){
+    banner.style.background = proj.members.length ? 'var(--accent-soft)' : 'var(--surface-3)';
+    banner.style.color = proj.members.length ? 'var(--accent-deep)' : 'var(--text-muted)';
+    banner.innerHTML = proj.members.length
+      ? `<strong>${proj.members.length}</strong> member${proj.members.length===1?'':'s'} toegewezen`
+      : '⚠ Geen members toegewezen — alle gebruikers worden getoond';
   }
   // Refresh the dashboard card in the background
   if(state.activeView === 'dashboard') renderDashboard();
