@@ -4,7 +4,7 @@
 
 Built as a single HTML file with zero build tools, zero dependencies on npm/node, and zero server-side code. Deploy anywhere that serves static files.
 
-URL: https://cedricbaertdelaware.github.io/integration-tracker/sap-integration-tracker.html
+URL: https://cedricbaertdelaware.github.io/integration-tracker
 
 ---
 
