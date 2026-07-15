@@ -3512,6 +3512,8 @@ function toggleTheme(){
   document.body.dataset.theme = next;
   updateThemeBtn(next);
   try{ localStorage.setItem(LS_THEME, next); }catch(e){}
+  const _tp = state.projects && state.projects.find(p => p.id === state.activeProject);
+  if(typeof applyProjectTheme === 'function') applyProjectTheme(_tp ? _tp.color : null);
 }
 function restoreTheme(){
   const t = localStorage.getItem(LS_THEME) || 'light';
@@ -3591,6 +3593,8 @@ function bootApp(){
   }catch(_){}
   applyRBAC();
   if(!state.activeProject && state.projects.length) state.activeProject = state.projects[0].id;
+  const _bootProj = state.projects.find(p => p.id === state.activeProject);
+  applyProjectTheme(_bootProj ? _bootProj.color : null);
   renderProjectList();
   renderNav();
   // Honor the seed-set activeView (if any) instead of forcing dashboard
@@ -3658,8 +3662,58 @@ function renderProjectList(){
     el.onclick = () => selectProject(Number(el.dataset.pid));
   });
 }
+function hexToRgb(hex){
+  hex = hex.replace(/^#/, '');
+  if(hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+  const n = parseInt(hex, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function darken(hex, amt){
+  const {r,g,b} = hexToRgb(hex);
+  const f = 1 - amt;
+  return '#' + [r,g,b].map(v => Math.round(Math.max(0, v*f)).toString(16).padStart(2,'0')).join('');
+}
+function lighten(hex, alpha){
+  const {r,g,b} = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function lightenHex(hex, amt){
+  const {r,g,b} = hexToRgb(hex);
+  const f = amt;
+  return '#' + [r,g,b].map(v => Math.round(Math.min(255, v + (255-v)*f)).toString(16).padStart(2,'0')).join('');
+}
+function applyProjectTheme(color){
+  const root = document.documentElement;
+  const isDark = document.body.dataset.theme === 'dark';
+  if(!color || color === '#0f7a4b'){
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--accent-deep');
+    root.style.removeProperty('--accent-soft');
+    root.style.removeProperty('--accent-glow');
+    root.style.removeProperty('--success');
+    root.style.removeProperty('--success-soft');
+    return;
+  }
+  if(isDark){
+    root.style.setProperty('--accent',       lightenHex(color, 0.45));
+    root.style.setProperty('--accent-deep',  lightenHex(color, 0.15));
+    root.style.setProperty('--accent-soft',  lighten(color, 0.18));
+    root.style.setProperty('--accent-glow',  lightenHex(color, 0.6));
+    root.style.setProperty('--success',      lightenHex(color, 0.45));
+    root.style.setProperty('--success-soft', lighten(color, 0.18));
+  } else {
+    root.style.setProperty('--accent',       color);
+    root.style.setProperty('--accent-deep',  darken(color, 0.28));
+    root.style.setProperty('--accent-soft',  lighten(color, 0.14));
+    root.style.setProperty('--accent-glow',  lightenHex(color, 0.25));
+    root.style.setProperty('--success',      color);
+    root.style.setProperty('--success-soft', lighten(color, 0.14));
+  }
+}
 function selectProject(id){
   state.activeProject = id;
+  const proj = state.projects.find(p => p.id === id);
+  applyProjectTheme(proj ? proj.color : null);
   renderProjectList();
   renderNav();
   renderAll();
@@ -4258,7 +4312,14 @@ function renderDashboard(){
   const todayIdx = (jsDow >= 1 && jsDow <= 5) ? jsDow - 1 : -1;
   const isWeekend = todayIdx === -1;
   const dayLabels = ['M','T','W','T','F'];
-  const activeUsers = state.users.filter(u => u.active !== false);
+  // Filter to project members if assigned, else show all active users
+  const allActiveUsers = state.users.filter(u => u.active !== false);
+  const projMemberNames = (proj && proj.members && proj.members.length)
+    ? proj.members
+    : null;
+  const activeUsers = projMemberNames
+    ? allActiveUsers.filter(u => projMemberNames.includes(u.name))
+    : allActiveUsers;
   const availRows = activeUsers.map(u => {
     const avail = u.availability || [true,true,true,true,true];
     const availToday = todayIdx >= 0 ? !!avail[todayIdx] : false;
@@ -4272,6 +4333,7 @@ function renderDashboard(){
     return a.user.name.localeCompare(b.user.name);
   });
   const availToday = availRows.filter(r => r.availToday).length;
+  const memberLabel = projMemberNames ? `${projMemberNames.length} member${projMemberNames.length===1?'':'s'}` : `${allActiveUsers.length} users`;
   const availSubtitle = isWeekend
     ? `Weekend · showing weekly pattern`
     : `${availToday} of ${activeUsers.length} in today`;
@@ -4415,8 +4477,9 @@ function renderDashboard(){
         <div class="list-head">
           <div>
             <h3>${isWeekend ? 'Team availability' : "Who's in today"}</h3>
-            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">${availSubtitle}</p>
+            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">${availSubtitle} · ${memberLabel}</p>
           </div>
+          ${currentUser.role==='admin'?`<button class="btn btn-ghost btn-sm" onclick="openManageMembersModal()" title="Assign team members to this project">⚙ Members</button>`:''}
         </div>
         <div class="avail-today-list">${availHtml}</div>
       </div>
@@ -4692,14 +4755,10 @@ function groupByDate(workItems, parents, subs){
   }).join('') || `<div class="empty-screen" style="padding:40px"><p>No tasks match your filters.</p></div>`;
 }
 
-// Returns true when the work item has at least one non-done task with an overdue due date.
 function wiIsOverdue(tasks){
   const today = new Date(); today.setHours(0,0,0,0);
-  // Only count tasks that are truly overdue: not done, has a due date,
-  // and the due date (parsed as local date, not UTC) is strictly before today.
   return tasks.some(t => {
     if(t.status === 'done' || !t.due) return false;
-    // Parse as local date to avoid UTC-shift: "2026-07-03" must stay July 3rd
     const parts = t.due.split('-');
     const dueLocal = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
     return dueLocal < today;
@@ -8998,6 +9057,109 @@ function denyRequest(id){
 /* ════════════════════════════════════════════════════════
    NEW PROJECT MODAL
    ════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   MANAGE PROJECT MEMBERS
+   Admin can assign/remove users from a project. The project
+   stores members as an array of user names (proj.members).
+   ════════════════════════════════════════════════════════ */
+function openManageMembersModal(){
+  if(currentUser.role !== 'admin') return;
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj) return;
+  proj.members = proj.members || [];
+  const allUsers = state.users.filter(u => u.active !== false);
+  const root = document.getElementById('modalRoot');
+  const renderRows = () => allUsers.map(u => {
+    const isMember = proj.members.includes(u.name);
+    return `<div class="member-row" data-uname="${escHtml(u.name)}" style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border);">
+      ${avatarEl(u.name, 32)}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13.5px;font-weight:500;">${escHtml(u.name)}</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:var(--mono);">${escHtml(u.role)}</div>
+      </div>
+      <button onclick="toggleProjectMember('${escHtml(u.name)}')"
+        style="padding:5px 14px;border-radius:999px;border:1.5px solid ${isMember?'var(--danger)':'var(--accent)'};
+               background:${isMember?'var(--danger-soft)':'var(--accent-soft)'};
+               color:${isMember?'var(--danger)':'var(--accent)'};
+               font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">
+        ${isMember?'✕ Remove':'＋ Add'}
+      </button>
+    </div>`;
+  }).join('');
+
+  root.innerHTML = `
+    <div class="modal-overlay visible" id="manageMembersOverlay" onclick="if(event.target===this)closeManageMembersModal()">
+      <div class="modal" style="max-width:480px">
+        <div class="modal-title">
+          Team members — ${escHtml(proj.name)}
+          <button class="modal-close" onclick="closeManageMembersModal()">×</button>
+        </div>
+        <p style="color:var(--text-muted);font-size:12.5px;margin:-6px 0 14px">
+          Assigned members appear on the project dashboard's availability card.
+          If no members are assigned, all active users are shown.
+        </p>
+        <div id="memberRows">${renderRows()}</div>
+        <div class="modal-actions" style="margin-top:16px;">
+          <button class="btn btn-ghost btn-sm" onclick="clearAllProjectMembers()">Clear all</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-primary" onclick="closeManageMembersModal()">Done</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleProjectMember(name){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj) return;
+  proj.members = proj.members || [];
+  const idx = proj.members.indexOf(name);
+  if(idx >= 0) proj.members.splice(idx, 1);
+  else proj.members.push(name);
+  saveState();
+  // Re-render just the rows without closing the modal
+  const rowsEl = document.getElementById('memberRows');
+  if(rowsEl){
+    const allUsers = state.users.filter(u => u.active !== false);
+    rowsEl.innerHTML = allUsers.map(u => {
+      const isMember = proj.members.includes(u.name);
+      return `<div class="member-row" style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--border);">
+        ${avatarEl(u.name, 32)}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13.5px;font-weight:500;">${escHtml(u.name)}</div>
+          <div style="font-size:12px;color:var(--text-muted);font-family:var(--mono);">${escHtml(u.role)}</div>
+        </div>
+        <button onclick="toggleProjectMember('${escHtml(u.name)}')"
+          style="padding:5px 14px;border-radius:999px;border:1.5px solid ${isMember?'var(--danger)':'var(--accent)'};
+                 background:${isMember?'var(--danger-soft)':'var(--accent-soft)'};
+                 color:${isMember?'var(--danger)':'var(--accent)'};
+                 font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;">
+          ${isMember?'✕ Remove':'＋ Add'}
+        </button>
+      </div>`;
+    }).join('');
+  }
+  // Refresh the dashboard card in the background
+  if(state.activeView === 'dashboard') renderDashboard();
+}
+
+function clearAllProjectMembers(){
+  const proj = state.projects.find(p => p.id === state.activeProject);
+  if(!proj) return;
+  proj.members = [];
+  saveState();
+  if(state.activeView === 'dashboard') renderDashboard();
+  closeManageMembersModal();
+  toast('All members cleared — showing all users', 'info');
+}
+
+function closeManageMembersModal(){
+  const o = document.getElementById('manageMembersOverlay');
+  if(!o) return;
+  o.classList.remove('visible');
+  setTimeout(() => document.getElementById('modalRoot').innerHTML = '', 180);
+  if(state.activeView === 'dashboard') renderDashboard();
+}
+
 function openNewProjectModal(){
   if(currentUser.role !== 'admin') return;
   const root = document.getElementById('modalRoot');
