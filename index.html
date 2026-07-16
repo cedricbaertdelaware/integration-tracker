@@ -8815,48 +8815,36 @@ function _archLoadViewer(d){
   const xml = d.xmlContent || '';
   if(!xml){ iframe.src = 'about:blank'; return; }
 
-  // Strategy: use viewer.diagrams.net with postMessage to pass the XML.
-  // This avoids the URL-length limit that breaks large diagrams (>50KB).
-  // 1. Load the viewer with no XML in the URL
-  // 2. Once the iframe is ready, send the XML via postMessage
-  const viewerBase = 'https://viewer.diagrams.net/?lightbox=0&nav=1&noSaveBtn=1&chrome=0';
-  iframe.src = viewerBase;
+  // Use embed.diagrams.net with the official postMessage protocol.
+  // viewer.diagrams.net only accepts XML via URL params (breaks >~50KB).
+  // embed.diagrams.net?embed=1&proto=json is the correct host for postMessage:
+  //   1. iframe loads embed.diagrams.net
+  //   2. embed sends {event:'init'} when ready
+  //   3. we respond with {action:'load', xml:'<mxfile>...</mxfile>'}
+  //   4. embed renders the diagram — no URL length limit, works for any size
+  // Official docs: https://www.drawio.com/doc/faq/embed-html
+  iframe.src = 'https://embed.diagrams.net/?embed=1&proto=json&spin=1&noSaveBtn=1&noExitBtn=1&nav=1';
 
-  // Listen for the viewer to signal it is ready, then send the XML
   let sent = false;
   const onMsg = (evt) => {
     if(!evt.data || typeof evt.data !== 'string') return;
     try {
       const msg = JSON.parse(evt.data);
-      // draw.io viewer sends {event:'init'} when ready to receive XML
-      if((msg.event === 'init' || msg.event === 'load') && !sent){
+      if(msg.event === 'init' && !sent){
         sent = true;
         iframe.contentWindow.postMessage(JSON.stringify({
           action: 'load',
           xml: xml,
           autoCrop: true,
-        }), '*');
+        }), 'https://embed.diagrams.net');
         window.removeEventListener('message', onMsg);
       }
     } catch(_) {}
   };
   window.addEventListener('message', onMsg);
 
-  // Fallback: if viewer doesn't send 'init' within 3s, try posting anyway
-  // (older viewer versions don't always send the init event)
-  setTimeout(() => {
-    if(!sent && iframe.contentWindow){
-      sent = true;
-      try {
-        iframe.contentWindow.postMessage(JSON.stringify({
-          action: 'load',
-          xml: xml,
-          autoCrop: true,
-        }), '*');
-      } catch(_) {}
-      window.removeEventListener('message', onMsg);
-    }
-  }, 3000);
+  // Safety cleanup after 30s
+  setTimeout(() => window.removeEventListener('message', onMsg), 30000);
 }
 
 function archIframeLoaded(){
