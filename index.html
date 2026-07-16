@@ -234,8 +234,6 @@ input,select,textarea{font-family:inherit;}
   margin-left:-4px;
 }
 .proj-item:hover .proj-drag-handle{opacity:.6;}
-.proj-item:hover .proj-edit-btn{opacity:1 !important;}
-.proj-edit-btn:hover{color:var(--accent) !important;}
 .proj-item:hover .proj-drag-handle:hover{opacity:1;color:var(--text);}
 .proj-item.proj-dragging{opacity:.4;}
 .proj-item.proj-drop-before{box-shadow:0 -2px 0 0 var(--accent);}
@@ -1663,7 +1661,26 @@ body.gg-resizing *{cursor:col-resize !important;}
 .act b{color:var(--text);font-weight:500;}
 
 /* Time log entry in panel */
-/* tlog CSS removed — time logging feature not active */
+.tlog-list{display:flex;flex-direction:column;gap:4px;}
+.tlog-item{
+  display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;
+  padding:6px 8px;border-radius:7px;font-size:12.5px;
+}
+.tlog-item:hover{background:var(--surface-2);}
+.tlog-date{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);}
+.tlog-person{color:var(--text);font-weight:500;}
+.tlog-note{color:var(--text-muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tlog-hrs{font-family:var(--mono);font-weight:500;}
+.tlog-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11.5px;padding:2px 4px;opacity:0;}
+.tlog-item:hover .tlog-del{opacity:1;}
+.tlog-del:hover{color:var(--danger);}
+.tlog-add{
+  display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;
+  padding:6px 8px;
+}
+.tlog-add input[type=date]{width:110px;padding:4px 8px;font-size:12px;}
+.tlog-add input[type=number]{width:60px;padding:4px 8px;font-size:12px;}
+.tlog-add input[type=text]{padding:4px 8px;font-size:12px;}
 
 /* ════════════════════════════════════════════════════════
    POPOVER (for status/priority/assignee dropdowns)
@@ -3079,7 +3096,6 @@ const ICONS = {
   trash:  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
   open:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14L21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
   close:  `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>`,
-  copy:   `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
   expand: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`,
   plus:   `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
   sun:    `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg>`,
@@ -3713,7 +3729,6 @@ function renderProjectList(){
       <span class="proj-name">${escHtml(p.name)}</span>
       ${isDefault ? '<span title="Default project" style="font-size:9px;color:var(--text-dim);flex-shrink:0">★</span>' : ''}
       <span class="proj-meta">${count}</span>
-      <button class="proj-edit-btn" onclick="event.stopPropagation();openEditProjectModal(${p.id})" title="Edit project" style="background:none;border:none;color:var(--text-dim);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:12px;opacity:0;transition:opacity .12s;">✎</button>
     </div>`;
   }).join('');
 
@@ -4609,8 +4624,8 @@ function renderDashboard(){
    TASKS — primary view (grouped)
    ════════════════════════════════════════════════════════ */
 let tasksViewState = { groupBy:'workitem', kindFilter:null, mine:false, overdue:false, search:'', openGroups: new Set(), allCollapsed:true };
-let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set(), expandedSubGroups: new Set(), taskColW: 270, search:'' };
-let kanbanViewState = { columnBy:'status', search:'' };  // 'status' | 'phase'
+let ganttViewState = { zoom:'week', sideW:200, groupBy:'phase', collapsedGroups: new Set(), expandedSubGroups: new Set(), taskColW: 270 };
+let kanbanViewState = { columnBy:'status' };  // 'status' | 'phase'
 let commentSortOrder = 'newest';  // 'newest' | 'oldest' — for both side panel and full task view
 
 function renderTasks(){ renderWorkView({kindFilter: null}); }
@@ -4658,7 +4673,7 @@ function renderWorkView(opts){
       <span class="chip-filter ${filters.mine?'active':''}" data-f="mine">Assigned to me · ${parents.filter(t=>t.assignee===currentUser.name).length}</span>
       <span class="chip-filter ${filters.overdue?'active':''}" data-f="overdue">Overdue · ${parents.filter(t=>t.due && t.status!=='done' && daysUntil(t.due)<0).length}</span>
       ${!opts.kindFilter ? `
-        <span class="chip-filter ${filters.kindFilter==='interface'?'active':''}" data-f="iface">Interfaces only</span>
+        <span class="chip-filter ${filters.kindFilter==='interface'?'active':''}" data-f="iface">iFlows only</span>
         <span class="chip-filter ${filters.kindFilter==='work'?'active':''}" data-f="work">Work items only</span>
       ` : ''}
       <div class="vt-search">
@@ -4883,12 +4898,12 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
   const pct = wTasks.length ? Math.round(doneCount/wTasks.length*100) : 0;
   const statusChip = wiStatusChip(wi, wTasks);
   const kindBadge = wi.kind === 'interface'
-    ? `<span class="gh-kind kind-iface">Iface</span>`
+    ? `<span class="gh-kind kind-iface">iFlow</span>`
     : `<span class="gh-kind">Work</span>`;
   const route = wi.kind === 'interface' && (wi.source || wi.target)
     ? `<div class="gh-route">${escHtml(wi.source||'?')}<span class="arrow">→</span>${escHtml(wi.target||'?')}</div>`
     : '';
-  const tags = wi.kind === 'work' && wi.tags && wi.tags.length
+  const tags = wi.tags && wi.tags.length
     ? `<div class="gh-tags">${wi.tags.slice(0,4).map(t => `<span class="gh-tag">${escHtml(t)}</span>`).join('')}</div>`
     : '';
   const _wiOverdue = wiIsOverdue(wTasks);
@@ -4989,7 +5004,6 @@ function renderTaskRow(t, workItems, subs){
     <div class="tc-prog"><div class="tc-prog-bar"><div class="tc-prog-fill" style="width:${t.progress != null ? t.progress : statusToProgress(t.status)}%"></div></div><span>${t.progress != null ? t.progress : statusToProgress(t.status)}%</span></div>
     <div class="tc-actions">
       <button data-open="${t.id}" title="Open">${ICONS.open}</button>
-      <button data-dup-task="${t.id}" title="Duplicate task">${ICONS.copy}</button>
       ${currentUser.role==='admin'?`<button class="danger" data-del-task="${t.id}" title="Delete">${ICONS.trash}</button>`:''}
     </div>
   </div>`;
@@ -5142,8 +5156,6 @@ function wireTaskGroupInteractions(workItems){
     if(editWi){ e.stopPropagation(); openEditWorkItemModal(Number(editWi.dataset.editWi)); return; }
     const delWi = e.target.closest('[data-del-wi]');
     if(delWi){ e.stopPropagation(); deleteWorkItem(Number(delWi.dataset.delWi)); return; }
-    const dupTask = e.target.closest('[data-dup-task]');
-    if(dupTask){ e.stopPropagation(); duplicateTask(Number(dupTask.dataset.dupTask)); return; }
     const delTask = e.target.closest('[data-del-task]');
     if(delTask){ e.stopPropagation(); confirmDeleteTask(Number(delTask.dataset.delTask)); return; }
     const addFor = e.target.closest('[data-add-for]');
@@ -5287,7 +5299,6 @@ function renderSidePanel(){
         ${wi ? `<a data-open-wi="${wi.id}">${escHtml(wi.code)}</a><span class="bc-sep">/</span><a data-open-wi="${wi.id}">${escHtml(wi.title)}</a>` : '<span>Task</span>'}
       </div>
       <button class="sp-head-btn" title="Expand to full view" onclick="openFullTask(${task.id})">${ICONS.expand}</button>
-      ${canWrite ? `<button class="sp-head-btn" title="Duplicate task" onclick="duplicateTask(${task.id})">${ICONS.copy}</button>` : ''}
       ${canWrite && currentUser.role==='admin' ? `<button class="sp-head-btn danger" title="Delete" onclick="deleteTaskFromPanel(${task.id})">${ICONS.trash}</button>` : ''}
       <button class="sp-head-btn" title="Close" onclick="closeSidePanel()">${ICONS.close}</button>
     </div>
@@ -5819,41 +5830,6 @@ function onDocClickForPop(e){
 }
 
 /* Mutations */
-function duplicateTask(id){
-  const t = state.tasks.find(x => x.id === id);
-  if(!t) return;
-  const newId = uid();
-  const copy = JSON.parse(JSON.stringify(t));
-  copy.id = newId;
-  copy.code = 'TSK-' + String(newId).slice(-4);
-  copy.title = copy.title + ' (copy)';
-  copy.status = 'todo';
-  copy.progress = 0;
-  copy.comments = [];
-  copy.activity = [{ id: uid(), by: currentUser.name, text: 'duplicated from ' + (t.code || t.title), at: new Date().toISOString() }];
-  copy.createdAt = new Date().toISOString();
-  copy.createdBy = currentUser.name;
-  // Place the copy right after the original
-  const idx = state.tasks.findIndex(x => x.id === id);
-  state.tasks.splice(idx + 1, 0, copy);
-  // Also duplicate subtasks
-  const subs = state.tasks.filter(s => s.parentTaskId === id);
-  subs.forEach(s => {
-    const sc = JSON.parse(JSON.stringify(s));
-    sc.id = uid();
-    sc.parentTaskId = newId;
-    sc.code = 'TSK-' + String(sc.id).slice(-4);
-    sc.status = 'todo';
-    sc.comments = [];
-    sc.activity = [];
-    sc.createdAt = new Date().toISOString();
-    state.tasks.push(sc);
-  });
-  saveState();
-  renderAll();
-  toast(`Task duplicated — "${copy.title}"`, 'success');
-}
-
 function mutateTask(id, fn){
   const t = state.tasks.find(x => x.id === id);
   if(!t) return;
@@ -5994,7 +5970,7 @@ function openWorkItemModal(opts){
   root.innerHTML = `
     <div class="modal-overlay" id="wiOverlay">
       <div class="modal">
-        <div class="modal-title">${editing?'Edit':'New'} ${kind==='interface'?'interface':'work item'}<button class="modal-close" onclick="closeWiModal()">×</button></div>
+        <div class="modal-title">${editing?'Edit':'New'} ${kind==='interface'?'iFlow':'work item'}<button class="modal-close" onclick="closeWiModal()">×</button></div>
         ${editing ? `<div class="form-row cols-2">
           <div class="form-group"><label>Code</label><input id="wi-code" value="${escHtml(wi.code||'')}" readonly style="opacity:.7;cursor:not-allowed"/></div>
           <div class="form-group"><label>Title<span class="req">*</span></label><input id="wi-title" value="${escHtml(wi.title||'')}" placeholder="Short descriptive title"/></div>
@@ -6015,6 +5991,9 @@ function openWorkItemModal(opts){
               ${['One-Way','Request-Reply','Bidirectional'].map(d => `<option ${d===wi.direction?'selected':''}>${d}</option>`).join('')}
             </select></div>
             <div class="form-group"><label>Protocol</label><input id="wi-protocol" value="${escHtml(wi.protocol||'')}" placeholder="HTTPS"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Tags (comma-separated)</label><input id="wi-tags" value="${escHtml((wi.tags||[]).join(', '))}" placeholder="MDI, S/4HC, SFTP, Peppol…"/></div>
           </div>
         ` : `
           <div class="form-row">
@@ -6087,9 +6066,10 @@ function saveWorkItem(editId, kind){
     data.dif = document.getElementById('wi-dif').value;
     data.direction = document.getElementById('wi-direction').value;
     data.protocol = document.getElementById('wi-protocol').value.trim();
-  }else{
-    data.tags = document.getElementById('wi-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
   }
+  // Tags available for both interfaces and work items
+  const tagsEl = document.getElementById('wi-tags');
+  data.tags = tagsEl ? tagsEl.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
   if(editId){
     const wi = state.workItems.find(w => w.id === editId);
     if(wi){
@@ -6374,11 +6354,11 @@ function renderGantt(){
   const pid = state.activeProject;
   const proj = state.projects.find(p => p.id === pid);
   const workItems = state.workItems.filter(w => w.projectId === pid);
-  let allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
+  const allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
   const canWrite = canWriteView('tasks');
 
   setTopbar('Gantt', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ iFlow</button>
      <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
@@ -6396,10 +6376,6 @@ function renderGantt(){
 
   // Compute task bars (grid+gantt rows). undated = no start AND no end at all.
   const today = new Date(); today.setHours(0,0,0,0);
-  // Apply search filter
-  const _gs = (ganttViewState.search || '').toLowerCase();
-  if(_gs) allTasks = allTasks.filter(t => (t.title||'').toLowerCase().includes(_gs) || (t.description||'').toLowerCase().includes(_gs));
-
   const bars = [];
   const undated = [];
   allTasks.forEach(t => {
@@ -6898,12 +6874,7 @@ function renderGantt(){
       <button class="btn btn-outline btn-sm" onclick="openPhasePlanningModal()">⚙ Configure phases</button>
       <button class="btn btn-outline btn-sm" id="ganttCollapseAll">Collapse all</button>
       <button class="btn btn-outline btn-sm" id="ganttExpandAll">Expand all</button>
-      <button class="btn btn-outline btn-sm" id="ganttScrollToday" title="Scroll to today">⊙ Today</button>
-      <div class="vt-search" style="max-width:220px;margin-left:auto">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-        <input id="ganttSearch" placeholder="Search tasks…" value="${escHtml(ganttViewState.search||'')}"/>
-      </div>
-      ${undated.length && !ganttViewState.search ? `<span style="color:var(--text-muted);font-size:12px">${undated.length} task${undated.length===1?'':'s'} without a date hidden</span>` : ''}
+      ${undated.length ? `<span style="color:var(--text-muted);font-size:12px;margin-left:auto">${undated.length} task${undated.length===1?'':'s'} without a date hidden</span>` : ''}
     </div>
 
     <div class="gg-container">
@@ -7001,21 +6972,6 @@ function renderGantt(){
     });
     renderGantt();
   };
-  document.getElementById('ganttScrollToday').onclick = () => {
-    const c = content.querySelector('.gg-container');
-    if(!c) return;
-    const sideW2 = c.querySelector('.gg-side')?.offsetWidth || 0;
-    const visible = c.clientWidth - sideW2;
-    c.scrollLeft = Math.max(0, todayX - visible * 0.25);
-    _ganttScrollLeft = c.scrollLeft;
-  };
-  const ganttSearchEl = document.getElementById('ganttSearch');
-  if(ganttSearchEl){
-    ganttSearchEl.oninput = e => {
-      ganttViewState.search = e.target.value;
-      renderGantt();
-    };
-  }
 
   // Phase collapse toggle (chevron in phase header)
   cont.querySelectorAll('.gg-collapse-btn[data-toggle]').forEach(btn => {
@@ -7629,7 +7585,7 @@ function renderTimeline(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Timeline', `${VIEW_DESCRIPTIONS.timeline} · ${allTasks.length} task${allTasks.length===1?'':'s'}`,
-    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ iFlow</button>
      <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
@@ -7899,6 +7855,7 @@ function getTaskDateRange(t){
   return { start, end };
 }
 
+// Legacy stub — time logging removed. Kept to avoid breaking call sites; always 0.
 function sumActualHours(){ return 0; }
 
 
@@ -7908,13 +7865,11 @@ function sumActualHours(){ return 0; }
 function renderKanban(){
   const pid = state.activeProject;
   const workItems = state.workItems.filter(w => w.projectId === pid);
-  let tasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
-  const _ks = (kanbanViewState.search || '').toLowerCase();
-  if(_ks) tasks = tasks.filter(t => (t.title||'').toLowerCase().includes(_ks));
+  const tasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
 
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${VIEW_DESCRIPTIONS.kanban} · ${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ iFlow</button>
      <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
@@ -7949,6 +7904,7 @@ function renderKanban(){
           <span class="chip chip-${prio==='high'?'danger':prio==='low'?'muted':'warn'}" style="padding:1px 7px;font-size:10px">${prio[0].toUpperCase()+prio.slice(1)}</span>
         </div>
         <div class="kb-card-title">${escHtml(t.title||'Untitled')}</div>
+        ${wi && wi.tags && wi.tags.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">${wi.tags.slice(0,3).map(tg=>`<span class="gh-tag">${escHtml(tg)}</span>`).join('')}</div>` : ''}
         <div class="kb-card-bot">
           <span class="kb-meta">${t.due ? `<span style="color:${dueColor}">${fmtDate(t.due)}</span>` : '—'}</span>
           ${t.assignee ? avatarEl(t.assignee, 22) : '<span></span>'}
@@ -7972,10 +7928,6 @@ function renderKanban(){
         <button data-cb="status" class="${colBy==='status'?'active':''}">By status</button>
         <button data-cb="phase"  class="${colBy==='phase'?'active':''}">By phase</button>
       </div>
-      <div class="vt-search" style="max-width:220px;margin-left:auto">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-        <input id="kanbanSearch" placeholder="Search tasks…" value="${escHtml(kanbanViewState.search||'')}"/>
-      </div>
     </div>
     <div class="kanban">${colsHtml}</div>`;
 
@@ -7984,8 +7936,6 @@ function renderKanban(){
     kanbanViewState.columnBy = b.dataset.cb;
     renderKanban();
   };
-  const kbSearchEl = document.getElementById('kanbanSearch');
-  if(kbSearchEl) kbSearchEl.oninput = e => { kanbanViewState.search = e.target.value; renderKanban(); };
 
   // Wire click-to-open
   document.querySelectorAll('.kb-card').forEach(card => {
@@ -9415,108 +9365,6 @@ function closeNewProjectModal(){
   if(!o) return;
   o.classList.remove('visible');
   setTimeout(() => document.getElementById('modalRoot').innerHTML = '', 180);
-}
-
-function openEditProjectModal(id){
-  if(currentUser.role !== 'admin') return;
-  const proj = state.projects.find(p => p.id === id);
-  if(!proj) return;
-  const COLORS = ['#0f7a4b','#2d5fa0','#b8741a','#7a3ea8','#b3362e','#0a8b8b','#c44a4a','#5e7a1a'];
-  const root = document.getElementById('modalRoot');
-  root.innerHTML = `
-    <div class="modal-overlay" id="editProjectOverlay">
-      <div class="modal">
-        <div class="modal-title">Edit project <button class="modal-close" onclick="closeEditProjectModal()">×</button></div>
-        <div class="form-row cols-2">
-          <div class="form-group"><label>Customer name<span class="req">*</span></label><input id="ep-name" value="${escHtml(proj.name)}"/></div>
-          <div class="form-group"><label>Code</label><input id="ep-code" value="${escHtml(proj.code||'')}" maxlength="6"/></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Description</label><input id="ep-desc" value="${escHtml(proj.desc||'')}"/></div>
-        </div>
-        <div class="form-row cols-2">
-          <div class="form-group"><label>Landscape</label><select id="ep-landscape">
-            ${['S/4HANA Public Cloud','S/4HANA Private Cloud','S/4HANA On-Premise','ECC On-Premise'].map(l=>`<option ${l===(proj.landscape||'')?'selected':''}>${l}</option>`).join('')}
-          </select></div>
-          <div class="form-group"><label>Phase</label><select id="ep-phase">
-            ${['Discovery','Design','Build','Test','Go-Live'].map(p=>`<option ${p===(proj.phase||'')?'selected':''}>${p}</option>`).join('')}
-          </select></div>
-        </div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label>Color</label>
-          <div class="color-options" id="ep-colors">
-            ${COLORS.map(c=>`<div class="color-opt ${c===proj.color?'selected':''}" data-c="${c}" style="background:${c}"></div>`).join('')}
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-danger btn-sm" onclick="confirmDeleteProject(${id})">Delete project</button>
-          <div style="flex:1"></div>
-          <button class="btn btn-outline" onclick="closeEditProjectModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveEditProject(${id})">Save</button>
-        </div>
-      </div>
-    </div>`;
-  const o = document.getElementById('editProjectOverlay');
-  requestAnimationFrame(() => o.classList.add('visible'));
-  o.addEventListener('click', e => { if(e.target === o) closeEditProjectModal(); });
-  o.querySelectorAll('.color-opt').forEach(el => {
-    el.onclick = () => {
-      o.querySelectorAll('.color-opt').forEach(x => x.classList.remove('selected'));
-      el.classList.add('selected');
-      o.dataset.selColor = el.dataset.c;
-    };
-  });
-  o.dataset.selColor = proj.color || '#0f7a4b';
-}
-
-function closeEditProjectModal(){
-  const o = document.getElementById('editProjectOverlay');
-  if(!o) return;
-  o.classList.remove('visible');
-  setTimeout(() => document.getElementById('modalRoot').innerHTML = '', 180);
-}
-
-function saveEditProject(id){
-  const name = document.getElementById('ep-name').value.trim();
-  if(!name){ toast('Name is required', 'error'); return; }
-  const proj = state.projects.find(p => p.id === id);
-  if(!proj) return;
-  const o = document.getElementById('editProjectOverlay');
-  proj.name = name;
-  proj.code = (document.getElementById('ep-code').value.trim() || name.substring(0,3)).toUpperCase();
-  proj.desc = document.getElementById('ep-desc').value.trim();
-  proj.landscape = document.getElementById('ep-landscape').value;
-  proj.phase = document.getElementById('ep-phase').value;
-  proj.color = o.dataset.selColor || proj.color;
-  saveState();
-  applyProjectTheme(proj.color);
-  closeEditProjectModal();
-  renderProjectList();
-  renderAll();
-  toast('Project updated', 'success');
-}
-
-function confirmDeleteProject(id){
-  const proj = state.projects.find(p => p.id === id);
-  if(!proj) return;
-  const taskCount = state.tasks.filter(t => t.projectId === id).length;
-  const wiCount = state.workItems.filter(w => w.projectId === id).length;
-  confirmDialog(`Delete <b>${escHtml(proj.name)}</b>?<br><br>This also removes <b>${wiCount} work item${wiCount===1?'':'s'}</b> and <b>${taskCount} task${taskCount===1?'':'s'}</b>. This cannot be undone.`, 'Delete project').then(ok => {
-    if(!ok) return;
-    state.projects = state.projects.filter(p => p.id !== id);
-    state.workItems = state.workItems.filter(w => w.projectId !== id);
-    state.tasks = state.tasks.filter(t => t.projectId !== id);
-    if(state.activeProject === id){
-      state.activeProject = state.projects.length ? state.projects[0].id : null;
-      applyProjectTheme(state.projects[0]?.color || null);
-    }
-    saveState();
-    closeEditProjectModal();
-    renderProjectList();
-    renderNav();
-    renderAll();
-    toast('Project deleted', 'success');
-  });
 }
 function saveNewProject(){
   const name = document.getElementById('np-name').value.trim();
