@@ -8814,10 +8814,49 @@ function _archLoadViewer(d){
   if(!iframe) return;
   const xml = d.xmlContent || '';
   if(!xml){ iframe.src = 'about:blank'; return; }
-  // Use viewer.diagrams.net with lightbox=false, nav=true
-  // We pass the XML via URL encoding — works well up to ~2MB of XML
-  const encoded = encodeURIComponent(xml);
-  iframe.src = `https://viewer.diagrams.net/?lightbox=0&nav=1&title=${encodeURIComponent(d.name)}&xml=${encoded}`;
+
+  // Strategy: use viewer.diagrams.net with postMessage to pass the XML.
+  // This avoids the URL-length limit that breaks large diagrams (>50KB).
+  // 1. Load the viewer with no XML in the URL
+  // 2. Once the iframe is ready, send the XML via postMessage
+  const viewerBase = 'https://viewer.diagrams.net/?lightbox=0&nav=1&noSaveBtn=1&chrome=0';
+  iframe.src = viewerBase;
+
+  // Listen for the viewer to signal it is ready, then send the XML
+  let sent = false;
+  const onMsg = (evt) => {
+    if(!evt.data || typeof evt.data !== 'string') return;
+    try {
+      const msg = JSON.parse(evt.data);
+      // draw.io viewer sends {event:'init'} when ready to receive XML
+      if((msg.event === 'init' || msg.event === 'load') && !sent){
+        sent = true;
+        iframe.contentWindow.postMessage(JSON.stringify({
+          action: 'load',
+          xml: xml,
+          autoCrop: true,
+        }), '*');
+        window.removeEventListener('message', onMsg);
+      }
+    } catch(_) {}
+  };
+  window.addEventListener('message', onMsg);
+
+  // Fallback: if viewer doesn't send 'init' within 3s, try posting anyway
+  // (older viewer versions don't always send the init event)
+  setTimeout(() => {
+    if(!sent && iframe.contentWindow){
+      sent = true;
+      try {
+        iframe.contentWindow.postMessage(JSON.stringify({
+          action: 'load',
+          xml: xml,
+          autoCrop: true,
+        }), '*');
+      } catch(_) {}
+      window.removeEventListener('message', onMsg);
+    }
+  }, 3000);
 }
 
 function archIframeLoaded(){
