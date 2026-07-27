@@ -6071,6 +6071,9 @@ function openWorkItemModal(opts){
             </select></div>
             <div class="form-group"><label>Protocol</label><input id="wi-protocol" value="${escHtml(wi.protocol||'')}" placeholder="HTTPS"/></div>
           </div>
+          <div class="form-row">
+            <div class="form-group"><label>Tags (comma-separated)</label><input id="wi-tags" value="${escHtml((wi.tags||[]).join(', '))}" placeholder="MDI, S/4HC, SFTP…"/></div>
+          </div>
         ` : `
           <div class="form-row">
             <div class="form-group"><label>Tags (comma-separated)</label><input id="wi-tags" value="${escHtml((wi.tags||[]).join(', '))}" placeholder="MDI, Peppol, Italy"/></div>
