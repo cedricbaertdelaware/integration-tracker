@@ -761,6 +761,16 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   background:var(--surface-3);border:1px solid var(--border);white-space:nowrap;
 }
 .gh-title{font-weight:600;font-size:14.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.group[draggable="true"]{cursor:default;}
+.group.wi-dragging{opacity:.4;}
+.group.wi-drop-before{box-shadow:0 -2px 0 0 var(--accent);}
+.group.wi-drop-after{box-shadow:0 2px 0 0 var(--accent);}
+.gh-drag-handle{
+  color:var(--text-dim);font-size:13px;letter-spacing:-2px;cursor:grab;
+  opacity:0;transition:opacity .12s;user-select:none;flex-shrink:0;padding:0 2px;
+}
+.group-header:hover .gh-drag-handle{opacity:.5;}
+.gh-drag-handle:hover{opacity:1 !important;color:var(--text);}
 .gh-title.wi-overdue{color:var(--danger);}
 .gg-sub-label.wi-overdue{color:var(--danger);}
 .gg-group-label.wi-overdue{color:var(--danger);}
@@ -2211,63 +2221,6 @@ body.gg-resizing *{cursor:col-resize !important;}
 .sched-month-meta{
   font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:6px 0 14px;
 }
-/* ──── Architecture view ──── */
-.arch-wrap{display:flex;flex-direction:column;gap:16px;}
-.arch-upload-zone{
-  border:2px dashed var(--border-strong);border-radius:var(--radius);
-  padding:32px;text-align:center;cursor:pointer;transition:.15s;
-  background:var(--surface);
-}
-.arch-upload-zone:hover,.arch-upload-zone.drag-over{
-  border-color:var(--accent);background:var(--accent-soft);
-}
-.arch-upload-icon{font-size:32px;margin-bottom:10px;color:var(--text-dim);}
-.arch-upload-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;}
-.arch-upload-sub{font-size:12.5px;color:var(--text-muted);}
-.arch-file-info{
-  display:flex;align-items:center;gap:12px;padding:12px 16px;
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-}
-.arch-file-icon{font-size:24px;flex-shrink:0;}
-.arch-file-name{font-size:13.5px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.arch-file-size{font-family:var(--mono);font-size:12px;color:var(--text-muted);flex-shrink:0;}
-.arch-preview{
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  overflow:hidden;position:relative;
-}
-.arch-preview-toolbar{
-  display:flex;align-items:center;gap:8px;padding:10px 14px;
-  border-bottom:1px solid var(--border);background:var(--surface-2);
-}
-.arch-preview-label{font-size:12.5px;font-weight:500;color:var(--text);flex:1;}
-.arch-preview-sub{font-size:11.5px;color:var(--text-muted);}
-.arch-iframe-wrap{
-  position:relative;width:100%;
-  height:calc(100vh - 320px);min-height:480px;
-}
-.arch-iframe-wrap iframe{width:100%;height:100%;border:none;display:block;}
-.arch-loading{
-  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:10px;background:var(--surface);color:var(--text-muted);font-size:13px;
-}
-.arch-tabs{display:flex;gap:4px;flex-wrap:wrap;}
-.arch-tab{
-  padding:6px 14px;border-radius:999px;border:1px solid var(--border);
-  background:var(--surface);font-size:12.5px;font-weight:500;color:var(--text-muted);
-  cursor:pointer;transition:.12s;display:flex;align-items:center;gap:6px;
-}
-.arch-tab:hover{border-color:var(--border-strong);color:var(--text);}
-.arch-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-[data-theme="dark"] .arch-tab.active{color:#0a120d;}
-.arch-tab-del{background:none;border:none;color:inherit;opacity:.6;cursor:pointer;font-size:13px;padding:0 0 0 4px;line-height:1;}
-.arch-tab-del:hover{opacity:1;}
-.arch-add-tab{
-  padding:6px 14px;border-radius:999px;border:1.5px dashed var(--border-strong);
-  background:transparent;font-size:12.5px;color:var(--text-muted);cursor:pointer;transition:.12s;
-  display:inline-flex;align-items:center;gap:6px;
-}
-.arch-add-tab:hover{border-color:var(--accent);color:var(--accent);}
-
 /* ──── RACI matrix ──── */
 .raci-wrap{padding:0 4px;}
 .raci-legend{
@@ -2973,7 +2926,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
         <a data-view="dashboard" class="active" title="Dashboard"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span>Dashboard</span></a>
         <a data-view="gantt" title="Tasks"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span>Tasks</span> <span class="nav-count" id="navTaskCount">0</span></a>
         <a data-view="schedule" title="My schedule"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h13a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M4 8h2"/><path d="M4 12h2"/><path d="M4 16h2"/><line x1="9" y1="8" x2="16" y2="8"/><line x1="9" y1="12" x2="16" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span><span>My schedule</span></a>
-        <a data-view="architecture" title="Architecture"><span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="9" y="16" width="6" height="5" rx="1"/><path d="M5.5 8v3a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8"/><path d="M12 13v3"/></svg></span><span>Architecture</span></a>
       </nav>
     </div>
 
@@ -3384,14 +3336,14 @@ function uid(){ return Date.now()*1000 + Math.floor(Math.random()*1000); }
    STATE + FIREBASE
    ════════════════════════════════════════════════════════ */
 const ROLE_DEFAULTS = {
-  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},architecture:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
-  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},architecture:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
-  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},architecture:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
-  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},architecture:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
-  custom:    {dashboard:{r:0,w:0},tasks:{r:0,w:0},workitems:{r:0,w:0},interfaces:{r:0,w:0},schedule:{r:0,w:0},architecture:{r:0,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  admin:     {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:1},users:{r:1,w:1}},
+  architect: {dashboard:{r:1,w:1},tasks:{r:1,w:1},workitems:{r:1,w:1},interfaces:{r:1,w:1},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:1},templates:{r:1,w:0},users:{r:0,w:0}},
+  developer: {dashboard:{r:1,w:0},tasks:{r:1,w:1},workitems:{r:1,w:0},interfaces:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  viewer:    {dashboard:{r:1,w:0},tasks:{r:1,w:0},workitems:{r:1,w:0},interfaces:{r:1,w:0},schedule:{r:1,w:1},focus:{r:1,w:1},raci:{r:1,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
+  custom:    {dashboard:{r:0,w:0},tasks:{r:0,w:0},workitems:{r:0,w:0},interfaces:{r:0,w:0},schedule:{r:0,w:0},templates:{r:0,w:0},users:{r:0,w:0}},
 };
 const ADMIN_VIEWS = ['templates','users'];
-const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','schedule','focus','raci','architecture','templates','users'];
+const ALL_VIEWS = ['dashboard','tasks','workitems','interfaces','schedule','focus','raci','templates','users'];
 
 const DEFAULT_DIF_TEMPLATES = [
   {id:1, code:'TF000', name:'External Connections', ver:'2.0.1', short:'Reusable external connection configs.', desc:'', dir:'N/A', proc:'N/A', proto:'HTTPS/SFTP/AMQP'},
@@ -3961,7 +3913,6 @@ function renderAll(){
     else if(v === 'schedule') renderSchedule();
     else if(v === 'focus') renderFocus();
     else if(v === 'raci') renderRaci();
-    else if(v === 'architecture') renderArchitecture();
     else if(v === 'templates') renderTemplatesView();
     else if(v === 'users') renderUsersView();
     else if(v === 'fulltask') renderFullTask();
@@ -4839,7 +4790,13 @@ function renderTaskGroups(opts){
 }
 
 function groupByWorkItem(workItems, parents, subs){
-  const sorted = workItems.slice().sort((a,b) => (a.code||'').localeCompare(b.code||''));
+  // Sort by manual order first, then code as fallback
+  const sorted = workItems.slice().sort((a,b) => {
+    const ao = typeof a.order === 'number' ? a.order : 999999;
+    const bo = typeof b.order === 'number' ? b.order : 999999;
+    if(ao !== bo) return ao - bo;
+    return (a.code||'').localeCompare(b.code||'');
+  });
   return sorted.map(wi => {
     const wTasks = sortByOrder(parents.filter(t => t.workItemId === wi.id));
     const isOpen = tasksViewState.openGroups.has('wi:'+wi.id) || (!tasksViewState.allCollapsed && wTasks.length > 0 && wTasks.length <= 8);
@@ -4957,20 +4914,21 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
   const pct = wTasks.length ? Math.round(doneCount/wTasks.length*100) : 0;
   const statusChip = wiStatusChip(wi, wTasks);
   const kindBadge = wi.kind === 'interface'
-    ? `<span class="gh-kind kind-iface">iFlow</span>`
+    ? `<span class="gh-kind kind-iface">Iface</span>`
     : `<span class="gh-kind">Work</span>`;
   const route = wi.kind === 'interface' && (wi.source || wi.target)
     ? `<div class="gh-route">${escHtml(wi.source||'?')}<span class="arrow">→</span>${escHtml(wi.target||'?')}</div>`
     : '';
-  const tags = wi.tags && wi.tags.length
+  const tags = wi.kind === 'work' && wi.tags && wi.tags.length
     ? `<div class="gh-tags">${wi.tags.slice(0,4).map(t => `<span class="gh-tag">${escHtml(t)}</span>`).join('')}</div>`
     : '';
   const _wiOverdue = wiIsOverdue(wTasks);
   const rowsHtml = wTasks.length
     ? wTasks.map(t => renderTaskRow(t, [wi], subs.filter(s => s.parentTaskId === t.id))).join('') + `<div class="add-task-row" data-add-for="${wi.id}">+ Add task</div>`
     : `<div class="group-body-empty">No tasks yet — <span style="color:var(--accent);cursor:pointer" data-add-for="${wi.id}">add one</span>.</div>`;
-  return `<div class="group ${isOpen?'open':''}" data-gid="${gid}" data-wi="${wi.id}">
+  return `<div class="group ${isOpen?'open':''}" data-gid="${gid}" data-wi="${wi.id}" draggable="true">
     <div class="group-header">
+      <span class="gh-drag-handle" title="Drag to reorder">⋮⋮</span>
       <svg class="gh-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
       ${kindBadge}
       <span class="gh-id">${escHtml(wi.code||'—')}</span>
@@ -5194,9 +5152,71 @@ function wireTaskGroupInteractions(workItems){
     });
   }
 
+  // ── Work item drag-to-reorder ─────────────────────────────────
+  if(groupBy === 'workitem' && canWriteView('tasks')){
+    let draggedWiId = null;
+
+    container.querySelectorAll('.group[data-wi][draggable="true"]').forEach(group => {
+      const handle = group.querySelector('.gh-drag-handle');
+      let armed = false;
+      if(handle){
+        handle.addEventListener('mousedown', () => { armed = true; });
+        document.addEventListener('mouseup', () => { armed = false; });
+      }
+      group.addEventListener('dragstart', e => {
+        if(!armed){ e.preventDefault(); return; }
+        armed = false;
+        draggedWiId = Number(group.dataset.wi);
+        group.classList.add('wi-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', String(draggedWiId)); } catch(_) {}
+      });
+      group.addEventListener('dragend', () => {
+        group.classList.remove('wi-dragging');
+        container.querySelectorAll('.wi-drop-before,.wi-drop-after').forEach(el => el.classList.remove('wi-drop-before','wi-drop-after'));
+        draggedWiId = null;
+      });
+      group.addEventListener('dragover', e => {
+        if(draggedWiId === null || Number(group.dataset.wi) === draggedWiId) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        container.querySelectorAll('.wi-drop-before,.wi-drop-after').forEach(el => el.classList.remove('wi-drop-before','wi-drop-after'));
+        const r = group.getBoundingClientRect();
+        group.classList.add((e.clientY - r.top) < r.height / 2 ? 'wi-drop-before' : 'wi-drop-after');
+      });
+      group.addEventListener('drop', e => {
+        e.preventDefault();
+        if(draggedWiId === null) return;
+        const targetWiId = Number(group.dataset.wi);
+        if(targetWiId === draggedWiId) return;
+        const r = group.getBoundingClientRect();
+        const above = (e.clientY - r.top) < r.height / 2;
+        // Find the current ordered list of work items for this project
+        const pid = state.activeProject;
+        const projectWis = state.workItems
+          .filter(w => w.projectId === pid)
+          .sort((a,b) => {
+            const ao = typeof a.order === 'number' ? a.order : 999999;
+            const bo = typeof b.order === 'number' ? b.order : 999999;
+            return ao !== bo ? ao - bo : (a.code||'').localeCompare(b.code||'');
+          });
+        const fromIdx = projectWis.findIndex(w => w.id === draggedWiId);
+        let toIdx = projectWis.findIndex(w => w.id === targetWiId);
+        if(fromIdx < 0 || toIdx < 0) return;
+        const [moved] = projectWis.splice(fromIdx, 1);
+        if(fromIdx < toIdx) toIdx--;
+        projectWis.splice(above ? toIdx : toIdx + 1, 0, moved);
+        // Reassign order values
+        projectWis.forEach((w, i) => { w.order = (i + 1) * 10; });
+        saveState();
+        renderTaskGroups({kindFilter: tasksViewState.kindFilter});
+      });
+    });
+  }
+
   container.onclick = e => {
     const header = e.target.closest('.group-header');
-    if(header && !e.target.closest('.gh-actions')){
+    if(header && !e.target.closest('.gh-actions') && !e.target.closest('.gh-drag-handle')){
       const group = header.parentElement;
       const gid = group.dataset.gid;
       group.classList.toggle('open');
@@ -6051,9 +6071,6 @@ function openWorkItemModal(opts){
             </select></div>
             <div class="form-group"><label>Protocol</label><input id="wi-protocol" value="${escHtml(wi.protocol||'')}" placeholder="HTTPS"/></div>
           </div>
-          <div class="form-row">
-            <div class="form-group"><label>Tags (comma-separated)</label><input id="wi-tags" value="${escHtml((wi.tags||[]).join(', '))}" placeholder="MDI, S/4HC, SFTP…"/></div>
-          </div>
         ` : `
           <div class="form-row">
             <div class="form-group"><label>Tags (comma-separated)</label><input id="wi-tags" value="${escHtml((wi.tags||[]).join(', '))}" placeholder="MDI, Peppol, Italy"/></div>
@@ -6073,6 +6090,7 @@ function openWorkItemModal(opts){
         </div>
         <div class="modal-actions">
           ${editing && currentUser.role==='admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteWorkItemFromModal(${wi.id})">Delete</button>` : ''}
+          ${editing && canWriteView('tasks') ? `<button class="btn btn-outline btn-sm" onclick="convertWorkItemKind(${wi.id})" title="Switch between iFlow and Work item">${kind==='interface'?'Convert to Work item':'Convert to iFlow'}</button>` : ''}
           <div style="flex:1"></div>
           <button class="btn btn-outline" onclick="closeWiModal()">Cancel</button>
           <button class="btn btn-primary" onclick="saveWorkItem(${editing?wi.id:'null'}, '${kind}')">${editing?'Save':'Create'}</button>
@@ -6097,6 +6115,36 @@ function closeWiModal(){
   const o = document.getElementById('wiOverlay'); if(!o) return;
   o.classList.remove('visible');
   setTimeout(() => document.getElementById('modalRoot').innerHTML = '', 180);
+}
+
+function convertWorkItemKind(id){
+  const wi = state.workItems.find(w => w.id === id);
+  if(!wi) return;
+  const currentKind = wi.kind;
+  const newKind = currentKind === 'interface' ? 'work' : 'interface';
+  const newKindLabel = newKind === 'interface' ? 'iFlow' : 'Work item';
+  confirmDialog(`Convert <b>${escHtml(wi.code)} — ${escHtml(wi.title)}</b> to a <b>${newKindLabel}</b>?<br><br>${newKind === 'interface' ? 'Source, target, dIF and protocol fields will be empty — fill them in afterwards.' : 'Interface-specific fields (source, target, dIF, protocol) will be cleared.'}`, 'Convert').then(ok => {
+    if(!ok) return;
+    wi.kind = newKind;
+    // Generate a new code for the new kind
+    const proj = state.projects.find(p => p.id === wi.projectId);
+    const prefix = (proj && proj.code) ? proj.code.toUpperCase() : 'XX';
+    const mid = newKind === 'interface' ? 'IF' : 'WK';
+    const pattern = new RegExp('^' + prefix + '-' + mid + '(\d+)$');
+    const existing = state.workItems
+      .filter(w => w.projectId === wi.projectId && w.kind === newKind && w.id !== wi.id)
+      .map(w => { const m = (w.code||'').match(pattern); return m ? parseInt(m[1], 10) : 0; });
+    const next = (existing.length ? Math.max(...existing) : 0) + 1;
+    wi.code = `${prefix}-${mid}${String(next).padStart(3, '0')}`;
+    // Clear kind-specific fields when converting away from interface
+    if(newKind === 'work'){
+      wi.source = ''; wi.target = ''; wi.dif = ''; wi.protocol = ''; wi.direction = '';
+    }
+    saveState();
+    closeWiModal();
+    renderAll();
+    toast(`Converted to ${newKindLabel}: ${wi.code}`, 'success');
+  });
 }
 function generateWorkItemCode(kind){
   const proj = state.projects.find(p => p.id === state.activeProject);
@@ -6416,7 +6464,7 @@ function renderGantt(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Gantt', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ iFlow</button>
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
      <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
@@ -7643,7 +7691,7 @@ function renderTimeline(){
   const canWrite = canWriteView('tasks');
 
   setTopbar('Timeline', `${VIEW_DESCRIPTIONS.timeline} · ${allTasks.length} task${allTasks.length===1?'':'s'}`,
-    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ iFlow</button>
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
      <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
@@ -7927,7 +7975,7 @@ function renderKanban(){
 
   const canWrite = canWriteView('tasks');
   setTopbar('Board', `${VIEW_DESCRIPTIONS.kanban} · ${tasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
-    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ iFlow</button>
+    `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Interface</button>
      <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
 
@@ -8724,246 +8772,6 @@ const RACI_TOOLTIP = {
   C: 'Consulted — provides input',
   I: 'Informed — kept in the loop',
 };
-
-/* ════════════════════════════════════════════════════════
-   ARCHITECTURE VIEW
-   Upload and preview draw.io / .xml architecture diagrams.
-   Files stored as base64 + raw XML on proj.architectureDiagrams[].
-   Preview via official draw.io viewer (viewer.diagrams.net).
-   ════════════════════════════════════════════════════════ */
-let archActiveIdx = 0;
-
-function renderArchitecture(){
-  const pid = state.activeProject;
-  const proj = state.projects.find(p => p.id === pid);
-  if(!pid || !proj){
-    setTopbar('Architecture','Select a project first');
-    document.getElementById('content').innerHTML = '<div class="empty-screen"><div class="empty-screen-icon">⬡</div><h3>No project selected</h3></div>';
-    return;
-  }
-  const canWrite = canWriteView('architecture');
-  proj.architectureDiagrams = proj.architectureDiagrams || [];
-  const diagrams = proj.architectureDiagrams;
-  if(archActiveIdx >= diagrams.length) archActiveIdx = Math.max(0, diagrams.length - 1);
-
-  setTopbar('Architecture', `${escHtml(proj.name)} · ${diagrams.length} diagram${diagrams.length!==1?'s':''}`,
-    canWrite ? `<button class="btn btn-primary btn-sm" onclick="document.getElementById('arch-file-inp').click()">＋ Upload diagram</button>` : '');
-
-  const content = document.getElementById('content');
-
-  if(!diagrams.length){
-    content.innerHTML = `
-      ${canWrite ? `<input type="file" id="arch-file-inp" accept=".drawio,.xml,.dio" multiple style="display:none" onchange="handleArchUpload(event)"/>` : ''}
-      <div class="arch-wrap">
-        <div class="arch-upload-zone" id="arch-drop-zone" ${canWrite ? `onclick="document.getElementById('arch-file-inp').click()"` : ''}>
-          <div class="arch-upload-icon">⬡</div>
-          <div class="arch-upload-title">${canWrite ? 'Upload een draw.io architectuurdiagram' : 'Geen diagram beschikbaar'}</div>
-          <div class="arch-upload-sub">${canWrite ? 'Klik of sleep een .drawio of .xml bestand hierheen' : 'Een admin of architect kan een diagram uploaden.'}</div>
-        </div>
-      </div>`;
-    if(canWrite) _wireArchDrop();
-    return;
-  }
-
-  const active = diagrams[archActiveIdx];
-  const tabsHtml = diagrams.map((d, i) =>
-    `<button class="arch-tab ${i===archActiveIdx?'active':''}" onclick="archSelectTab(${i})">
-      ⬡ ${escHtml(d.name)}
-      ${canWrite ? `<span class="arch-tab-del" onclick="event.stopPropagation();archDeleteDiagram(${i})" title="Verwijderen">×</span>` : ''}
-    </button>`
-  ).join('');
-
-  content.innerHTML = `
-    ${canWrite ? `<input type="file" id="arch-file-inp" accept=".drawio,.xml,.dio" multiple style="display:none" onchange="handleArchUpload(event)"/>` : ''}
-    <div class="arch-wrap">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <div class="arch-tabs">${tabsHtml}</div>
-        ${canWrite ? `<button class="arch-add-tab" onclick="document.getElementById('arch-file-inp').click()">＋ Toevoegen</button>` : ''}
-      </div>
-
-      <div class="arch-file-info">
-        <span class="arch-file-icon">⬡</span>
-        <span class="arch-file-name">${escHtml(active.name)}</span>
-        <span class="arch-file-size">${fmtBytes(active.size||0)}</span>
-        ${canWrite ? `<button class="btn btn-ghost btn-sm" onclick="archReplaceDiagram(${archActiveIdx})">Replace</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="archDownload(${archActiveIdx})">Download</button>
-        <button class="btn btn-outline btn-sm" onclick="archOpenExternal(${archActiveIdx})">Open in draw.io ↗</button>
-      </div>
-
-      <div class="arch-preview">
-        <div class="arch-preview-toolbar">
-          <span class="arch-preview-label">Preview — ${escHtml(active.name)}</span>
-          <span class="arch-preview-sub">Powered by draw.io viewer · scroll/pinch to zoom</span>
-        </div>
-        <div class="arch-iframe-wrap">
-          <div class="arch-loading" id="arch-loading">
-            <span style="font-size:32px;color:var(--accent)">⬡</span>
-            <span>Diagram laden…</span>
-          </div>
-          <iframe id="arch-iframe" style="opacity:0;transition:opacity .4s;" onload="archIframeLoaded()" src="about:blank"></iframe>
-        </div>
-      </div>
-    </div>`;
-
-  _archLoadViewer(active);
-  if(canWrite) _wireArchDrop();
-}
-
-function _archLoadViewer(d){
-  const iframe = document.getElementById('arch-iframe');
-  if(!iframe) return;
-  const xml = d.xmlContent || '';
-  if(!xml){ iframe.src = 'about:blank'; return; }
-
-  // Use embed.diagrams.net with the official postMessage protocol.
-  // viewer.diagrams.net only accepts XML via URL params (breaks >~50KB).
-  // embed.diagrams.net?embed=1&proto=json is the correct host for postMessage:
-  //   1. iframe loads embed.diagrams.net
-  //   2. embed sends {event:'init'} when ready
-  //   3. we respond with {action:'load', xml:'<mxfile>...</mxfile>'}
-  //   4. embed renders the diagram — no URL length limit, works for any size
-  // Official docs: https://www.drawio.com/doc/faq/embed-html
-  iframe.src = 'https://embed.diagrams.net/?embed=1&proto=json&spin=1&noSaveBtn=1&noExitBtn=1&nav=1';
-
-  let sent = false;
-  const onMsg = (evt) => {
-    if(!evt.data || typeof evt.data !== 'string') return;
-    try {
-      const msg = JSON.parse(evt.data);
-      if(msg.event === 'init' && !sent){
-        sent = true;
-        iframe.contentWindow.postMessage(JSON.stringify({
-          action: 'load',
-          xml: xml,
-          autoCrop: true,
-        }), 'https://embed.diagrams.net');
-        window.removeEventListener('message', onMsg);
-      }
-    } catch(_) {}
-  };
-  window.addEventListener('message', onMsg);
-
-  // Safety cleanup after 30s
-  setTimeout(() => window.removeEventListener('message', onMsg), 30000);
-}
-
-function archIframeLoaded(){
-  const iframe = document.getElementById('arch-iframe');
-  const loading = document.getElementById('arch-loading');
-  if(iframe) iframe.style.opacity = '1';
-  if(loading) loading.style.display = 'none';
-}
-
-function archSelectTab(idx){
-  archActiveIdx = idx;
-  renderArchitecture();
-}
-
-function archDeleteDiagram(idx){
-  const proj = state.projects.find(p => p.id === state.activeProject);
-  if(!proj || !proj.architectureDiagrams) return;
-  const d = proj.architectureDiagrams[idx];
-  confirmDialog(`Verwijder <b>${escHtml(d.name)}</b>?`, 'Delete').then(ok => {
-    if(!ok) return;
-    proj.architectureDiagrams.splice(idx, 1);
-    if(archActiveIdx >= proj.architectureDiagrams.length) archActiveIdx = Math.max(0, proj.architectureDiagrams.length - 1);
-    saveState();
-    renderArchitecture();
-    toast('Diagram verwijderd', 'success');
-  });
-}
-
-function archDownload(idx){
-  const proj = state.projects.find(p => p.id === state.activeProject);
-  if(!proj || !proj.architectureDiagrams) return;
-  const d = proj.architectureDiagrams[idx];
-  const blob = new Blob([d.xmlContent || ''], {type: 'application/xml'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = d.name;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function archOpenExternal(idx){
-  const proj = state.projects.find(p => p.id === state.activeProject);
-  if(!proj || !proj.architectureDiagrams) return;
-  const d = proj.architectureDiagrams[idx];
-  const blob = new Blob([d.xmlContent || ''], {type: 'application/xml'});
-  const url = URL.createObjectURL(blob);
-  window.open(`https://app.diagrams.net/?url=${encodeURIComponent(url)}`, '_blank');
-}
-
-function archReplaceDiagram(idx){
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = '.drawio,.xml,.dio';
-  inp.onchange = e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const proj = state.projects.find(p => p.id === state.activeProject);
-      if(!proj) return;
-      proj.architectureDiagrams[idx] = {
-        id: uid(), name: file.name, size: file.size,
-        xmlContent: ev.target.result,
-        uploadedBy: currentUser.name,
-        uploadedAt: new Date().toISOString(),
-      };
-      saveState(); renderArchitecture();
-      toast('Diagram vervangen', 'success');
-    };
-    reader.readAsText(file);
-  };
-  inp.click();
-}
-
-function handleArchUpload(event){
-  const files = [...event.target.files];
-  if(!files.length) return;
-  const proj = state.projects.find(p => p.id === state.activeProject);
-  if(!proj) return;
-  proj.architectureDiagrams = proj.architectureDiagrams || [];
-  let done = 0;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      proj.architectureDiagrams.push({
-        id: uid(), name: file.name, size: file.size,
-        xmlContent: e.target.result,
-        uploadedBy: currentUser.name,
-        uploadedAt: new Date().toISOString(),
-      });
-      done++;
-      if(done === files.length){
-        archActiveIdx = proj.architectureDiagrams.length - 1;
-        saveState(); renderArchitecture();
-        toast(`${files.length} diagram${files.length!==1?'s':''} geüpload`, 'success');
-      }
-    };
-    reader.readAsText(file);
-  });
-  event.target.value = '';
-}
-
-function _wireArchDrop(){
-  const zone = document.querySelector('.arch-upload-zone, .arch-wrap');
-  if(!zone) return;
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('drag-over');
-    const valid = [...e.dataTransfer.files].filter(f => /\.(drawio|xml|dio)$/i.test(f.name));
-    if(!valid.length){ toast('Enkel .drawio of .xml bestanden worden ondersteund', 'error'); return; }
-    const inp = document.getElementById('arch-file-inp');
-    if(!inp) return;
-    const dt = new DataTransfer();
-    valid.forEach(f => dt.items.add(f));
-    inp.files = dt.files;
-    inp.dispatchEvent(new Event('change'));
-  });
-}
 
 function renderRaci(){
   const pid = state.activeProject;
