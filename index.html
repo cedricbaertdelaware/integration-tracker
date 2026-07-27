@@ -4919,7 +4919,7 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
   const route = wi.kind === 'interface' && (wi.source || wi.target)
     ? `<div class="gh-route">${escHtml(wi.source||'?')}<span class="arrow">→</span>${escHtml(wi.target||'?')}</div>`
     : '';
-  const tags = wi.kind === 'work' && wi.tags && wi.tags.length
+  const tags = wi.tags && wi.tags.length
     ? `<div class="gh-tags">${wi.tags.slice(0,4).map(t => `<span class="gh-tag">${escHtml(t)}</span>`).join('')}</div>`
     : '';
   const _wiOverdue = wiIsOverdue(wTasks);
