@@ -6518,8 +6518,8 @@ function renderGantt(){
   });
   if(today < minDate) minDate = new Date(today);
   if(today > maxDate) maxDate = new Date(today);
-  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 7);
-  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 14);
+  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 14);
+  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 90);
 
   const zoom = ganttViewState.zoom;
   const dayPx = zoom === 'day' ? 28 : zoom === 'week' ? 14 : 5;
@@ -7734,8 +7734,8 @@ function renderTimeline(){
   });
   if(today < minDate) minDate = new Date(today);
   if(today > maxDate) maxDate = new Date(today);
-  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 7);
-  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 14);
+  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 14);
+  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 90);
 
   const zoom = timelineViewState.zoom;
   const dayPx = zoom === 'day' ? 36 : zoom === 'week' ? 18 : 6;
