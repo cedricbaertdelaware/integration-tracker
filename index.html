@@ -772,6 +772,11 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
 .group-header:hover .gh-drag-handle{opacity:.5;}
 .gh-drag-handle:hover{opacity:1 !important;color:var(--text);}
 .gh-title.wi-overdue{color:var(--danger);}
+.gh-title.wi-done{text-decoration:line-through;color:var(--text-muted);text-decoration-color:var(--border-strong);}
+.group.wi-all-done .group-header{opacity:.65;}
+.group.wi-all-done .group-header:hover{opacity:1;}
+.group.wi-all-done .gh-id{text-decoration:line-through;color:var(--text-dim);}
+.group.wi-all-done .gh-bar-fill{background:var(--accent);opacity:.6;}
 .gg-sub-label.wi-overdue{color:var(--danger);}
 .gg-group-label.wi-overdue{color:var(--danger);}
 .kb-iface-title.wi-overdue{color:var(--danger) !important;}
@@ -4923,10 +4928,11 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
     ? `<div class="gh-tags">${wi.tags.slice(0,4).map(t => `<span class="gh-tag">${escHtml(t)}</span>`).join('')}</div>`
     : '';
   const _wiOverdue = wiIsOverdue(wTasks);
+  const _wiAllDone = wTasks.length > 0 && wTasks.every(t => t.status === 'done');
   const rowsHtml = wTasks.length
     ? wTasks.map(t => renderTaskRow(t, [wi], subs.filter(s => s.parentTaskId === t.id))).join('') + `<div class="add-task-row" data-add-for="${wi.id}">+ Add task</div>`
     : `<div class="group-body-empty">No tasks yet — <span style="color:var(--accent);cursor:pointer" data-add-for="${wi.id}">add one</span>.</div>`;
-  return `<div class="group ${isOpen?'open':''}" data-gid="${gid}" data-wi="${wi.id}" draggable="true">
+  return `<div class="group ${isOpen?'open':''} ${_wiAllDone?'wi-all-done':''}" data-gid="${gid}" data-wi="${wi.id}" draggable="true">
     <div class="group-header">
       <span class="gh-drag-handle" title="Drag to reorder">⋮⋮</span>
       <svg class="gh-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
@@ -4934,8 +4940,8 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
       <span class="gh-id">${escHtml(wi.code||'—')}</span>
       ${route}
       ${tags}
-      <span class="gh-title${_wiOverdue?' wi-overdue':''}">${escHtml(wi.title||'Untitled')}${_wiOverdue?' <span title="Bevat verlopen taken" style="font-size:11px;margin-left:4px">⚠</span>':''}</span>
-      ${statusChip}
+      <span class="gh-title${_wiOverdue?' wi-overdue':(_wiAllDone?' wi-done':'')}">${escHtml(wi.title||'Untitled')}${_wiOverdue?' <span title="Bevat verlopen taken" style="font-size:11px;margin-left:4px">⚠</span>':''}</span>
+      ${_wiAllDone ? '<span class="chip chip-success" style="flex-shrink:0">✓ Done</span>' : statusChip}
       <div class="gh-progress"><div class="gh-bar"><div class="gh-bar-fill" style="width:${pct}%"></div></div><span>${doneCount} / ${wTasks.length}</span></div>
       <div class="gh-actions">
         <button title="Edit" data-edit-wi="${wi.id}">${ICONS.edit}</button>
