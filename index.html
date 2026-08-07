@@ -9166,12 +9166,12 @@ function renderUsersView(){
     <div class="two-col">
       <div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;">
-          <h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0">Active users <span style="color:var(--text-muted);font-weight:400;font-size:13px">(${users.length})</span></h3>
+          <h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0">Active users <span id="userCountLabel" style="color:var(--text-muted);font-weight:400;font-size:13px">(${users.length})</span></h3>
         </div>
         <div class="vt-search" style="margin-bottom:12px;max-width:100%;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
           <input id="userSearch" placeholder="Search by name, email or role…" value="${escHtml(usersViewSearch||'')}"/>
-          ${q ? `<button onclick="usersViewSearch='';renderUsersView()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0 2px;" title="Clear">×</button>` : ''}
+          <button id="userSearchClear" onclick="usersViewSearch='';document.getElementById('userSearch').value='';document.querySelectorAll('.user-card').forEach(c=>c.style.display='');document.getElementById('userCountLabel').textContent='(${state.users.length})';" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0 2px;display:${q?'':'none'}" title="Clear">×</button>
         </div>
         ${users.length === 0 ? `<div style="padding:20px;color:var(--text-dim);font-size:13px">No users match "${escHtml(q)}".</div>` : ''}
         ${users.map(u => `
@@ -9205,7 +9205,28 @@ function renderUsersView(){
       </div>
     </div>`;
   const searchEl = document.getElementById('userSearch');
-  if(searchEl){ searchEl.oninput = e => { usersViewSearch = e.target.value; renderUsersView(); }; }
+  if(searchEl){
+    // Restore cursor position after any re-render that may have happened
+    searchEl.focus();
+    searchEl.oninput = e => {
+      usersViewSearch = e.target.value;
+      // Filter user cards in-place without rebuilding the whole page
+      const q = usersViewSearch.toLowerCase();
+      document.querySelectorAll('.user-card').forEach(card => {
+        const name  = (card.querySelector('.user-name')?.textContent  || '').toLowerCase();
+        const email = (card.querySelector('.user-email')?.textContent || '').toLowerCase();
+        const role  = (card.querySelector('.chip-accent')?.textContent || '').toLowerCase();
+        card.style.display = (!q || name.includes(q) || email.includes(q) || role.includes(q)) ? '' : 'none';
+      });
+      // Update the count label
+      const visible = document.querySelectorAll('.user-card:not([style*="display: none"])').length;
+      const countEl = document.querySelector('#userCountLabel');
+      if(countEl) countEl.textContent = `(${visible}${q?' match':''})`; 
+      // Show/hide clear button
+      const clearBtn = document.getElementById('userSearchClear');
+      if(clearBtn) clearBtn.style.display = q ? '' : 'none';
+    };
+  }
 }
 function openUserModal(id){
   const editing = !!id;
