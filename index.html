@@ -761,22 +761,7 @@ label{font-size:12px;color:var(--text-muted);font-family:var(--mono);letter-spac
   background:var(--surface-3);border:1px solid var(--border);white-space:nowrap;
 }
 .gh-title{font-weight:600;font-size:14.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.group[draggable="true"]{cursor:default;}
-.group.wi-dragging{opacity:.4;}
-.group.wi-drop-before{box-shadow:0 -2px 0 0 var(--accent);}
-.group.wi-drop-after{box-shadow:0 2px 0 0 var(--accent);}
-.gh-drag-handle{
-  color:var(--text-dim);font-size:13px;letter-spacing:-2px;cursor:grab;
-  opacity:0;transition:opacity .12s;user-select:none;flex-shrink:0;padding:0 2px;
-}
-.group-header:hover .gh-drag-handle{opacity:.5;}
-.gh-drag-handle:hover{opacity:1 !important;color:var(--text);}
 .gh-title.wi-overdue{color:var(--danger);}
-.gh-title.wi-done{text-decoration:line-through;color:var(--text-muted);text-decoration-color:var(--border-strong);}
-.group.wi-all-done .group-header{opacity:.65;}
-.group.wi-all-done .group-header:hover{opacity:1;}
-.group.wi-all-done .gh-id{text-decoration:line-through;color:var(--text-dim);}
-.group.wi-all-done .gh-bar-fill{background:var(--accent);opacity:.6;}
 .gg-sub-label.wi-overdue{color:var(--danger);}
 .gg-group-label.wi-overdue{color:var(--danger);}
 .kb-iface-title.wi-overdue{color:var(--danger) !important;}
@@ -4491,146 +4476,127 @@ function renderDashboard(){
   `).join('') : `<div style="padding:14px;color:var(--text-dim);font-size:12.5px">No users yet.</div>`;
 
   document.getElementById('content').innerHTML = `
-    <div class="bento">
-      <div class="card card-hero">
-        <div class="stat-label">Project completion</div>
-        <div class="stat-value">${pct}%</div>
-        <div class="stat-sub">${doneTasks} of ${parents.length} tasks done</div>
+    <!-- ── Hero: full-width green card ── -->
+    <div style="
+      background:linear-gradient(135deg,var(--accent) 0%,var(--accent-deep) 100%);
+      border-radius:var(--radius-lg);padding:26px 32px;color:#fff;margin-bottom:0;
+      display:flex;align-items:center;gap:40px;flex-wrap:wrap;
+      box-shadow:0 8px 28px color-mix(in srgb,var(--accent) 28%,transparent);
+      position:relative;overflow:hidden;
+    ">
+      <div style="position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">Overall completion</div>
+        <div style="font-size:52px;font-weight:600;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums">${pct}%</div>
+        <div style="font-size:12px;opacity:.75">${doneTasks} of ${parents.length} tasks done</div>
       </div>
-      <div class="card" style="grid-column:span 4">
-        <div class="stat-label">Work items ${ifaces.length?`<span class="chip chip-accent">${ifaces.length} process${ifaces.length===1?'':'es'}</span>`:''}</div>
-        <div class="stat-value">${workItems.length}</div>
-        <div class="stat-sub">${workItems.filter(w=>w.kind==='work').length} generic · ${ifaces.length} process${ifaces.length===1?'':'es'}</div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,.2);flex-shrink:0"></div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">Tasks open</div>
+        <div style="font-size:32px;font-weight:600;line-height:1;letter-spacing:-.03em">${parents.length - doneTasks}</div>
+        <div style="font-size:12px;opacity:.75">${doing} in progress · ${todo} todo</div>
       </div>
-      <div class="card" style="grid-column:span 4">
-        <div class="stat-label">Open tasks ${blockedTasks?`<span class="chip chip-danger">${blockedTasks} blocked</span>`:''}</div>
-        <div class="stat-value">${parents.length - doneTasks}</div>
-        <div class="stat-sub">${doing} in progress · ${inReview} in review · ${todo} todo</div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,.2);flex-shrink:0"></div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">Blocked</div>
+        <div style="font-size:32px;font-weight:600;line-height:1;letter-spacing:-.03em;color:${blockedTasks?'#ffb3ae':'rgba(255,255,255,.9)'}">${blockedTasks}</div>
+        <div style="font-size:12px;opacity:.75">${overdueTasks.length} overdue</div>
       </div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,.2);flex-shrink:0"></div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">iFlows</div>
+        <div style="font-size:32px;font-weight:600;line-height:1;letter-spacing:-.03em">${ifaces.length}</div>
+        <div style="font-size:12px;opacity:.75">${workItems.length} work items total</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:999px;padding:8px 18px;font-size:13px;font-weight:600;flex-shrink:0;">
+        <span style="width:9px;height:9px;border-radius:50%;background:${healthStatus==='healthy'?'#6effc5':healthStatus==='at-risk'?'#ffd599':'#ffb3ae'};display:inline-block;flex-shrink:0"></span>
+        ${healthLabel} · ${healthScore}/100
+      </div>
+    </div>
 
-      <div class="card card-health health-${healthStatus}" style="grid-column:span 6">
-        <div class="health-head">
-          <div class="health-status">
-            <span class="health-dot"></span>
-            <span class="health-label">Project health</span>
-          </div>
-          <span class="health-pill">${healthLabel}</span>
-        </div>
-        <div class="health-row">
-          <div class="health-score">${healthScore}<span class="health-score-max">/100</span></div>
-          <div class="health-reasons">${healthReasons.map(r => `<span class="health-reason">${escHtml(r)}</span>`).join('')}</div>
-        </div>
-      </div>
+    <!-- ── Connector lines ── -->
+    <div style="position:relative;height:24px;">
+      <svg width="100%" height="24" style="display:block;overflow:visible">
+        <line x1="25%" y1="0" x2="25%" y2="24" stroke="var(--accent)" stroke-width="1.5" opacity="0.3" stroke-dasharray="4 3"/>
+        <circle cx="25%" cy="0" r="3" fill="var(--accent)" opacity="0.4"/>
+        <circle cx="25%" cy="24" r="3" fill="var(--accent)" opacity="0.4"/>
+        <line x1="75%" y1="0" x2="75%" y2="24" stroke="var(--accent)" stroke-width="1.5" opacity="0.3" stroke-dasharray="4 3"/>
+        <circle cx="75%" cy="0" r="3" fill="var(--accent)" opacity="0.4"/>
+        <circle cx="75%" cy="24" r="3" fill="var(--accent)" opacity="0.4"/>
+      </svg>
+    </div>
 
-      <div class="card card-quicklinks" style="grid-column:span 6">
+    <!-- ── Quick links strip ── -->
+    <div style="display:flex;align-items:center;gap:6px;padding:0 6px 10px;flex-wrap:wrap;">
+      <span style="font-size:10.5px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-right:4px;">Links</span>
+      ${(proj.quickLinks||[]).map((ql,i) => `
+        ${i>0?'<div style="width:1px;height:14px;background:var(--border);flex-shrink:0"></div>':''}
+        <a href="${escHtml(ql.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--text-muted);text-decoration:none;padding:2px 4px;border-radius:5px;transition:.12s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">${ql.favicon?`<img src="${escHtml(ql.favicon)}" width="14" height="14" style="border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:'🔗'} ${escHtml(ql.label)}</a>
+      `).join('')}
+      ${currentUser.role==='admin'?`
+        ${proj.quickLinks&&proj.quickLinks.length?'<div style="width:1px;height:14px;background:var(--border);flex-shrink:0"></div>':''}
+        <button onclick="addQuickLink()" style="background:none;border:none;font-size:12.5px;font-weight:500;color:var(--text-dim);cursor:pointer;padding:2px 4px;border-radius:5px;font-family:inherit;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">＋ Add link</button>
+      `:''}
+    </div>
+
+    <!-- ── Two cards: availability + phases ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+      <!-- Who's in today -->
+      <div class="card">
         <div class="list-head">
           <div>
-            <h3>Quick links</h3>
-            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">Shortcuts to systems and tools for ${escHtml(proj.name)}</p>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="addQuickLink()">＋ Add link</button>
-        </div>
-        <div class="ql-grid" id="qlGrid">${renderQuickLinks(proj)}</div>
-      </div>
-
-      <div class="card-load-section">
-        <div class="card-load-header">
-          <h3>Open tasks per person</h3>
-          <p>${totalOpen} open · across all assignees</p>
-        </div>
-        <div class="card-load-grid">
-          ${people.length ? people.map(p => {
-            const n = openByPerson[p];
-            const isPeak = n === maxOpen;
-            return `<div class="card card-person ${isPeak ? 'is-peak' : ''}">
-              <div class="card-person-count">${n}</div>
-              <div class="card-person-name">${escHtml(p)}</div>
-            </div>`;
-          }).join('') : `<div class="card" style="grid-column:1/-1;padding:24px;text-align:center;color:var(--text-dim);font-size:13px">No open tasks assigned.</div>`}
-        </div>
-      </div>
-
-      <div class="card card-progress">
-        <div class="stat-label" style="width:100%">Project progress</div>
-        <div class="donut-wrap">
-          <svg viewBox="0 0 100 100">
-            <circle class="donut-bg" cx="50" cy="50" r="42" fill="none" stroke-width="10"/>
-            <circle class="donut-fg" cx="50" cy="50" r="42" fill="none" stroke-width="10"
-              stroke-dasharray="263.9" stroke-dashoffset="${263.9 - 263.9 * pct/100}"/>
-          </svg>
-          <div class="donut-center">
-            <div class="donut-pct">${pct}%</div>
-            <div class="donut-lbl">Complete</div>
-          </div>
-        </div>
-        <div class="legend">
-          <div class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Done ${doneTasks}</div>
-          <div class="legend-item"><span class="legend-dot" style="background:var(--warn)"></span>In progress ${doing}</div>
-          <div class="legend-item"><span class="legend-dot" style="background:var(--surface-3)"></span>Todo ${todo}</div>
-        </div>
-      </div>
-
-      <div class="card card-phases">
-        <div class="chart-head">
-          <div>
-            <h3>SAP Activate phases</h3>
-            <p>${totalPhased} of ${parents.length} task${parents.length===1?'':'s'} mapped${noPhaseCount?` · ${noPhaseCount} unphased`:''}</p>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Open Gantt →</button>
-        </div>
-        <div class="phase-grid">
-          ${phaseRows.map(r => `
-            <div class="phase-cell ${r.total===0?'is-empty':''}" data-phase="${r.phase.k}" onclick="openPhaseInTasks('${r.phase.k}')" title="${escHtml(r.phase.desc)}">
-              <div class="phase-cell-head">
-                <span class="phase-cell-dot" style="background:${r.phase.color}"></span>
-                <span class="phase-cell-label">${r.phase.label}</span>
-                <span class="phase-cell-count">${r.total}</span>
-              </div>
-              <div class="phase-cell-bar">
-                ${r.total === 0
-                  ? '<div class="phase-cell-empty">No tasks yet</div>'
-                  : `<div class="phase-cell-segments">
-                      ${r.done?`<div class="seg seg-done" style="flex:${r.done}" title="${r.done} done"></div>`:''}
-                      ${r.inProgress?`<div class="seg seg-progress" style="flex:${r.inProgress}" title="${r.inProgress} in progress / review"></div>`:''}
-                      ${r.todo?`<div class="seg seg-todo" style="flex:${r.todo}" title="${r.todo} todo"></div>`:''}
-                      ${r.blocked?`<div class="seg seg-blocked" style="flex:${r.blocked}" title="${r.blocked} blocked"></div>`:''}
-                    </div>
-                    <div class="phase-cell-pct">${r.pct}%</div>`
-                }
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-
-      <div class="card card-pipeline">
-        <div class="chart-head">
-          <div><h3>Status pipeline</h3><p>${parents.length} tasks across ${groups.length} stages</p></div>
-          <button class="btn btn-ghost btn-sm" onclick="setView('tasks')">Open board →</button>
-        </div>
-        <div class="pipeline">${pipeCols}</div>
-      </div>
-
-      <div class="card card-team">
-        <div class="list-head"><h3>Recent activity</h3></div>
-        ${teamHtml}
-      </div>
-
-      <div class="card card-avail">
-        <div class="list-head">
-          <div>
-            <h3>${isWeekend ? 'Team availability' : "Who's in today"}</h3>
+            <h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em">${isWeekend ? "Team availability" : "Who's in today"}</h3>
             <p style="color:var(--text-muted);font-size:12px;margin-top:2px">${availSubtitle} · ${memberLabel}</p>
           </div>
-          ${currentUser.role==='admin'?`<button class="btn btn-ghost btn-sm" onclick="openManageMembersModal()" title="Assign team members to this project">⚙ Members</button>`:''}
+          ${currentUser.role==='admin'?`<button class="btn btn-ghost btn-sm" onclick="openManageMembersModal()" title="Assign team members">⚙ Members</button>`:''}
         </div>
-        <div class="avail-today-list">${availHtml}</div>
+        <div class="avail-today-list">
+          ${availRows.length ? availRows.map(r => {
+            const taskCount = tasks.filter(t => t.assignee === r.user.name && t.status !== 'done').length;
+            const isPeak = taskCount === Math.max(...availRows.map(x => tasks.filter(t => t.assignee === x.user.name && t.status !== 'done').length));
+            return `<div class="avail-today-row ${r.availToday?'on':'off'}" style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;">
+              ${avatarEl(r.user.name, 28)}
+              <div class="avail-today-name" style="flex:1;font-size:13px;font-weight:500">${escHtml(r.user.name)}</div>
+              <div class="avail-today-days" style="display:flex;gap:3px;">
+                ${r.avail.map((on,i) => `<span class="avail-mini-day ${on?'on':''} ${i===todayIdx?'today':''}">${dayLabels[i]}</span>`).join('')}
+              </div>
+              <span style="font-family:var(--mono);font-size:11.5px;font-weight:600;background:${isPeak&&taskCount>0?'var(--warn-soft)':'var(--surface-2)'};border:1px solid ${isPeak&&taskCount>0?'var(--warn)':'var(--border)'};color:${isPeak&&taskCount>0?'var(--warn)':'var(--text-muted)'};border-radius:999px;padding:2px 9px;flex-shrink:0;">${taskCount} tasks</span>
+            </div>`;
+          }).join('') : `<div style="padding:14px;color:var(--text-dim);font-size:12.5px">No users yet.</div>`}
+        </div>
       </div>
 
-      <div class="card card-list">
-        <div class="list-head"><h3>Up next</h3></div>
-        ${upcomingHtml}
+      <!-- Phase progress -->
+      <div class="card">
+        <div class="list-head">
+          <div>
+            <h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em">Phase progress</h3>
+            <p style="color:var(--text-muted);font-size:12px;margin-top:2px">SAP Activate methodology</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Gantt →</button>
+        </div>
+        <div style="display:flex;flex-direction:column;">
+          ${phaseRows.map(r => {
+            const chip = r.pct===100
+              ? `<span style="font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600;background:var(--accent-soft);color:var(--accent-deep);width:70px;text-align:center;flex-shrink:0">Done</span>`
+              : r.total > 0
+                ? `<span style="font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600;background:var(--warn-soft);color:var(--warn);width:70px;text-align:center;flex-shrink:0">Active</span>`
+                : `<span style="font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600;background:var(--surface-3);color:var(--text-dim);width:70px;text-align:center;flex-shrink:0">Not started</span>`;
+            return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);${r.total===0?'opacity:.45':''}">
+              <div style="width:8px;height:8px;border-radius:50%;background:${r.phase.color};flex-shrink:0"></div>
+              <div style="font-size:13px;font-weight:500;width:72px;flex-shrink:0">${r.phase.label}</div>
+              <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;border-radius:4px;background:${r.phase.color};width:${r.pct}%;transition:width .4s"></div>
+              </div>
+              <div style="font-family:var(--mono);font-size:11.5px;color:var(--text-muted);width:34px;text-align:right;flex-shrink:0">${r.pct}%</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);width:32px;text-align:right;flex-shrink:0">${r.done}/${r.total}</div>
+              ${chip}
+            </div>`;
+          }).join('')}
+        </div>
       </div>
+
     </div>`;
   wireQuickLinksDnD();
 }
@@ -4795,13 +4761,7 @@ function renderTaskGroups(opts){
 }
 
 function groupByWorkItem(workItems, parents, subs){
-  // Sort by manual order first, then code as fallback
-  const sorted = workItems.slice().sort((a,b) => {
-    const ao = typeof a.order === 'number' ? a.order : 999999;
-    const bo = typeof b.order === 'number' ? b.order : 999999;
-    if(ao !== bo) return ao - bo;
-    return (a.code||'').localeCompare(b.code||'');
-  });
+  const sorted = workItems.slice().sort((a,b) => (a.code||'').localeCompare(b.code||''));
   return sorted.map(wi => {
     const wTasks = sortByOrder(parents.filter(t => t.workItemId === wi.id));
     const isOpen = tasksViewState.openGroups.has('wi:'+wi.id) || (!tasksViewState.allCollapsed && wTasks.length > 0 && wTasks.length <= 8);
@@ -4924,24 +4884,22 @@ function renderGroupHeader(wi, wTasks, subs, isOpen, gid){
   const route = wi.kind === 'interface' && (wi.source || wi.target)
     ? `<div class="gh-route">${escHtml(wi.source||'?')}<span class="arrow">→</span>${escHtml(wi.target||'?')}</div>`
     : '';
-  const tags = wi.tags && wi.tags.length
+  const tags = wi.kind === 'work' && wi.tags && wi.tags.length
     ? `<div class="gh-tags">${wi.tags.slice(0,4).map(t => `<span class="gh-tag">${escHtml(t)}</span>`).join('')}</div>`
     : '';
   const _wiOverdue = wiIsOverdue(wTasks);
-  const _wiAllDone = wTasks.length > 0 && wTasks.every(t => t.status === 'done');
   const rowsHtml = wTasks.length
     ? wTasks.map(t => renderTaskRow(t, [wi], subs.filter(s => s.parentTaskId === t.id))).join('') + `<div class="add-task-row" data-add-for="${wi.id}">+ Add task</div>`
     : `<div class="group-body-empty">No tasks yet — <span style="color:var(--accent);cursor:pointer" data-add-for="${wi.id}">add one</span>.</div>`;
-  return `<div class="group ${isOpen?'open':''} ${_wiAllDone?'wi-all-done':''}" data-gid="${gid}" data-wi="${wi.id}" draggable="true">
+  return `<div class="group ${isOpen?'open':''}" data-gid="${gid}" data-wi="${wi.id}">
     <div class="group-header">
-      <span class="gh-drag-handle" title="Drag to reorder">⋮⋮</span>
       <svg class="gh-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
       ${kindBadge}
       <span class="gh-id">${escHtml(wi.code||'—')}</span>
       ${route}
       ${tags}
-      <span class="gh-title${_wiOverdue?' wi-overdue':(_wiAllDone?' wi-done':'')}">${escHtml(wi.title||'Untitled')}${_wiOverdue?' <span title="Bevat verlopen taken" style="font-size:11px;margin-left:4px">⚠</span>':''}</span>
-      ${_wiAllDone ? '<span class="chip chip-success" style="flex-shrink:0">✓ Done</span>' : statusChip}
+      <span class="gh-title${_wiOverdue?' wi-overdue':''}">${escHtml(wi.title||'Untitled')}${_wiOverdue?' <span title="Bevat verlopen taken" style="font-size:11px;margin-left:4px">⚠</span>':''}</span>
+      ${statusChip}
       <div class="gh-progress"><div class="gh-bar"><div class="gh-bar-fill" style="width:${pct}%"></div></div><span>${doneCount} / ${wTasks.length}</span></div>
       <div class="gh-actions">
         <button title="Edit" data-edit-wi="${wi.id}">${ICONS.edit}</button>
@@ -5158,71 +5116,9 @@ function wireTaskGroupInteractions(workItems){
     });
   }
 
-  // ── Work item drag-to-reorder ─────────────────────────────────
-  if(groupBy === 'workitem' && canWriteView('tasks')){
-    let draggedWiId = null;
-
-    container.querySelectorAll('.group[data-wi][draggable="true"]').forEach(group => {
-      const handle = group.querySelector('.gh-drag-handle');
-      let armed = false;
-      if(handle){
-        handle.addEventListener('mousedown', () => { armed = true; });
-        document.addEventListener('mouseup', () => { armed = false; });
-      }
-      group.addEventListener('dragstart', e => {
-        if(!armed){ e.preventDefault(); return; }
-        armed = false;
-        draggedWiId = Number(group.dataset.wi);
-        group.classList.add('wi-dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        try { e.dataTransfer.setData('text/plain', String(draggedWiId)); } catch(_) {}
-      });
-      group.addEventListener('dragend', () => {
-        group.classList.remove('wi-dragging');
-        container.querySelectorAll('.wi-drop-before,.wi-drop-after').forEach(el => el.classList.remove('wi-drop-before','wi-drop-after'));
-        draggedWiId = null;
-      });
-      group.addEventListener('dragover', e => {
-        if(draggedWiId === null || Number(group.dataset.wi) === draggedWiId) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        container.querySelectorAll('.wi-drop-before,.wi-drop-after').forEach(el => el.classList.remove('wi-drop-before','wi-drop-after'));
-        const r = group.getBoundingClientRect();
-        group.classList.add((e.clientY - r.top) < r.height / 2 ? 'wi-drop-before' : 'wi-drop-after');
-      });
-      group.addEventListener('drop', e => {
-        e.preventDefault();
-        if(draggedWiId === null) return;
-        const targetWiId = Number(group.dataset.wi);
-        if(targetWiId === draggedWiId) return;
-        const r = group.getBoundingClientRect();
-        const above = (e.clientY - r.top) < r.height / 2;
-        // Find the current ordered list of work items for this project
-        const pid = state.activeProject;
-        const projectWis = state.workItems
-          .filter(w => w.projectId === pid)
-          .sort((a,b) => {
-            const ao = typeof a.order === 'number' ? a.order : 999999;
-            const bo = typeof b.order === 'number' ? b.order : 999999;
-            return ao !== bo ? ao - bo : (a.code||'').localeCompare(b.code||'');
-          });
-        const fromIdx = projectWis.findIndex(w => w.id === draggedWiId);
-        let toIdx = projectWis.findIndex(w => w.id === targetWiId);
-        if(fromIdx < 0 || toIdx < 0) return;
-        const [moved] = projectWis.splice(fromIdx, 1);
-        if(fromIdx < toIdx) toIdx--;
-        projectWis.splice(above ? toIdx : toIdx + 1, 0, moved);
-        // Reassign order values
-        projectWis.forEach((w, i) => { w.order = (i + 1) * 10; });
-        saveState();
-        renderTaskGroups({kindFilter: tasksViewState.kindFilter});
-      });
-    });
-  }
-
   container.onclick = e => {
     const header = e.target.closest('.group-header');
-    if(header && !e.target.closest('.gh-actions') && !e.target.closest('.gh-drag-handle')){
+    if(header && !e.target.closest('.gh-actions')){
       const group = header.parentElement;
       const gid = group.dataset.gid;
       group.classList.toggle('open');
@@ -6055,7 +5951,7 @@ function openWorkItemModal(opts){
   root.innerHTML = `
     <div class="modal-overlay" id="wiOverlay">
       <div class="modal">
-        <div class="modal-title">${editing?'Edit':'New'} ${kind==='interface'?'iFlow':'work item'}<button class="modal-close" onclick="closeWiModal()">×</button></div>
+        <div class="modal-title">${editing?'Edit':'New'} ${kind==='interface'?'interface':'work item'}<button class="modal-close" onclick="closeWiModal()">×</button></div>
         ${editing ? `<div class="form-row cols-2">
           <div class="form-group"><label>Code</label><input id="wi-code" value="${escHtml(wi.code||'')}" readonly style="opacity:.7;cursor:not-allowed"/></div>
           <div class="form-group"><label>Title<span class="req">*</span></label><input id="wi-title" value="${escHtml(wi.title||'')}" placeholder="Short descriptive title"/></div>
@@ -6077,9 +5973,6 @@ function openWorkItemModal(opts){
             </select></div>
             <div class="form-group"><label>Protocol</label><input id="wi-protocol" value="${escHtml(wi.protocol||'')}" placeholder="HTTPS"/></div>
           </div>
-          <div class="form-row">
-            <div class="form-group"><label>Tags (comma-separated)</label><input id="wi-tags" value="${escHtml((wi.tags||[]).join(', '))}" placeholder="MDI, S/4HC, SFTP…"/></div>
-          </div>
         ` : `
           <div class="form-row">
             <div class="form-group"><label>Tags (comma-separated)</label><input id="wi-tags" value="${escHtml((wi.tags||[]).join(', '))}" placeholder="MDI, Peppol, Italy"/></div>
@@ -6099,7 +5992,6 @@ function openWorkItemModal(opts){
         </div>
         <div class="modal-actions">
           ${editing && currentUser.role==='admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteWorkItemFromModal(${wi.id})">Delete</button>` : ''}
-          ${editing && canWriteView('tasks') ? `<button class="btn btn-outline btn-sm" onclick="convertWorkItemKind(${wi.id})" title="Switch between iFlow and Work item">${kind==='interface'?'Convert to Work item':'Convert to iFlow'}</button>` : ''}
           <div style="flex:1"></div>
           <button class="btn btn-outline" onclick="closeWiModal()">Cancel</button>
           <button class="btn btn-primary" onclick="saveWorkItem(${editing?wi.id:'null'}, '${kind}')">${editing?'Save':'Create'}</button>
@@ -6124,36 +6016,6 @@ function closeWiModal(){
   const o = document.getElementById('wiOverlay'); if(!o) return;
   o.classList.remove('visible');
   setTimeout(() => document.getElementById('modalRoot').innerHTML = '', 180);
-}
-
-function convertWorkItemKind(id){
-  const wi = state.workItems.find(w => w.id === id);
-  if(!wi) return;
-  const currentKind = wi.kind;
-  const newKind = currentKind === 'interface' ? 'work' : 'interface';
-  const newKindLabel = newKind === 'interface' ? 'iFlow' : 'Work item';
-  confirmDialog(`Convert <b>${escHtml(wi.code)} — ${escHtml(wi.title)}</b> to a <b>${newKindLabel}</b>?<br><br>${newKind === 'interface' ? 'Source, target, dIF and protocol fields will be empty — fill them in afterwards.' : 'Interface-specific fields (source, target, dIF, protocol) will be cleared.'}`, 'Convert').then(ok => {
-    if(!ok) return;
-    wi.kind = newKind;
-    // Generate a new code for the new kind
-    const proj = state.projects.find(p => p.id === wi.projectId);
-    const prefix = (proj && proj.code) ? proj.code.toUpperCase() : 'XX';
-    const mid = newKind === 'interface' ? 'IF' : 'WK';
-    const pattern = new RegExp('^' + prefix + '-' + mid + '(\d+)$');
-    const existing = state.workItems
-      .filter(w => w.projectId === wi.projectId && w.kind === newKind && w.id !== wi.id)
-      .map(w => { const m = (w.code||'').match(pattern); return m ? parseInt(m[1], 10) : 0; });
-    const next = (existing.length ? Math.max(...existing) : 0) + 1;
-    wi.code = `${prefix}-${mid}${String(next).padStart(3, '0')}`;
-    // Clear kind-specific fields when converting away from interface
-    if(newKind === 'work'){
-      wi.source = ''; wi.target = ''; wi.dif = ''; wi.protocol = ''; wi.direction = '';
-    }
-    saveState();
-    closeWiModal();
-    renderAll();
-    toast(`Converted to ${newKindLabel}: ${wi.code}`, 'success');
-  });
 }
 function generateWorkItemCode(kind){
   const proj = state.projects.find(p => p.id === state.activeProject);
@@ -6182,9 +6044,9 @@ function saveWorkItem(editId, kind){
     data.dif = document.getElementById('wi-dif').value;
     data.direction = document.getElementById('wi-direction').value;
     data.protocol = document.getElementById('wi-protocol').value.trim();
+  }else{
+    data.tags = document.getElementById('wi-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
   }
-  const tagsEl = document.getElementById('wi-tags');
-  data.tags = tagsEl ? tagsEl.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
   if(editId){
     const wi = state.workItems.find(w => w.id === editId);
     if(wi){
@@ -6524,8 +6386,8 @@ function renderGantt(){
   });
   if(today < minDate) minDate = new Date(today);
   if(today > maxDate) maxDate = new Date(today);
-  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 14);
-  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 90);
+  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 7);
+  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 14);
 
   const zoom = ganttViewState.zoom;
   const dayPx = zoom === 'day' ? 28 : zoom === 'week' ? 14 : 5;
@@ -7740,8 +7602,8 @@ function renderTimeline(){
   });
   if(today < minDate) minDate = new Date(today);
   if(today > maxDate) maxDate = new Date(today);
-  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 14);
-  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 90);
+  minDate = snapToMonday(minDate); minDate.setDate(minDate.getDate() - 7);
+  maxDate = snapToMonday(maxDate); maxDate.setDate(maxDate.getDate() + 14);
 
   const zoom = timelineViewState.zoom;
   const dayPx = zoom === 'day' ? 36 : zoom === 'week' ? 18 : 6;
