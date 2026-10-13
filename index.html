@@ -3045,6 +3045,168 @@ input:focus,select:focus,textarea:focus {box-shadow:0 0 0 3px color-mix(in srgb,
   .nav a.active {outline:2px solid var(--accent);}
 }
 
+
+/* ===== Apple-inspired complete workspace redesign ===== */
+:root{--page:#f4f7f5;--surface:#fff;--surface-2:#f8faf9;--surface-3:#eef3f0;--border:#e3eae5;--border-strong:#d3dfd6;--text:#1b2920;--text-muted:#65756a;--text-dim:#8a998e;--accent:#138453;--accent-deep:#0c6d44;--accent-soft:#e3f4e8;--shadow-sm:0 2px 7px rgba(13,53,30,.035);--shadow:0 6px 26px rgba(13,53,30,.055);--shadow-lg:0 18px 55px rgba(13,53,30,.14);--radius:17px;--radius-lg:23px;--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;--serif:var(--sans)}
+body{font-family:var(--sans);letter-spacing:-.008em}
+.sidebar{width:262px;min-width:262px;gap:22px;padding:27px 15px 19px;background:color-mix(in srgb,var(--surface) 78%,var(--page));border-color:var(--border)}
+.sidebar:not(.collapsed) .logo{padding:1px 11px 6px;gap:12px}.logo-mark{width:39px;height:39px;border-radius:13px;background:linear-gradient(140deg,#25a675,#096f47);font-size:16px;box-shadow:0 6px 16px #1486582b}.logo-text{font-size:16px;font-weight:720;letter-spacing:-.04em}
+.nav-label{font-family:var(--sans);font-size:10px;font-weight:750;letter-spacing:.13em;padding-left:13px;margin-bottom:8px}.nav{gap:3px}.nav a{padding:11px 13px;min-height:43px;border-radius:12px;font-size:13px;font-weight:560;transition:background .16s,box-shadow .16s,color .16s,transform .13s}.nav a.active{background:var(--accent-soft);color:var(--accent-deep);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent)}.nav a .ico{width:19px;height:19px}.nav a .ico svg{width:18px;height:18px}
+.nav a.active .nav-count{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent-deep)}.user-chip{background:var(--surface);border-radius:16px;padding:12px}.user-chip-name{font-weight:660}.projects-card{background:transparent;border:0;padding:2px}.projects-card h4{font-family:var(--sans);font-weight:760;padding:6px 9px 12px}.proj-item{min-height:40px;border-left:0!important;border-radius:12px;padding:10px 12px}.proj-item.active{border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow-sm)}.sidebar-footer button{background:var(--surface);border-radius:11px}
+.main{background:var(--page)}.topbar{min-height:119px;padding:27px 35px 18px;gap:13px;flex-wrap:wrap}.topbar-left{flex:1 1 250px}.topbar-breadcrumb{font-size:11px;font-weight:610}.greeting{font-size:clamp(25px,2.3vw,32px);letter-spacing:-.045em;font-weight:745}.greeting-sub{font-size:12.5px;margin-top:5px}.content{padding:8px 35px 42px;gap:17px}
+.mac-overview{margin-bottom:4px}.mac-overview-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:2px 0 20px}.mac-eyebrow{font-size:10px;font-weight:760;letter-spacing:.14em;color:var(--accent);margin-bottom:5px}.mac-overview-heading h2{font-size:21px;letter-spacing:-.035em;font-weight:745}.mac-overview-heading p{font-size:12px;color:var(--text-muted);margin-top:3px}.mac-link-button{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:11px;padding:10px 15px;font-weight:630;font-size:12px;cursor:pointer;white-space:nowrap}
+.mac-metric-grid{display:grid;grid-template-columns:1.3fr repeat(3,minmax(0,1fr));gap:14px}.mac-metric{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);padding:23px 22px;border-radius:21px;min-height:197px;display:flex;flex-direction:column;align-items:flex-start}.mac-metric-primary{background:linear-gradient(125deg,#e8f6ed,#f5fbf7);border-color:#d5e9dc}.mac-metric-label{display:flex;align-items:center;gap:9px;color:var(--text-muted);font-weight:640;font-size:12px;margin-bottom:21px}.mac-metric-icon{width:31px;height:31px;display:grid;place-items:center;border-radius:10px;background:#d2edde;color:#13764d;font-size:15px;font-weight:800}.mac-metric-icon.orange{background:#fff0d8;color:#a77725}.mac-metric-icon.rose{background:#fbe7e6;color:#bb514d}.mac-metric-icon.blue{background:#e4eefb;color:#4b7cad}.mac-big-value{font-size:42px;line-height:1;font-weight:760;letter-spacing:-.065em;font-variant-numeric:tabular-nums}.mac-big-value small{font-size:24px}.mac-metric-bottom{font-size:11.5px;color:var(--text-muted);margin-top:auto;padding-top:11px}.mac-metric-bottom strong{display:block;color:var(--accent-deep);margin-top:5px;font-size:10px}.mac-metric>button{border:0;background:none;color:var(--accent);padding:9px 0 0;font-size:11.5px;font-weight:670;cursor:pointer}.mac-progress{height:7px;background:#d5eadd;border-radius:10px;width:100%;margin-top:21px;overflow:hidden}.mac-progress span{display:block;background:linear-gradient(90deg,#36b77a,#0a7548);height:100%;border-radius:inherit;transition:width .35s}
+.card,.group,.kb-col,.sched-section,.sched-chart-card,.timeline-container,.gg-container{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow)}.card{padding:21px}.card .list-head h3{font-size:16px!important;font-weight:710!important;letter-spacing:-.035em!important}.avail-today-row{padding:11px 6px!important;border-bottom:1px solid var(--border);border-radius:0!important}.avail-today-row:last-child{border:0}.avail-mini-day{border-radius:7px}.view-toolbar,.gantt-toolbar{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 15px;box-shadow:var(--shadow-sm)}.view-switcher{background:var(--surface-3);border:1px solid var(--border);border-radius:12px;padding:4px}.vs-btn{border-radius:9px;padding:8px 13px}.vs-btn.active,.group-toggle button.active{background:var(--surface);color:var(--accent-deep);box-shadow:0 1px 6px #00000012}.btn{border-radius:11px;transition:transform .14s,background .15s,box-shadow .15s,border-color .15s}.btn:active,.nav a:active,.proj-item:active{transform:scale(.975)}.btn-primary{background:var(--accent);box-shadow:0 3px 9px #16885520}.btn-primary:hover{background:var(--accent-deep)}.vt-search{border-radius:11px}
+.kb-col{background:var(--surface-2);border-radius:19px;min-height:460px}.kb-head{padding:17px 15px 13px}.kb-title{font-family:var(--sans);font-size:12px;font-weight:725;letter-spacing:.02em}.kb-card{padding:16px;border-radius:15px;box-shadow:var(--shadow-sm);gap:11px;transition:box-shadow .2s,transform .2s}.kb-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}.kb-card-title{font-weight:620;font-size:13px;line-height:1.5}.kb-add{border-radius:12px}.gg-container{max-height:calc(100vh - 245px);border-radius:17px}.gg-header,.gg-axis,.gg-grouprow{background:var(--surface-2)}.gg-row{min-height:39px;border-color:var(--border)}.gg-bar{height:20px;border-radius:7px;transition:filter .14s,box-shadow .14s}.gg-bar:hover{filter:brightness(1.04);box-shadow:0 2px 9px #00000020}.gg-side-head{font-family:var(--sans);font-size:10px;font-weight:700}.gg-st-chip{border-radius:7px}.task-row{min-height:48px}.task-row:hover,.group-header:hover{background:var(--surface-2)}.group-header{padding:16px 18px}.gh-title{font-weight:650}.focus-task{border-radius:15px}.sched-section,.sched-chart-card{border-radius:20px}.sched-slot{border-radius:10px}.side-panel{width:min(520px,100%);border-radius:22px 0 0 22px;box-shadow:-20px 0 60px #142d201f}.sp-head{padding:17px 23px}.sp-body{padding:26px 29px}.sp-title{font-size:25px;font-weight:720;letter-spacing:-.045em}.modal{border-radius:24px;box-shadow:0 24px 85px #163b2533}.modal-title{font-weight:720;font-size:20px}.modal-overlay,.confirm-overlay{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.popover,.notif-panel{border-radius:16px;box-shadow:var(--shadow-lg)}.login-box{padding:43px;border-radius:25px;box-shadow:0 25px 80px #153a2319}.login-overlay{background:radial-gradient(ellipse at 50% 20%,#e6f3e9,var(--page) 55%)}.login-heading{font-size:29px;font-weight:740;letter-spacing:-.045em}
+/* Fluid motion and interruption: WAAPI is used by the motion manager below. */
+.mac-animated-panel{will-change:transform;animation:none!important}.mac-animated-modal{will-change:transform,opacity;animation:none!important}.mac-dragging{filter:drop-shadow(0 12px 16px #12392333);cursor:grabbing!important}.mac-view-enter{animation:macViewEnter .24s cubic-bezier(.2,.7,.2,1) both}@keyframes macViewEnter{from{opacity:.45;transform:translateY(7px)}to{opacity:1;transform:none}}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+@media(min-width:1100px){.topbar{position:sticky;top:0;z-index:4;background:color-mix(in srgb,var(--page) 91%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}}
+@media(max-width:1260px){.mac-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.content{padding:8px 23px 34px}.topbar{padding-left:23px;padding-right:23px}}
+@media(max-width:720px){.content{padding:6px 14px 97px}.topbar{min-height:85px;padding:17px 15px 11px}.mac-overview-heading h2{font-size:18px}.mac-overview-heading p{font-size:11px}.mac-link-button{padding:10px;font-size:0}.mac-link-button::first-letter{font-size:15px}.mac-metric-grid{gap:9px}.mac-metric{min-height:150px;padding:15px;border-radius:16px}.mac-metric-label{font-size:10.5px;margin-bottom:15px;gap:6px}.mac-metric-icon{width:25px;height:25px;font-size:12px}.mac-big-value{font-size:32px}.mac-metric-bottom{font-size:10px}.mac-metric>button{font-size:10px}.content>div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}.mac-mobile-tabs{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:76;display:flex;justify-content:space-around;min-height:63px;padding:5px;background:#fffffff0;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid #e2ece4;border-radius:20px;box-shadow:0 12px 38px #20472c2c}.mac-mobile-tabs button{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-size:10px;font-weight:680;color:#74857a;border:0;background:none;border-radius:15px}.mac-mobile-tabs .mac-tab-icon{font-size:20px}.mac-mobile-tabs button.active{background:#e2f2e7;color:#108054}.save-indicator-floating{bottom:84px}}
+@media(min-width:721px){.mac-mobile-tabs{display:none}}[data-theme="dark"] .mac-metric,[data-theme="dark"] .card,[data-theme="dark"] .mac-link-button{background:var(--surface);border-color:var(--border)}[data-theme="dark"] .mac-metric-primary{background:var(--surface-2)}[data-theme="dark"] .mac-metric-label,[data-theme="dark"] .mac-metric-bottom{color:var(--text-muted)}[data-theme="dark"] .sidebar,[data-theme="dark"] .topbar{background:var(--page)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}.kb-card:hover{transform:none}}@media(prefers-reduced-transparency:reduce){.topbar,.mac-mobile-tabs{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--surface)!important}}@media(prefers-contrast:more){.mac-metric,.card,.kb-card,.side-panel{border:2px solid var(--text-muted)}}
+
+
+/* ============================================================
+   REFERENCE-MATCHING WORKSPACE UI — real rendered view structure
+   Inspired by the approved light, calm dashboard and Gantt concepts
+   ============================================================ */
+:root{--page:#f5f6f8;--surface:#fff;--surface-2:#fafbf9;--surface-3:#eef1f5;--border:#e5e9e5;--border-strong:#d7ded8;--text:#26332e;--text-muted:#74817a;--text-dim:#99a69e;--accent:#4778b8;--accent-deep:#345f9c;--accent-soft:#e9f0fb;--radius:16px;--radius-lg:19px;--shadow:0 3px 16px rgba(35,65,47,.045),0 1px 4px rgba(34,65,49,.025);--shadow-lg:0 18px 48px rgba(39,70,56,.12)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--page);font-weight:400;color:var(--text)}
+.sidebar{width:248px;min-width:248px;padding:24px 14px 20px;background:#edf1ee;border-right:1px solid #dfe6e0;gap:24px}
+.logo{padding:0 9px 8px;gap:12px}.logo-mark{background:#4778b8;border-radius:12px;width:40px;height:40px;font-size:23px;box-shadow:none}.logo-text{font-weight:740;color:#293832;letter-spacing:-.04em}
+.nav{gap:5px}.nav a{padding:12px 15px;border-radius:12px;color:#72827a;min-height:43px;font-size:14px}.nav a.active{background:#fff;color:#293832;box-shadow:none;font-weight:700;position:relative}.nav a.active:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#4778b8;border-radius:5px}.nav a.active .ico{color:#4778b8}.nav a:hover:not(.active){background:rgba(255,255,255,.45)}
+.nav-label,.projects-card h4{font-family:inherit;letter-spacing:.035em;color:#95a49b;font-size:10px;font-weight:700}.projects-card{border:0;background:transparent;padding:4px 0}.projects-card h4{padding:5px 10px 13px}.proj-item{border:0;padding:11px 13px;margin:1px 0;border-radius:10px}.proj-item.active{background:rgba(255,255,255,.8);border:0;box-shadow:none}.proj-dot{width:10px;height:10px}.user-chip{background:rgba(255,255,255,.78);border:0;border-radius:15px;padding:12px}.sidebar-footer button{background:rgba(255,255,255,.55);border:0}
+.main{background:var(--page)}.topbar{padding:37px 38px 23px;gap:12px;min-height:151px;align-items:flex-end;flex-wrap:wrap}.topbar-left{flex:1 1 285px}.topbar-breadcrumb{margin-bottom:22px;color:#88988f;font-size:12px}.greeting{font-size:30px;line-height:1.15;font-weight:720;letter-spacing:-.04em}.greeting-sub{font-size:13.5px;color:#88988f;margin-top:6px}.topbar-right{align-self:center}.topbar-viewswitcher{align-self:center}.notif-bell{align-self:flex-start;margin-top:0;background:white;border-color:var(--border);width:44px;height:40px;border-radius:13px}.content{padding:0 38px 46px;gap:18px}
+.btn{border-radius:12px;padding:10px 16px;font-weight:620}.btn-primary{background:#4778b8;border-color:#4778b8;color:white}.btn-primary:hover{background:#345f9c}.btn-outline{border-color:#e3e9e4;background:#fff}.icon-btn{border-radius:11px}.view-switcher{background:#fff;border-color:#e1e8e2;border-radius:13px}.vs-btn{border-radius:10px;min-height:32px}.vs-btn.active{background:#e9f0fb;color:#4778b8;box-shadow:none}.group-toggle{border-radius:12px}.group-toggle button{border-radius:9px}.group-toggle button.active{background:#e9f0fb;color:#4778b8}.chip-filter.active{background:#e9f0fb;color:#4778b8;border-color:#d5e4fc}
+.ref-dashboard{display:flex;flex-direction:column;gap:24px}.ref-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.ref-stat{padding:19px 19px 20px;min-height:135px;background:#fff;border:1px solid #e5e9f0;border-radius:19px;box-shadow:0 4px 15px rgba(35,65,47,.055);display:flex;flex-direction:column}.ref-stat-icon{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:17px;font-weight:800;color:white}.ref-stat-icon.blue{background:#598c94}.ref-stat-icon.purple{background:#aa94c5}.ref-stat-icon.green{background:#5d9f88}.ref-stat-icon.orange{background:#d5a26d}.ref-stat-line{display:flex;align-items:center;gap:13px;margin-top:6px}.ref-stat-line b{font-size:28px;line-height:1.2;letter-spacing:-.06em}.ref-stat-line strong{font-size:13px;color:#52655b;font-weight:660}.ref-stat p{font-size:11px;color:#90a195;margin-left:46px;margin-top:2px}
+.ref-dashboard-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:20px}.ref-card{background:white;border:1px solid #e5e9f0;border-radius:19px;box-shadow:0 4px 15px rgba(35,65,47,.055);padding:25px 24px 24px;min-width:0}.ref-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px}.ref-card h3{font-size:17px;letter-spacing:-.02em;font-weight:710}.ref-card header p{color:#8b9c92;font-size:12px;margin-top:4px}.ref-more{border:0;background:none;color:#4778b8;font-size:11px;font-weight:650;cursor:pointer;padding:6px}.ref-streams{display:flex;flex-direction:column;gap:20px;padding:3px 0 6px}.ref-stream{cursor:pointer;border-radius:10px}.ref-stream-label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;margin-bottom:9px;color:#385170}.ref-stream-label strong{color:#809288;font-size:12px}.ref-stream-track{height:9px;background:#eef2ee;border-radius:10px;overflow:hidden}.ref-stream-fill{display:block;height:100%;border-radius:10px;background:#6b93c9;transition:width .5s cubic-bezier(.2,.8,.2,1)}.ref-color-1{background:#729acb}.ref-color-2{background:#aa94c5}.ref-color-3{background:#d5a26d}.ref-stream:hover .ref-stream-track{box-shadow:0 0 0 2px #eaf3f0}.ref-milestone-list{display:flex;flex-direction:column;gap:18px}.ref-milestone{display:flex;align-items:center;gap:14px;border-radius:12px;cursor:pointer;padding:0 2px}.ref-milestone:hover>div:last-child strong{color:#4778b8}.ref-milestone-date{width:52px;height:54px;border-radius:11px;background:#eaf2ef;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;color:#4778b8}.ref-milestone-date strong{font-size:19px;line-height:1.2}.ref-milestone-date small{font-size:10px;font-weight:670}.ref-milestone>div:last-child strong{font-size:12px;color:#2b3c34}.ref-milestone>div:last-child p{font-size:10.5px;color:#9aaa9e;margin-top:5px}.ref-focus{padding-bottom:25px}.ref-focus header{margin-bottom:18px}.ref-focus-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.ref-focus-item{display:flex;align-items:flex-start;gap:9px;min-width:0;padding:16px;border-radius:14px;background:#f7f9f7;border:1px solid #e9edf3;text-align:left;cursor:pointer;color:#384e43;transition:transform .15s,box-shadow .15s}.ref-focus-item:hover{transform:translateY(-2px);box-shadow:0 7px 16px rgba(39,70,56,.08)}.ref-focus-item>span:nth-child(2){min-width:0;flex:1}.ref-focus-item strong{font-size:11px;font-weight:670;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ref-focus-item small{color:#98a99e;font-size:10.5px;display:block;margin-top:9px}.ref-focus-dot{flex-shrink:0;width:10px;height:10px;border-radius:50%;margin-top:4px}.ref-focus-arrow{font-size:13px;color:#9faca2}.ref-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.ref-bottom-grid .ref-card header{margin-bottom:12px}.ref-team-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid #f0f3f7}.ref-team-row:last-child{border:0}.ref-team-row>strong{font-size:12px;font-weight:610;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ref-team-days{display:flex;gap:4px}.ref-team-days span{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;background:#eff3f7;color:#acb7c6;font-size:10px;font-weight:650}.ref-team-days span.yes{background:#e4f6ed;color:#5b997e}.ref-team-days span.today{box-shadow:inset 0 0 0 1.4px #729acb}.ref-phase-list{display:flex;flex-direction:column;gap:16px;padding:6px 0}.ref-phase{display:flex;gap:12px;align-items:center}.ref-phase-name{width:95px;flex-shrink:0;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:580}.ref-phase-name i{display:block;width:8px;height:8px;border-radius:50%}.ref-phase-track{flex:1;height:9px;border-radius:9px;background:#eef2ee;overflow:hidden}.ref-phase-track span{height:100%;border-radius:9px;display:block}.ref-phase b{font-size:11px;font-weight:600;color:#809288;width:36px;text-align:right}.ref-links{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:8px}.ref-links span{font-size:11px;color:#91a197;text-transform:uppercase;font-weight:700}.ref-links a{text-decoration:none;color:#4778b8;background:white;border:1px solid #e4ebe5;padding:8px 12px;border-radius:11px;font-size:12px}.ref-empty{padding:23px 8px;color:#93a397;font-size:12px}
+/* Gantt and board now share the same pale-canvas / floating-white hierarchy. */
+.view-toolbar,.gantt-toolbar{padding:12px 17px;background:#fff;border:1px solid #e5e9f0;border-radius:17px;box-shadow:0 2px 0 #e8ede8}.gg-container{background:#fff;border:1px solid #e5e9f0;border-radius:20px;box-shadow:0 4px 15px rgba(35,65,47,.055);max-height:calc(100vh - 282px)}.gg-header,.gg-axis,.gg-side-head{background:#f4f7f4}.gg-grouprow,.gg-grouprow .gg-side{background:#f4f7f4}.gg-grouprow{min-height:53px;border:0}.gg-row{min-height:50px;border-bottom:1px solid #eef2ee}.gg-bar{height:24px;border-radius:9px}.gg-st-chip{border-radius:7px;padding:5px 8px}.gg-axis-months,.gg-axis-weeks{height:26px}.gg-axis-month,.gg-axis-week{font-family:inherit;font-size:10px;font-weight:660}.gg-cell{font-size:12.5px}.gg-side{border-color:#e9eee9}.gg-row-today{background:#4778b8}.gg-axis-today{background:#4778b8}
+.kb-col{background:#f5f8f5;border:1px solid #e5e9f0;border-radius:18px;padding:6px;flex-basis:305px;width:305px;min-height:520px}.kb-head{padding:16px 13px}.kb-title{font-family:inherit;letter-spacing:.03em;font-size:12px}.kb-body{gap:11px}.kb-card{background:#fff;border-radius:14px;padding:16px;border:1px solid #e8eee8;box-shadow:0 3px 12px rgba(35,65,47,.035);gap:11px;transition:transform .18s,box-shadow .18s}.kb-card:hover{transform:translateY(-3px);box-shadow:0 9px 25px rgba(39,70,56,.1)}.kb-card-title{font-size:13.5px;font-weight:650}.kb-add{background:rgba(255,255,255,.7);border-radius:12px;margin-top:8px}
+.group{background:white;border:1px solid #e4ebe5;border-radius:17px;box-shadow:0 4px 0 #e9eee9}.group-header{padding:17px 19px}.group-body{background:white}.task-row{padding-top:14px;padding-bottom:14px}.task-row:hover{background:#f6f9f6}.sp-head{padding:19px 24px}.side-panel{width:510px;border-left:1px solid #e5e9f0;border-radius:21px 0 0 21px;box-shadow:-20px 0 50px rgba(26,50,81,.14)}.sp-body{padding:26px}.sp-title{font-size:26px}.sp-props{grid-template-columns:108px 1fr;gap:11px 16px}.sp-section h4{font-family:inherit;font-weight:750;font-size:11px}.modal{border-radius:24px}.modal-title{font-size:20px}.modal-overlay,.confirm-overlay{backdrop-filter:blur(10px);background:rgba(26,49,78,.25)}
+/* Active interaction surface and reduced motion */
+.btn,.vs-btn,.nav a,.icon-btn{transition:background .18s,color .18s,box-shadow .18s,transform .14s}.btn:active,.icon-btn:active,.vs-btn:active{transform:scale(.965)}:where(button,a,input,select,textarea,[role="button"]):focus-visible{outline:3px solid #8ab6ab!important;outline-offset:3px}
+[data-theme="dark"]{--page:#141b25;--surface:#1b2634;--surface-2:#202e3e;--surface-3:#2c3d50;--border:#354458;--border-strong:#47576b;--text:#e6efff;--text-muted:#a2b2c8;--text-dim:#738ba8;--accent:#6caaff;--accent-deep:#428ef4;--accent-soft:#253e5c}.\31 {color:inherit}
+[data-theme="dark"] .sidebar{background:#1b2634;border-color:#354458}[data-theme="dark"] .logo-text,[data-theme="dark"] .nav a.active{color:#e6efff}[data-theme="dark"] .nav a.active,[data-theme="dark"] .user-chip,[data-theme="dark"] .ref-stat,[data-theme="dark"] .ref-card,[data-theme="dark"] .gg-container,[data-theme="dark"] .kb-card{background:#243247;border-color:#36495e}[data-theme="dark"] .ref-stat-line strong,[data-theme="dark"] .ref-milestone>div:last-child strong,[data-theme="dark"] .ref-focus-item strong{color:#e6efff}[data-theme="dark"] .ref-stat,[data-theme="dark"] .ref-card,[data-theme="dark"] .gg-container{box-shadow:0 5px 0 #18212e}[data-theme="dark"] .ref-focus-item,[data-theme="dark"] .ref-milestone-date{background:#2b3e54;border-color:#3a4d62}[data-theme="dark"] .ref-stream-track,[data-theme="dark"] .ref-phase-track{background:#35465b}
+@media(max-width:1200px){.ref-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ref-dashboard-grid{grid-template-columns:minmax(0,1fr) 330px}.content{padding-left:25px;padding-right:25px}.topbar{padding-left:25px;padding-right:25px}}
+@media(max-width:880px){.ref-dashboard-grid,.ref-bottom-grid{grid-template-columns:1fr}.topbar{min-height:110px}.ref-focus-list{grid-template-columns:1fr}.ref-stat-grid{gap:11px}.ref-card{padding:20px}}
+@media(max-width:720px){.topbar{padding:16px 15px;min-height:90px}.topbar-breadcrumb{margin-bottom:8px}.greeting{font-size:23px}.content{padding:0 13px 94px}.ref-dashboard{gap:16px}.ref-stat{padding:16px;min-height:120px}.ref-stat-line{gap:8px}.ref-stat-line b{font-size:25px}.ref-stat-line strong{font-size:11px}.ref-stat p{margin-left:0;font-size:10px}.ref-stat-grid{gap:10px}.ref-dashboard-grid{gap:16px}.ref-card h3{font-size:16px}.ref-focus-list{grid-template-columns:1fr}.ref-streams{gap:20px}.gg-container{max-height:calc(100vh - 270px)}}
+@media(prefers-reduced-motion:reduce){.ref-focus-item,.kb-card,.btn,.icon-btn{transition:none!important}.ref-focus-item:hover,.kb-card:hover{transform:none!important}}
+
+
+/* CENTERED TASK DETAILS MODAL - replaces right-side detail drawer */
+.panel-backdrop {
+  position:fixed !important;
+  inset:0 !important;
+  z-index:800 !important;
+  background:rgba(16,30,24,.46) !important;
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+}
+.side-panel {
+  position:fixed !important;
+  top:50% !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:min(760px,calc(100vw - 36px)) !important;
+  max-width:calc(100vw - 36px) !important;
+  height:min(780px,calc(100dvh - 48px)) !important;
+  max-height:calc(100dvh - 48px) !important;
+  z-index:801 !important;
+  border:1px solid var(--border) !important;
+  border-radius:22px !important;
+  box-shadow:0 32px 96px rgba(9,27,17,.25) !important;
+  overflow:hidden;
+  animation:taskModalEnter .3s cubic-bezier(.2,.8,.2,1) both !important;
+}
+.side-panel .sp-head { flex-shrink:0; }
+.side-panel .sp-body { overflow:auto; min-height:0; }
+@keyframes taskModalEnter {
+  from { opacity:0; transform:translate(-50%,-47%) scale(.965); }
+  to { opacity:1; transform:translate(-50%,-50%) scale(1); }
+}
+@media(max-width:720px) {
+  .side-panel {
+    width:calc(100vw - 20px) !important;
+    max-width:calc(100vw - 20px) !important;
+    height:min(86dvh,900px) !important;
+    max-height:calc(100dvh - 24px) !important;
+    border-radius:19px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .side-panel { animation:none !important; transform:translate(-50%,-50%) !important; }
+}
+
+
+/* REFINED BLUE + COOL NEUTRAL PALETTE — 2026 */
+:root{
+  --page:#f5f6f8;--surface:#ffffff;--surface-2:#fafbfc;--surface-3:#eef1f5;
+  --border:#e5e9f0;--border-strong:#d4dbe5;
+  --text:#242b38;--text-muted:#697586;--text-dim:#96a0ad;
+  --accent:#4778b8;--accent-deep:#345f9c;--accent-soft:#e9f0fb;--accent-glow:#82a8d6;
+  --success:#69a58b;--success-soft:#e7f4ed;
+  --warn:#d4a35f;--warn-soft:#fbf2e5;
+  --danger:#d47d7d;--danger-soft:#fbecec;
+  --info:#8d83bc;--info-soft:#f0edfa;
+  --shadow-sm:0 2px 7px rgba(37,51,75,.035);
+  --shadow:0 4px 19px rgba(37,51,75,.055);
+  --shadow-lg:0 20px 58px rgba(37,51,75,.14);
+}
+[data-theme="dark"]{
+  --page:#171b24;--surface:#212735;--surface-2:#282f3d;--surface-3:#323b4b;
+  --border:#394253;--border-strong:#505c70;
+  --text:#ecf0f7;--text-muted:#afbacb;--text-dim:#8995a7;
+  --accent:#91b6ea;--accent-deep:#7fa5dc;--accent-soft:#293c58;--accent-glow:#a5c5f1;
+  --success:#88bca0;--success-soft:#294537;
+  --warn:#ddb67e;--warn-soft:#493b29;
+  --danger:#e7a0a0;--danger-soft:#4b3037;
+  --info:#b0a4dd;--info-soft:#39334e;
+}
+.sidebar{background:#f8f9fb!important;border-color:var(--border)!important}
+.logo-mark,.login-mark{background:linear-gradient(145deg,#5e8ac2,#3c659e)!important;box-shadow:0 5px 15px rgba(47,84,135,.12)}
+.logo-text,.nav a.active{color:var(--text)!important}
+.nav a.active{background:#fff!important;box-shadow:0 3px 12px rgba(34,53,83,.045)!important}
+.nav a.active:before{background:var(--accent)!important}.nav a.active .ico{color:var(--accent)!important}
+.nav a:hover:not(.active){background:#ecf1f8!important}
+.btn-primary{background:var(--accent)!important;border-color:var(--accent)!important;color:white!important}
+.btn-primary:hover{background:var(--accent-deep)!important}
+.vs-btn.active,.group-toggle button.active,.chip-filter.active{background:var(--accent-soft)!important;color:var(--accent-deep)!important;border-color:#d6e3f6!important}
+.ref-stat,.ref-card,.gg-container,.group{box-shadow:0 5px 22px rgba(35,50,75,.045)}
+.ref-card,.ref-stat,.kb-card,.gg-container,.group,.view-toolbar,.gantt-toolbar{border-color:var(--border)!important}
+.ref-stat-icon.blue{background:#729acb!important}.ref-stat-icon.purple{background:#a399cd!important}
+.ref-stat-icon.green{background:#81b59e!important}.ref-stat-icon.orange{background:#d7ac77!important}
+.ref-stream-fill,.ref-color-1{background:#6b93c9!important}.ref-color-2{background:#a89acb!important}.ref-color-3{background:#d4aa72!important}
+.ref-stream-track,.ref-phase-track{background:#eef1f5!important}
+.ref-milestone-date{background:#edf2fb!important;color:var(--accent-deep)!important}
+.ref-more,.ref-links a{color:var(--accent-deep)!important}
+.ref-stream-label,.ref-focus-item,.ref-milestone>div:last-child strong{color:var(--text)!important}
+.ref-team-days span.yes{background:#e8f4ed!important;color:#4c8a6c!important}
+.ref-team-days span.today{box-shadow:inset 0 0 0 1.4px var(--accent)!important}
+.ref-focus-item{background:#f8f9fc!important;border-color:#e9edf3!important}
+.ref-focus-item:hover{box-shadow:0 7px 18px rgba(40,63,95,.09)!important}
+.ref-phase-track span{filter:saturate(.76)}
+.gg-row-today,.gg-axis-today{background:var(--accent)!important}
+.gg-header,.gg-axis,.gg-side-head,.gg-grouprow,.gg-grouprow .gg-side{background:#f6f8fc!important}
+.gg-row{border-bottom-color:#edf0f5!important}
+.gg-bar{filter:saturate(.8)}.gg-bar:hover{filter:saturate(.9) brightness(.96)}
+.kb-col{background:#f6f8fc!important;border-color:var(--border)!important}
+.kb-card{background:white!important;box-shadow:0 2px 9px rgba(35,52,78,.04)!important}
+.panel-backdrop{background:rgba(30,39,59,.38)!important}
+.side-panel{box-shadow:0 28px 90px rgba(26,38,59,.22)!important}
+.mac-mobile-tabs{background:rgba(255,255,255,.95)!important;border-color:var(--border)!important}
+.mac-mobile-tabs button.active{background:var(--accent-soft)!important;color:var(--accent-deep)!important}
+:where(button,a,input,select,textarea,[role="button"]):focus-visible{outline-color:#8cafe0!important}
+[data-theme="dark"] .sidebar{background:#1d2330!important;border-color:var(--border)!important}
+[data-theme="dark"] .nav a.active,[data-theme="dark"] .user-chip,[data-theme="dark"] .ref-stat,[data-theme="dark"] .ref-card,[data-theme="dark"] .gg-container,[data-theme="dark"] .kb-card{background:var(--surface)!important;border-color:var(--border)!important}
+[data-theme="dark"] .nav a:hover:not(.active){background:var(--surface-3)!important}
+[data-theme="dark"] .ref-focus-item,[data-theme="dark"] .ref-milestone-date,[data-theme="dark"] .gg-header,[data-theme="dark"] .gg-axis,[data-theme="dark"] .gg-side-head,[data-theme="dark"] .gg-grouprow,[data-theme="dark"] .gg-grouprow .gg-side,[data-theme="dark"] .kb-col{background:var(--surface-2)!important;border-color:var(--border)!important}
+[data-theme="dark"] .kb-card{background:var(--surface)!important}
+[data-theme="dark"] .ref-stream-track,[data-theme="dark"] .ref-phase-track{background:var(--surface-3)!important}
+
 </style>
 </head>
 <body data-theme="light">
@@ -3194,6 +3356,7 @@ input:focus,select:focus,textarea:focus {box-shadow:0 0 0 3px color-mix(in srgb,
   </main>
 </div>
 
+<nav class="mac-mobile-tabs" id="macMobileTabs" aria-label="Quick navigation"><button data-view="dashboard" onclick="setView('dashboard')"><span class="mac-tab-icon">▦</span>Overview</button><button data-view="gantt" onclick="setView('gantt')"><span class="mac-tab-icon">☷</span>Tasks</button><button data-view="focus" onclick="setView('focus')"><span class="mac-tab-icon">◉</span>Today</button><button data-view="schedule" onclick="setView('schedule')"><span class="mac-tab-icon">▣</span>Schedule</button><button data-view="architecture" onclick="setView('architecture')"><span class="mac-tab-icon">◇</span>Systems</button></nav>
 <!-- MODAL ROOT (modals injected at runtime) -->
 <div id="modalRoot"></div>
 
@@ -4690,92 +4853,41 @@ function renderDashboard(){
     </div>
   `).join('') : `<div style="padding:14px;color:var(--text-dim);font-size:12.5px">No users yet.</div>`;
 
+  const dashboardStreamRows = workItems.map((wi,idx)=>{
+    const related=parents.filter(t=>t.workItemId===wi.id);
+    const complete=related.filter(t=>t.status==='done').length;
+    const progress=related.length?Math.round(complete*100/related.length):0;
+    return {wi,progress,count:related.length,index:idx};
+  }).sort((a,b)=>b.count-a.count).slice(0,5);
+  const milestoneRows=parents.filter(t=>t.due&&t.status!=='done').map(t=>({t,days:daysUntil(t.due)})).filter(x=>x.days!==null).sort((a,b)=>a.days-b.days).slice(0,4);
+  const focusRows=parents.filter(t=>t.status!=='done' && (t.assignee===currentUser?.name||t.status==='blocked'||(t.due&&daysUntil(t.due)<=7))).sort((a,b)=>{
+    const score=t=>(t.status==='blocked'?0: t.due ? Math.max(-50,daysUntil(t.due)):90);
+    return score(a)-score(b);
+  }).slice(0,3);
   document.getElementById('content').innerHTML = `
-    <div style="background:linear-gradient(135deg,var(--accent) 0%,var(--accent-deep) 100%);border-radius:var(--radius-lg);padding:26px 32px;color:#fff;margin-bottom:0;display:flex;align-items:center;gap:40px;flex-wrap:wrap;box-shadow:0 8px 28px color-mix(in srgb,var(--accent) 28%,transparent);position:relative;overflow:hidden;">
-      <div style="position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">Overall completion</div>
-        <div style="font-size:52px;font-weight:600;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums">${pct}%</div>
-        <div style="font-size:12px;opacity:.75">${doneTasks} of ${parents.length} tasks done</div>
+    <div class="ref-dashboard">
+      <div class="ref-stat-grid">
+        <article class="ref-stat"><span class="ref-stat-icon blue">▦</span><div class="ref-stat-line"><b>${parents.length}</b><strong>Total tasks</strong></div><p>Across this project</p></article>
+        <article class="ref-stat"><span class="ref-stat-icon purple">◴</span><div class="ref-stat-line"><b>${doing+inReview}</b><strong>In progress</strong></div><p>Work underway</p></article>
+        <article class="ref-stat"><span class="ref-stat-icon green">✓</span><div class="ref-stat-line"><b>${doneTasks}</b><strong>Completed</strong></div><p>Delivered tasks</p></article>
+        <article class="ref-stat"><span class="ref-stat-icon orange">!</span><div class="ref-stat-line"><b>${blockedTasks+overdueTasks.length}</b><strong>Needs attention</strong></div><p>Blocked or overdue</p></article>
       </div>
-      <div style="width:1px;height:56px;background:rgba(255,255,255,.2);flex-shrink:0"></div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">Tasks open</div>
-        <div style="font-size:32px;font-weight:600;line-height:1;letter-spacing:-.03em">${parents.length - doneTasks}</div>
-        <div style="font-size:12px;opacity:.75">${doing} in progress · ${todo} todo</div>
+      <div class="ref-dashboard-grid">
+        <section class="ref-card ref-delivery"><header><div><h3>Delivery progress</h3><p>Workstream completion across active integrations</p></div><button class="ref-more" onclick="setView('gantt')" aria-label="Open project timeline">View timeline ↗</button></header>
+          <div class="ref-streams">${dashboardStreamRows.length?dashboardStreamRows.map(({wi,progress,index})=>`<div class="ref-stream" role="button" tabindex="0" onclick="setView('tasks')" onkeydown="if(event.key==='Enter')setView('tasks')"><div class="ref-stream-label"><span>${escHtml(wi.title||wi.name||wi.code||'Work item')}</span><strong>${progress}%</strong></div><div class="ref-stream-track"><span class="ref-stream-fill ref-color-${index%4}" style="width:${progress}%"></span></div></div>`).join(''):'<div class="ref-empty">Create work items and tasks to track delivery progress.</div>'}</div>
+        </section>
+        <section class="ref-card ref-milestones"><header><div><h3>Upcoming milestones</h3><p>Your next key delivery dates</p></div></header>
+          <div class="ref-milestone-list">${milestoneRows.length?milestoneRows.map(({t,days})=>{const date=new Date(t.due+'T12:00:00');return `<div class="ref-milestone" role="button" tabindex="0" onclick="openSidePanel(${t.id})" onkeydown="if(event.key==='Enter')openSidePanel(${t.id})"><div class="ref-milestone-date"><strong>${String(date.getDate()).padStart(2,'0')}</strong><small>${date.toLocaleString('en-US',{month:'short'}).toUpperCase()}</small></div><div><strong>${escHtml(t.title)}</strong><p>${days<0?'Overdue by '+Math.abs(days)+'d':days===0?'Due today':days===1?'Due tomorrow':'Due in '+days+' days'} · ${escHtml(t.phase||t.status||'Task')}</p></div></div>`}).join(''):'<div class="ref-empty">No upcoming milestones. Your schedule is clear.</div>'}</div>
+        </section>
       </div>
-      <div style="width:1px;height:56px;background:rgba(255,255,255,.2);flex-shrink:0"></div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">Blocked</div>
-        <div style="font-size:32px;font-weight:600;line-height:1;letter-spacing:-.03em;color:${blockedTasks?'#ffb3ae':'rgba(255,255,255,.9)'}">${blockedTasks}</div>
-        <div style="font-size:12px;opacity:.75">${overdueTasks.length} overdue</div>
+      <section class="ref-card ref-focus"><header><div><h3>My focus</h3><p>Tasks that need your attention</p></div><button class="ref-more" onclick="setView('focus')">See all →</button></header>
+        <div class="ref-focus-list">${focusRows.length?focusRows.map(t=>`<button class="ref-focus-item" onclick="openSidePanel(${t.id})"><span class="ref-focus-dot" style="background:${t.status==='blocked'?'#e99a53':'#6b9aeb'}"></span><span><strong>${escHtml(t.title)}</strong><small>${escHtml(t.assignee||'Unassigned')} · ${escHtml(t.status||'To do')}</small></span><span class="ref-focus-arrow">↗</span></button>`).join(''):'<div class="ref-empty">Nothing urgent right now.</div>'}</div>
+      </section>
+      <div class="ref-bottom-grid">
+        <section class="ref-card"><header><div><h3>Team availability</h3><p>${availSubtitle} · ${memberLabel}</p></div>${currentUser.role==='admin'?'<button class="ref-more" onclick="openManageMembersModal()">Manage ↗</button>':''}</header><div class="ref-team-list">${availRows.length?availRows.map(r=>`<div class="ref-team-row">${avatarEl(r.user.name,30)}<strong>${escHtml(r.user.name)}</strong><div class="ref-team-days">${r.avail.map((on,i)=>`<span class="${on?'yes':''} ${i===todayIdx?'today':''}">${dayLabels[i]}</span>`).join('')}</div></div>`).join(''):'<div class="ref-empty">No team members assigned.</div>'}</div></section>
+        <section class="ref-card"><header><div><h3>Phase progress</h3><p>SAP Activate delivery stages</p></div><button class="ref-more" onclick="setView('gantt')">View Gantt ↗</button></header><div class="ref-phase-list">${phaseRows.map(r=>`<div class="ref-phase"><span class="ref-phase-name"><i style="background:${r.phase.color}"></i>${r.phase.label}</span><div class="ref-phase-track"><span style="background:${r.phase.color};width:${r.pct}%"></span></div><b>${r.pct}%</b></div>`).join('')}</div></section>
       </div>
-      <div style="width:1px;height:56px;background:rgba(255,255,255,.2);flex-shrink:0"></div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;font-family:var(--mono)">iFlows</div>
-        <div style="font-size:32px;font-weight:600;line-height:1;letter-spacing:-.03em">${ifaces.length}</div>
-        <div style="font-size:12px;opacity:.75">${workItems.length} work items total</div>
-      </div>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:999px;padding:8px 18px;font-size:13px;font-weight:600;flex-shrink:0;">
-        <span style="width:9px;height:9px;border-radius:50%;background:${healthStatus==='healthy'?'#6effc5':healthStatus==='at-risk'?'#ffd599':'#ffb3ae'};display:inline-block;flex-shrink:0"></span>
-        ${healthLabel} · ${healthScore}/100
-      </div>
-    </div>
-
-    <div style="height:14px;"></div>
-
-    <div style="display:flex;align-items:center;gap:6px;padding:0 6px 10px;flex-wrap:wrap;">
-      <span style="font-size:10.5px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-right:4px;">Links</span>
-      ${(proj.quickLinks||[]).map((ql,i) => `${i>0?'<div style="width:1px;height:14px;background:var(--border);flex-shrink:0"></div>':''}<a href="${escHtml(ql.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--text-muted);text-decoration:none;padding:2px 4px;border-radius:5px;transition:.12s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">${ql.favicon?`<img src="${escHtml(ql.favicon)}" width="14" height="14" style="border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">`:'🔗'} ${escHtml(ql.label)}</a>`).join('')}
-      ${currentUser.role==='admin'?`${proj.quickLinks&&proj.quickLinks.length?'<div style="width:1px;height:14px;background:var(--border);flex-shrink:0"></div>':''}<button onclick="addQuickLink()" style="background:none;border:none;font-size:12.5px;font-weight:500;color:var(--text-dim);cursor:pointer;padding:2px 4px;border-radius:5px;font-family:inherit;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">＋ Add link</button>`:''}
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-      <div class="card">
-        <div class="list-head">
-          <div><h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em">${isWeekend?"Team availability":"Who's in today"}</h3>
-          <p style="color:var(--text-muted);font-size:12px;margin-top:2px">${availSubtitle} · ${memberLabel}</p></div>
-          ${currentUser.role==='admin'?`<button class="btn btn-ghost btn-sm" onclick="openManageMembersModal()" title="Assign team members">⚙ Members</button>`:''}
-        </div>
-        <div class="avail-today-list">
-          ${availRows.length ? availRows.map(r => {
-            const taskCount = tasks.filter(t => t.assignee === r.user.name && t.status !== 'done').length;
-            const maxTasks = Math.max(1, ...availRows.map(x => tasks.filter(t => t.assignee === x.user.name && t.status !== 'done').length));
-            const isPeak = taskCount === maxTasks && taskCount > 0;
-            return `<div class="avail-today-row ${r.availToday?'on':'off'}" style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;">
-              ${avatarEl(r.user.name, 28)}
-              <div class="avail-today-name" style="flex:1;font-size:13px;font-weight:500">${escHtml(r.user.name)}</div>
-              <div class="avail-today-days" style="display:flex;gap:3px;">${r.avail.map((on,i)=>`<span class="avail-mini-day ${on?'on':''} ${i===todayIdx?'today':''}">${dayLabels[i]}</span>`).join('')}</div>
-              <span style="font-family:var(--mono);font-size:11.5px;font-weight:600;background:${isPeak?'var(--warn-soft)':'var(--surface-2)'};border:1px solid ${isPeak?'var(--warn)':'var(--border)'};color:${isPeak?'var(--warn)':'var(--text-muted)'};border-radius:999px;padding:2px 9px;flex-shrink:0;">${taskCount} tasks</span>
-            </div>`;
-          }).join('') : `<div style="padding:14px;color:var(--text-dim);font-size:12.5px">No users yet.</div>`}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="list-head">
-          <div><h3 style="font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.01em">Phase progress</h3>
-          <p style="color:var(--text-muted);font-size:12px;margin-top:2px">SAP Activate methodology</p></div>
-          <button class="btn btn-ghost btn-sm" onclick="setView('gantt')">Gantt →</button>
-        </div>
-        <div style="display:flex;flex-direction:column;">
-          ${phaseRows.map(r => {
-            const chip = r.pct===100
-              ? `<span style="font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600;background:var(--accent-soft);color:var(--accent-deep);width:70px;text-align:center;flex-shrink:0">Done</span>`
-              : r.total > 0
-                ? `<span style="font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600;background:var(--warn-soft);color:var(--warn);width:70px;text-align:center;flex-shrink:0">Active</span>`
-                : `<span style="font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600;background:var(--surface-3);color:var(--text-dim);width:70px;text-align:center;flex-shrink:0">Not started</span>`;
-            return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);${r.total===0?'opacity:.45':''}">
-              <div style="width:8px;height:8px;border-radius:50%;background:${r.phase.color};flex-shrink:0"></div>
-              <div style="font-size:13px;font-weight:500;width:72px;flex-shrink:0">${r.phase.label}</div>
-              <div style="flex:1;height:8px;background:var(--surface-3);border-radius:4px;overflow:hidden;"><div style="height:100%;border-radius:4px;background:${r.phase.color};width:${r.pct}%;transition:width .4s"></div></div>
-              <div style="font-family:var(--mono);font-size:11.5px;color:var(--text-muted);width:34px;text-align:right;flex-shrink:0">${r.pct}%</div>
-              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);width:32px;text-align:right;flex-shrink:0">${r.done}/${r.total}</div>
-              ${chip}
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
+      ${(proj.quickLinks||[]).length?`<section class="ref-links"><span>Quick links</span>${(proj.quickLinks||[]).map(ql=>`<a href="${escHtml(ql.url)}" target="_blank" rel="noopener noreferrer">↗ ${escHtml(ql.label)}</a>`).join('')}</section>`:''}
     </div>`;
   wireQuickLinksDnD();
 }
@@ -6610,7 +6722,7 @@ function renderGantt(){
 let allTasks = state.tasks.filter(t => t.projectId === pid && !t.parentTaskId);
   const canWrite = canWriteView('tasks');
 
-  setTopbar('Gantt', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
+  setTopbar('Delivery timeline', `${VIEW_DESCRIPTIONS.gantt} · ${allTasks.length} tasks across ${workItems.length} parent${workItems.length===1?'':'s'}`,
     `<button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('interface')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ iFlow</button>
      <button class="btn btn-outline btn-sm" onclick="openNewWorkItemModal('work')" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Work item</button>
      <button class="btn btn-primary btn-sm" onclick="openNewTaskModal()" ${canWrite?'':'disabled style="opacity:.4"'}>＋ Task</button>`);
@@ -10103,6 +10215,52 @@ window.addEventListener('resize', () => {
   // If resized up from mobile to desktop, close any open mobile drawer
   if(!isMobileViewport()) closeMobileSidebar();
 });
+</script>
+<script>
+/* Apple-inspired interaction enhancement. Existing business handlers are unchanged. */
+(function(){
+  'use strict';
+  const reduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canAnimate=()=>!reduced()&&typeof Element.prototype.animate==='function';
+  const root=document.getElementById('app');
+  const content=document.getElementById('content');
+  const nav=document.getElementById('navPrimary');
+  const tabs=document.getElementById('macMobileTabs');
+  function syncTabs(){
+    if(!nav||!tabs)return;
+    const item=nav.querySelector('a.active');
+    const value=item?.dataset.view||'dashboard';
+    tabs.querySelectorAll('button[data-view]').forEach(button=>{
+      const active=button.dataset.view===value || (button.dataset.view==='gantt'&&['kanban','tasks','timeline'].includes(value));
+      button.classList.toggle('active',active);
+      if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+    });
+  }
+  if(nav){new MutationObserver(syncTabs).observe(nav,{attributes:true,subtree:true,attributeFilter:['class']});syncTabs();}
+  function entrance(el,type){
+    if(!canAnimate()||!el||el.dataset.macEntered==='1')return;
+    el.dataset.macEntered='1';
+    el.classList.add(type==='panel'?'mac-animated-panel':'mac-animated-modal');
+    const panel=type==='panel';
+    // WAAPI keyframe timing gives immediate responsive feedback while leaving layout untouched.
+    el.animate(panel?[{transform:'translateX(55px)',opacity:.7},{transform:'translateX(-3px)',opacity:1,offset:.82},{transform:'translateX(0)',opacity:1}]:[{transform:'translateY(12px) scale(.96)',opacity:.45},{transform:'translateY(-2px) scale(1.005)',opacity:1,offset:.8},{transform:'translateY(0) scale(1)',opacity:1}],{duration:panel?340:280,easing:'cubic-bezier(.2,.75,.22,1)'});
+  }
+  let oldPanel=null;
+  const observer=new MutationObserver(()=>{
+    const panel=root?.querySelector('.side-panel');
+    if(panel && panel!==oldPanel){oldPanel=panel;entrance(panel,'panel');}
+    if(!panel)oldPanel=null;
+    document.querySelectorAll('.modal-overlay.visible .modal,.confirm-overlay.visible .confirm-box').forEach(el=>entrance(el,'modal'));
+  });
+  observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  // Inline content gets replaced on view navigation. Trigger only on direct content replacement.
+  if(content){new MutationObserver((records)=>{if(!canAnimate()||!records.some(r=>r.type==='childList'&&r.target===content))return;content.animate([{opacity:.78},{opacity:1}],{duration:190,easing:'ease-out'});}).observe(content,{childList:true});}
+  // Native drag handlers remain the source of truth for task reorder / status changes.
+  document.addEventListener('dragstart',e=>{const el=e.target.closest?.('.kb-card,.proj-item,.task-row,.gg-row,.group');if(el)el.classList.add('mac-dragging');},true);
+  document.addEventListener('dragend',()=>document.querySelectorAll('.mac-dragging').forEach(el=>el.classList.remove('mac-dragging')),true);
+  document.addEventListener('drop',()=>document.querySelectorAll('.mac-dragging').forEach(el=>el.classList.remove('mac-dragging')),true);
+  // Escape continues to be handled by the app's own modals and panels.
+})();
 </script>
 </body>
 </html>
