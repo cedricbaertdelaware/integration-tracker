@@ -3207,6 +3207,62 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
 [data-theme="dark"] .kb-card{background:var(--surface)!important}
 [data-theme="dark"] .ref-stream-track,[data-theme="dark"] .ref-phase-track{background:var(--surface-3)!important}
 
+
+/* UI FIX 2026-10-15: make destructive confirmation topmost and desktop sidebar icon-only. */
+/* Task detail is a fixed centered modal at z-index 801; confirmation must sit above it. */
+#confirmOverlay.confirm-overlay {
+  z-index: 1300 !important;
+}
+#confirmOverlay .confirm-box {
+  position: relative;
+  z-index: 1;
+}
+/* Preserve the expanded navigation drawer on small touch screens. */
+@media only screen and (min-width:721px) {
+  #sidebar.sidebar.collapsed {
+    width: 62px !important;
+    min-width: 62px !important;
+    padding: 20px 10px !important;
+  }
+  #sidebar.sidebar.collapsed .logo-text,
+  #sidebar.sidebar.collapsed .user-chip-info,
+  #sidebar.sidebar.collapsed .user-chip-logout,
+  #sidebar.sidebar.collapsed .nav-label,
+  #sidebar.sidebar.collapsed .nav a > span:not(.ico),
+  #sidebar.sidebar.collapsed .nav-count,
+  #sidebar.sidebar.collapsed .projects-card {
+    display: none !important;
+  }
+  #sidebar.sidebar.collapsed .nav a {
+    justify-content: center !important;
+    gap: 0 !important;
+    padding: 11px 0 !important;
+  }
+  #sidebar.sidebar.collapsed .nav a > .ico {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  #sidebar.sidebar.collapsed .nav a > .ico svg {
+    width: 19px;
+    height: 19px;
+  }
+  #sidebar.sidebar.collapsed .logo,
+  #sidebar.sidebar.collapsed .user-chip {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  #sidebar.sidebar.collapsed .sidebar-footer {
+    flex-direction: column;
+  }
+  #sidebar.sidebar.collapsed .sidebar-footer button {
+    width: 100%;
+  }
+}
 </style>
 </head>
 <body data-theme="light">
